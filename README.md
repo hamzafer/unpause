@@ -13,7 +13,7 @@ unpause  158 sessions · personal, work
   ● Openusage multiple accounts    playground         personal   2m  │ id       9e63e42f
     ★ interview-skill-brain        surgery-planning   work       3h  │ account  work
     Wishlist contents              track-one          personal   2d  │ repo     ~/developer/ai/deepinsight/surgery-planning
-  ! Slack thread review            pow-1257           work       4d  │ branch   main
+  ! Slack thread review            pow-1257           work       4d◷ │ branch   main
                                                                      │ active   now  ·  41 messages
                                                                      │ ● running  pid 9310  busy
                                                                      │
@@ -56,7 +56,7 @@ Inside the picker:
 | `^r` | rename (writes the same record Claude Code's `/rename` does) |
 | `esc` | clear the filter, then quit |
 
-Rows: `★` has a name, `●` running right now, `!` folder no longer exists.
+Rows: `★` has a name, `●` running right now, `!` folder no longer exists, `◷` after the age means Claude Code will ask whether to resume from a summary (the session is over 100k tokens and has been idle for more than an hour). That last one is a prediction from the transcript's last usage record: the thresholds are approximate, and unpause can't tell if you've already picked "Don't ask again".
 
 ## Where sessions open
 

@@ -13,7 +13,7 @@ import (
 	"github.com/hamzafer/unpause/internal/session"
 )
 
-const cacheVersion = 3
+const cacheVersion = 4
 
 type entry struct {
 	ModTime int64            `json:"mtime"`

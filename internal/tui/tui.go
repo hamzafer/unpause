@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -402,7 +403,7 @@ func (m model) renderList(w int) string {
 	if w < 80 {
 		repoW = 12
 	}
-	titleW := w - 2 - 2 - repoW - 1 - 9 - 1 - 4 - 1
+	titleW := w - 2 - 2 - repoW - 1 - 9 - 1 - 5 - 1
 	if titleW < 10 {
 		titleW = 10
 	}
@@ -430,7 +431,10 @@ func (m model) renderList(w int) string {
 		}
 		acct := stAccount[s.Account].Render(fmt.Sprintf("%-8s", session.Clip(s.Account, 8)))
 		repo := stDim.Render(fmt.Sprintf("%-*s", repoW, session.Clip(s.Repo(), repoW)))
-		ageS := stDim.Render(fmt.Sprintf("%4s", session.Age(s.LastActive)))
+		ageS := stDim.Render(fmt.Sprintf("%4s", session.Age(s.LastActive))) + " "
+		if s.WillOfferSummary(time.Now()) {
+			ageS = stWarn.Render(fmt.Sprintf("%4s◷", session.Age(s.LastActive)))
+		}
 		lines = append(lines, prefix+dot+" "+title+" "+repo+" "+acct+" "+ageS)
 	}
 	for len(lines) < h {
@@ -460,7 +464,14 @@ func (m model) renderPreview(w int) string {
 	if active != "now" {
 		active += " ago"
 	}
-	meta = append(meta, stDim.Render("active  ")+active+stDim.Render(fmt.Sprintf("  ·  %d messages", s.Messages)))
+	size := ""
+	if s.ContextTokens > 0 {
+		size = "  ·  " + session.Tokens(s.ContextTokens) + " tokens"
+	}
+	meta = append(meta, stDim.Render("active  ")+active+stDim.Render(fmt.Sprintf("  ·  %d messages%s", s.Messages, size)))
+	if s.WillOfferSummary(time.Now()) {
+		meta = append(meta, stWarn.Render("◷ Claude will offer to resume from a summary"))
+	}
 	if s.Live != nil {
 		meta = append(meta, stLive.Render("● running")+stDim.Render(fmt.Sprintf("  pid %d  %s", s.Live.PID, s.Live.Status)))
 	}

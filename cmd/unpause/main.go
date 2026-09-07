@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -89,7 +90,11 @@ func main() {
 				if s.CWDMissing {
 					flag = " (cwd missing)"
 				}
-				fmt.Printf("%s %-8s %-9s %-28s %-6s %s%s\n", live, s.ShortID(), s.Account, session.Clip(s.Repo(), 28), session.Age(s.LastActive), session.Clip(s.Title(), 60), flag)
+				age := session.Age(s.LastActive)
+				if s.WillOfferSummary(time.Now()) {
+					age += "◷"
+				}
+				fmt.Printf("%s %-8s %-9s %-28s %-6s %s%s\n", live, s.ShortID(), s.Account, session.Clip(s.Repo(), 28), age, session.Clip(s.Title(), 60), flag)
 			}
 			return nil
 		},

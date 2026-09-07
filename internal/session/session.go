@@ -39,6 +39,9 @@ type Session struct {
 	LastActive time.Time `json:"last_active"`
 	Messages   int       `json:"messages"` // user prompts + assistant replies
 	Sidechain  bool      `json:"sidechain"`
+	// ContextTokens is the context size reported by the last assistant reply
+	// (input + cache creation + cache read). Zero when unknown.
+	ContextTokens int `json:"context_tokens,omitempty"`
 
 	Preview []Message `json:"preview,omitempty"`
 
@@ -81,3 +84,21 @@ func (s *Session) ShortID() string {
 
 // Empty is true when nobody ever typed a prompt.
 func (s *Session) Empty() bool { return s.Messages == 0 }
+
+// SummaryIdle and SummaryTokens are Claude Code's documented thresholds for the
+// "resume from summary" dialog: idle for about an hour and over 100k tokens.
+const (
+	SummaryIdle   = time.Hour
+	SummaryTokens = 100_000
+)
+
+// WillOfferSummary predicts whether Claude Code will show the resume-from-summary
+// dialog when this session is resumed at time now. It is a prediction: the thresholds
+// are approximate, it applies to Pro/Max plans only, and it can't see whether the
+// user already chose "Don't ask again".
+func (s *Session) WillOfferSummary(now time.Time) bool {
+	if s.Live != nil || s.LastActive.IsZero() {
+		return false
+	}
+	return now.Sub(s.LastActive) > SummaryIdle && s.ContextTokens > SummaryTokens
+}

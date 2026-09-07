@@ -20,7 +20,7 @@ func sessions() []*session.Session {
 	return []*session.Session{
 		{Provider: "claude", ID: "aaaaaaaa-1", Account: "work", Root: "/r/work", CWD: "/x/surgery", CustomTitle: "tracker", LastActive: time.Now(), Messages: 4,
 			Preview: []session.Message{{Role: "user", Text: "fix the tracker"}, {Role: "assistant", Text: "done"}}},
-		{Provider: "claude", ID: "bbbbbbbb-2", Account: "personal", Root: "/r/personal", CWD: "/x/track-one", AITitle: "Wishlist", LastActive: time.Now().Add(-time.Hour), Messages: 2},
+		{Provider: "claude", ID: "bbbbbbbb-2", Account: "personal", Root: "/r/personal", CWD: "/x/track-one", AITitle: "Wishlist", LastActive: time.Now().Add(-3 * time.Hour), Messages: 2, ContextTokens: 140_000},
 		{Provider: "claude", ID: "cccccccc-3", Account: "personal", Root: "/r/personal", CWD: "/x/gone", FirstPrompt: "hello", CWDMissing: true, LastActive: time.Now().Add(-48 * time.Hour), Messages: 1,
 			Live: &session.Live{PID: 1, Status: "idle"}},
 	}
@@ -58,6 +58,9 @@ func TestViewListsAndFilters(t *testing.T) {
 	}
 	if !strings.Contains(v, "fix the tracker") {
 		t.Errorf("preview missing for first row\n%s", v)
+	}
+	if strings.Count(v, "◷") != 1 {
+		t.Errorf("exactly one row (big + idle) should carry the summary marker\n%s", v)
 	}
 	m = drive(m, key("wish"))
 	v = m.View()

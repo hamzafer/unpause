@@ -45,6 +45,9 @@ func TestScanBasic(t *testing.T) {
 			t.Errorf("thinking leaked into preview: %q", m.Text)
 		}
 	}
+	if s.ContextTokens != 120503 {
+		t.Errorf("context tokens = %d, want last reply's input+cache_creation+cache_read", s.ContextTokens)
+	}
 	if s.Sidechain || s.Empty() {
 		t.Errorf("sidechain=%v empty=%v", s.Sidechain, s.Empty())
 	}

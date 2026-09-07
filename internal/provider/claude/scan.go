@@ -45,7 +45,17 @@ type line struct {
 type message struct {
 	Role    string          `json:"role"`
 	Content json.RawMessage `json:"content"`
+	Usage   *usage          `json:"usage"`
 }
+
+type usage struct {
+	Input         int `json:"input_tokens"`
+	CacheCreation int `json:"cache_creation_input_tokens"`
+	CacheRead     int `json:"cache_read_input_tokens"`
+}
+
+// context is the size of the prompt the model saw for this reply.
+func (u *usage) context() int { return u.Input + u.CacheCreation + u.CacheRead }
 
 type block struct {
 	Type string `json:"type"`
@@ -140,6 +150,11 @@ func consume(s *session.Session, raw []byte, push func(session.Message)) {
 		if !at.IsZero() {
 			s.LastActive = at // any activity counts, tool results included
 		}
+		if l.Type == "assistant" {
+			if n := extractContext(l.Message); n > 0 {
+				s.ContextTokens = n
+			}
+		}
 		text := extractText(l.Message)
 		if text == "" {
 			return
@@ -188,6 +203,20 @@ func extractText(raw json.RawMessage) string {
 		}
 	}
 	return strings.Join(parts, "\n")
+}
+
+// extractContext reads the context size from an assistant message's usage block.
+func extractContext(raw json.RawMessage) int {
+	if len(raw) == 0 {
+		return 0
+	}
+	var m struct {
+		Usage *usage `json:"usage"`
+	}
+	if json.Unmarshal(raw, &m) != nil || m.Usage == nil {
+		return 0
+	}
+	return m.Usage.context()
 }
 
 // isCommandNoise drops the synthetic user lines Claude Code writes for slash commands and hooks.
