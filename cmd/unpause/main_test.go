@@ -1,7 +1,9 @@
 package main
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -32,7 +34,16 @@ func TestOpenHelpDocumentsJSONFlag(t *testing.T) {
 
 func TestOpenUnknownSessionErrorsCleanly(t *testing.T) {
 	bin := buildBinary(t)
-	out, err := exec.Command(bin, "open", "definitely-not-a-real-session-id-xyz", "--print", "--json").CombinedOutput()
+	// Give the subprocess its own empty account so the failure we're testing is
+	// "no session matches", not "no account found" (which is what a bare CI runner
+	// with no ~/.claude at all would hit instead).
+	home := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(home, ".claude", "projects"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(bin, "open", "definitely-not-a-real-session-id-xyz", "--print", "--json")
+	cmd.Env = append(os.Environ(), "HOME="+home, "CLAUDE_CONFIG_DIR=")
+	out, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("expected a non-zero exit for an unmatched id, got success: %s", out)
 	}
