@@ -105,4 +105,6 @@ go test ./...
 go run ./cmd/unpause doctor
 ```
 
+Releases: tag `vX.Y.Z`, then `goreleaser release --clean` with `GITHUB_TOKEN` and `HOMEBREW_TAP_GITHUB_TOKEN` set. The `release` workflow does the same on CI once the `HOMEBREW_TAP_GITHUB_TOKEN` secret exists.
+
 MIT © Hamza Zafar
