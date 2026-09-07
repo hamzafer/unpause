@@ -132,7 +132,7 @@ func main() {
 			return op.Open(l)
 		},
 	}
-	open.Flags().StringP("open", "o", "", "how to open: auto, tab, tmux, inplace")
+	open.Flags().StringP("open", "o", "", "how to open: auto, tab, tmux, inplace (default from config)")
 	open.Flags().Bool("fork", false, "resume as a fork (new session id)")
 	open.Flags().Bool("print", false, "print the shell command instead of running it")
 
