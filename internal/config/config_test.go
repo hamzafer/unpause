@@ -60,3 +60,14 @@ path = "~/elsewhere"
 		t.Errorf("roots = %+v", roots)
 	}
 }
+
+func TestEnvForDefaultRootIsEmpty(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	if EnvFor(filepath.Join(home, ".claude")) != "" {
+		t.Error("default root must launch with CLAUDE_CONFIG_DIR unset")
+	}
+	if EnvFor(filepath.Join(home, ".claude-work")) != filepath.Join(home, ".claude-work") {
+		t.Error("non-default root must be passed through")
+	}
+}

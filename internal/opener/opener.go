@@ -15,7 +15,9 @@ type Launch struct {
 	Claude    string // binary name or path
 	SessionID string
 	CWD       string
-	ConfigDir string // CLAUDE_CONFIG_DIR value
+	// ConfigDir is the CLAUDE_CONFIG_DIR to run under. Empty means the default account,
+	// and the variable is explicitly unset in the child so an inherited value can't leak in.
+	ConfigDir string
 	Title     string // window/tab title
 	Fork      bool   // pass --fork-session
 	ExtraArgs []string
@@ -35,6 +37,8 @@ func (l Launch) ShellCommand() string {
 	parts := []string{"cd", shellQuote(l.CWD), "&&"}
 	if l.ConfigDir != "" {
 		parts = append(parts, "CLAUDE_CONFIG_DIR="+shellQuote(l.ConfigDir))
+	} else {
+		parts = append(parts, "unset", "CLAUDE_CONFIG_DIR", "&&")
 	}
 	parts = append(parts, "exec", shellQuote(l.Claude))
 	for _, a := range l.Args() {
@@ -101,10 +105,7 @@ func (InPlace) Open(l Launch) error {
 	if err := os.Chdir(l.CWD); err != nil {
 		return err
 	}
-	env := os.Environ()
-	if l.ConfigDir != "" {
-		env = setEnv(env, "CLAUDE_CONFIG_DIR", l.ConfigDir)
-	}
+	env := setEnv(os.Environ(), "CLAUDE_CONFIG_DIR", l.ConfigDir)
 	return syscall.Exec(bin, append([]string{bin}, l.Args()...), env)
 }
 
@@ -160,12 +161,16 @@ func tmuxName(t string) string {
 	return t
 }
 
+// setEnv replaces key in env; an empty val removes it entirely.
 func setEnv(env []string, key, val string) []string {
-	out := env[:0]
+	out := make([]string, 0, len(env)+1)
 	for _, kv := range env {
 		if !strings.HasPrefix(kv, key+"=") {
 			out = append(out, kv)
 		}
+	}
+	if val == "" {
+		return out
 	}
 	return append(out, key+"="+val)
 }

@@ -172,3 +172,20 @@ func expand(p string) string {
 	}
 	return os.ExpandEnv(p)
 }
+
+// DefaultRoot is the directory Claude Code uses when CLAUDE_CONFIG_DIR is unset.
+func DefaultRoot() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".claude")
+}
+
+// EnvFor returns the CLAUDE_CONFIG_DIR value to launch a session under root with.
+// It is empty for the default root: Claude Code must run with the variable UNSET there,
+// because with it set it looks for .claude.json inside the directory instead of at ~/.claude.json
+// and starts the login wizard.
+func EnvFor(root string) string {
+	if filepath.Clean(root) == DefaultRoot() {
+		return ""
+	}
+	return root
+}

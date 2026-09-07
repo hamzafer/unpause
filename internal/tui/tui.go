@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/session"
 )
@@ -194,7 +195,7 @@ func (m *model) launch(s *session.Session, fork bool) (tea.Model, tea.Cmd) {
 		Claude:    m.opts.Claude,
 		SessionID: s.ID,
 		CWD:       s.CWD,
-		ConfigDir: s.Root,
+		ConfigDir: config.EnvFor(s.Root),
 		Title:     s.Title(),
 		Fork:      fork,
 	}

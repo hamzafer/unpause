@@ -115,7 +115,7 @@ func main() {
 				openWith = cfg.Opener
 			}
 			fork, _ := cmd.Flags().GetBool("fork")
-			l := opener.Launch{Claude: cfg.Claude, SessionID: s.ID, CWD: s.CWD, ConfigDir: s.Root, Title: s.Title(), Fork: fork}
+			l := opener.Launch{Claude: cfg.Claude, SessionID: s.ID, CWD: s.CWD, ConfigDir: config.EnvFor(s.Root), Title: s.Title(), Fork: fork}
 			if p, _ := cmd.Flags().GetBool("print"); p {
 				fmt.Println(l.ShellCommand())
 				return nil

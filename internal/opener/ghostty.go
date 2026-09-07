@@ -21,12 +21,15 @@ func (Ghostty) Open(l Launch) error {
 	// Run through a login+interactive shell so PATH, aliases and prompt hooks match a normal tab.
 	cmd := fmt.Sprintf("%s -lic %s", shell, shellQuote(l.ShellCommand()))
 
+	envLine := ""
+	if l.ConfigDir != "" {
+		envLine = "\n\tset environment variables of cfg to {" + asQuote("CLAUDE_CONFIG_DIR="+l.ConfigDir) + "}"
+	}
 	script := fmt.Sprintf(`tell application "Ghostty"
 	set cfg to new surface configuration
 	set initial working directory of cfg to %s
 	set command of cfg to %s
-	set wait after command of cfg to false
-	set environment variables of cfg to {%s}
+	set wait after command of cfg to false%s
 	if (count of windows) is 0 then
 		new window with configuration cfg
 	else
@@ -34,7 +37,7 @@ func (Ghostty) Open(l Launch) error {
 	end if
 	activate
 end tell`,
-		asQuote(l.CWD), asQuote(cmd), asQuote("CLAUDE_CONFIG_DIR="+l.ConfigDir))
+		asQuote(l.CWD), asQuote(cmd), envLine)
 
 	out, err := exec.Command("osascript", "-e", script).CombinedOutput()
 	if err != nil {

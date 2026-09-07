@@ -28,3 +28,14 @@ func TestAsQuoteEscapes(t *testing.T) {
 		t.Error(tmuxName("a.b:c"))
 	}
 }
+
+func TestDefaultAccountUnsetsConfigDir(t *testing.T) {
+	l := Launch{Claude: "claude", SessionID: "abc", CWD: "/x"}
+	if got, want := l.ShellCommand(), "cd /x && unset CLAUDE_CONFIG_DIR && exec claude --resume abc"; got != want {
+		t.Errorf("\n got %s\nwant %s", got, want)
+	}
+	env := setEnv([]string{"A=1", "CLAUDE_CONFIG_DIR=/leak", "B=2"}, "CLAUDE_CONFIG_DIR", "")
+	if strings.Join(env, ",") != "A=1,B=2" {
+		t.Errorf("env = %v", env)
+	}
+}
