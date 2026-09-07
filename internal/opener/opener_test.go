@@ -39,3 +39,34 @@ func TestDefaultAccountUnsetsConfigDir(t *testing.T) {
 		t.Errorf("env = %v", env)
 	}
 }
+
+func TestTomlStringEscapes(t *testing.T) {
+	if got := tomlString(`say "hi" \ bye` + "\n\ttab"); got != `"say \"hi\" \\ bye\n\ttab"` {
+		t.Errorf("got %s", got)
+	}
+}
+
+func TestDetectPicksWarpFromTermProgram(t *testing.T) {
+	t.Setenv("TERM_PROGRAM", "WarpTerminal")
+	t.Setenv("TMUX", "")
+	if got := Detect().Name(); got != "warp-tab" {
+		t.Errorf("Detect() = %q, want warp-tab", got)
+	}
+}
+
+func TestDetectPrefersTmuxOverTerminalTab(t *testing.T) {
+	t.Setenv("TERM_PROGRAM", "WarpTerminal")
+	t.Setenv("TMUX", "/tmp/tmux-1/default,123,0")
+	if got := Detect().Name(); got != "tmux" {
+		t.Errorf("Detect() = %q, want tmux (inside tmux takes priority)", got)
+	}
+}
+
+func TestPickWarpAndGhosttyByName(t *testing.T) {
+	if o, err := Pick("warp"); err != nil || o.Name() != "warp-tab" {
+		t.Errorf("Pick(warp) = %v, %v", o, err)
+	}
+	if o, err := Pick("ghostty"); err != nil || o.Name() != "ghostty-tab" {
+		t.Errorf("Pick(ghostty) = %v, %v", o, err)
+	}
+}

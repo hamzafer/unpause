@@ -85,10 +85,11 @@ unpause detects the terminal it's running in:
 | you're in | a resumed session opens in |
 |---|---|
 | Ghostty | a new tab (via Ghostty's AppleScript API, Ghostty 1.3+) |
+| Warp | a new tab (via a reusable Warp Tab Config) |
 | tmux | a new window |
 | anything else | in place of unpause |
 
-Override with `--open tab|tmux|inplace` or in the config file. Tab and tmux openers leave the picker running so you can launch several sessions in a row.
+Override with `--open tab|tmux|inplace|ghostty|warp` or in the config file. Tab and tmux openers leave the picker running so you can launch several sessions in a row.
 
 Running sessions are never resumed twice; see the fork/open-anyway prompt above.
 
@@ -122,6 +123,16 @@ unpause streams each transcript in `<account>/projects/*/*.jsonl` once, keeps a 
 The transcript format is internal to Claude Code and may change. When it does, the parser in `internal/provider/claude/scan.go` is the only thing to fix. Decisions and their reasons are in [`docs/adr`](docs/adr); the vocabulary is in [`CONTEXT.md`](CONTEXT.md); how to work on the code is in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 Claude Code today. Codex, OpenCode and friends are welcome as sibling providers.
+
+## Shell completions
+
+Installed automatically by the Homebrew formula. To set them up manually:
+
+```sh
+unpause completion zsh  > "${fpath[1]}/_unpause"     # zsh
+unpause completion bash > /etc/bash_completion.d/unpause
+unpause completion fish > ~/.config/fish/completions/unpause.fish
+```
 
 ## Development
 

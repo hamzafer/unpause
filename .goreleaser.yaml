@@ -5,6 +5,7 @@ project_name: unpause
 before:
   hooks:
     - go mod tidy
+    - sh -c 'mkdir -p completions && go run ./cmd/unpause completion bash > completions/unpause.bash && go run ./cmd/unpause completion zsh > completions/unpause.zsh && go run ./cmd/unpause completion fish > completions/unpause.fish'
 
 builds:
   - main: ./cmd/unpause
@@ -19,6 +20,10 @@ builds:
 archives:
   - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - completions/*
+      - LICENSE
+      - README.md
 
 checksum:
   name_template: checksums.txt
@@ -43,6 +48,9 @@ brews:
     license: MIT
     install: |
       bin.install "unpause"
+      bash_completion.install "completions/unpause.bash" => "unpause"
+      zsh_completion.install "completions/unpause.zsh" => "_unpause"
+      fish_completion.install "completions/unpause.fish"
     test: |
       system "#{bin}/unpause", "--version"
 

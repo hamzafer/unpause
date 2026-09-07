@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Warp gets a real tab opener: `--open warp` (and auto-detection via `TERM_PROGRAM`) opens a new tab in the running Warp window through a reusable Tab Config, instead of falling back to in-place.
+- `unpause open <id> --print --json` emits the launch as structured JSON (claude, session id, cwd, config dir, args, fork, and the shell one-liner) for scripts that don't want to parse a shell string.
+- Shell completions (bash, zsh, fish) are generated at release time and installed automatically by the Homebrew formula. Manual setup instructions are in the README.
+
 ## v0.2.0, 2026-09-07
 
 - The `◷` marker predicts Claude Code's resume-from-summary dialog: shown after the age in the list, and spelled out in the preview pane, when a session is over 100k tokens and has been idle for more than an hour.

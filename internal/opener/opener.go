@@ -63,6 +63,10 @@ func Pick(kind string) (Opener, error) {
 			return o, nil
 		}
 		return nil, fmt.Errorf("no tab opener for this terminal (TERM_PROGRAM=%q); use tmux or inplace", os.Getenv("TERM_PROGRAM"))
+	case "warp":
+		return Warp{}, nil
+	case "ghostty":
+		return Ghostty{}, nil
 	case "tmux":
 		return Tmux{}, nil
 	case "inplace":
@@ -87,6 +91,10 @@ func terminalTab() Opener {
 	case "ghostty":
 		if _, err := exec.LookPath("osascript"); err == nil {
 			return Ghostty{}
+		}
+	case "WarpTerminal":
+		if _, err := exec.LookPath("open"); err == nil {
+			return Warp{}
 		}
 	}
 	return nil

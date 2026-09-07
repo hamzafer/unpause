@@ -122,6 +122,19 @@ func main() {
 			fork, _ := cmd.Flags().GetBool("fork")
 			l := opener.Launch{Claude: cfg.Claude, SessionID: s.ID, CWD: s.CWD, ConfigDir: config.EnvFor(s.Root), Title: s.Title(), Fork: fork}
 			if p, _ := cmd.Flags().GetBool("print"); p {
+				if j, _ := cmd.Flags().GetBool("json"); j {
+					enc := json.NewEncoder(os.Stdout)
+					enc.SetIndent("", "  ")
+					return enc.Encode(struct {
+						Claude    string   `json:"claude"`
+						SessionID string   `json:"session_id"`
+						CWD       string   `json:"cwd"`
+						ConfigDir string   `json:"config_dir,omitempty"`
+						Fork      bool     `json:"fork"`
+						Args      []string `json:"args"`
+						Shell     string   `json:"shell"`
+					}{l.Claude, l.SessionID, l.CWD, l.ConfigDir, l.Fork, l.Args(), l.ShellCommand()})
+				}
 				fmt.Println(l.ShellCommand())
 				return nil
 			}
@@ -135,6 +148,7 @@ func main() {
 	open.Flags().StringP("open", "o", "", "how to open: auto, tab, tmux, inplace (default from config)")
 	open.Flags().Bool("fork", false, "resume as a fork (new session id)")
 	open.Flags().Bool("print", false, "print the shell command instead of running it")
+	open.Flags().Bool("json", false, "with --print, emit structured JSON instead of a shell line")
 
 	rename := &cobra.Command{
 		Use:   "rename <id-or-name> <new name>",
