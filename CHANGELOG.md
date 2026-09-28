@@ -7,6 +7,7 @@
 - Fix: a CLI test assumed a real Claude account existed on the machine.
 
 ## v0.3.0, 2026-09-07
+
 - Warp gets a real tab opener: `--open warp` (and auto-detection via `TERM_PROGRAM`) opens a new tab in the running Warp window through a reusable Tab Config, instead of falling back to in-place.
 - `unpause open <id> --print --json` emits the launch as structured JSON (claude, session id, cwd, config dir, args, fork, and the shell one-liner) for scripts that don't want to parse a shell string.
 - Shell completions (bash, zsh, fish) are generated at release time and installed automatically by the Homebrew formula. Manual setup instructions are in the README.
