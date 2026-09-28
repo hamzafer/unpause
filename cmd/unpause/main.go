@@ -3,6 +3,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -179,16 +180,67 @@ func main() {
 		Short: "Name untitled sessions with Claude Haiku",
 		Long: "Names every session that has neither a name you gave it nor a title Claude generated, " +
 			"using `claude -p --model haiku` under the session's own account. Live sessions are skipped. " +
-			"Use --dry-run first to see the proposed names without writing anything.",
+			"Use --dry-run first to see the proposed names, then --apply to write exactly those.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			apply, _ := cmd.Flags().GetBool("apply")
 			only, _ := cmd.Flags().GetString("session")
 			delay, _ := cmd.Flags().GetDuration("delay")
+			if dryRun && apply {
+				return fmt.Errorf("--dry-run and --apply don't go together")
+			}
 			time.Sleep(delay)
 			cfg, sessions, err := loadAll(true)
 			if err != nil {
 				return err
+			}
+			write := func(s *session.Session, name string) error {
+				if ok, err := autoname.StillNeeds(s.Path); err != nil {
+					return err
+				} else if !ok {
+					return fmt.Errorf("got a name or title in the meantime, left alone")
+				}
+				if err := claude.Rename(s.Path, s.ID, name); err != nil {
+					return err
+				}
+				index.Invalidate(s.Path)
+				return nil
+			}
+			line := func(stamp string, s *session.Session, what string) {
+				fmt.Printf("%s%s %-9s %-24s %s\n", stamp, s.ShortID(), s.Account, session.Clip(s.Repo(), 24), what)
+			}
+			proposalsPath := autoname.ProposalsPath(config.CachePath())
+			if apply {
+				ps, err := autoname.LoadProposals(proposalsPath)
+				if errors.Is(err, os.ErrNotExist) {
+					return fmt.Errorf("no saved names; run `unpause autoname --dry-run` first")
+				} else if err != nil {
+					return err
+				}
+				byID := map[string]*session.Session{}
+				for _, s := range sessions {
+					byID[s.ID] = s
+				}
+				done, failed := 0, 0
+				for _, p := range ps {
+					s := byID[p.SessionID]
+					if s == nil {
+						s = &session.Session{ID: p.SessionID, Path: p.Path}
+					}
+					if err := write(s, p.Name); err != nil {
+						failed++
+						line("", s, "✗ "+err.Error())
+						continue
+					}
+					done++
+					line("", s, fmt.Sprintf("→ %q", p.Name))
+				}
+				if err := os.Remove(proposalsPath); err != nil {
+					return err
+				}
+				fmt.Printf("named %d, skipped %d\n", done, failed)
+				return nil
 			}
 			var todo []*session.Session
 			for _, s := range sessions {
@@ -218,41 +270,37 @@ func main() {
 				fmt.Printf("dry run: asking Haiku for %d names, nothing will be written\n", len(todo))
 			}
 			namer := autoname.Haiku(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) })
-			write := func(s *session.Session, name string) error {
-				if ok, err := autoname.StillNeeds(s.Path); err != nil {
-					return err
-				} else if !ok {
-					return fmt.Errorf("got a name or title while Haiku was thinking, left alone")
-				}
-				if err := claude.Rename(s.Path, s.ID, name); err != nil {
-					return err
-				}
-				index.Invalidate(s.Path)
-				return nil
-			}
 			done, failed := 0, 0
+			var proposals []autoname.Proposal
 			autoname.Run(cmd.Context(), todo, namer, write, dryRun, func(r autoname.Result) {
-				s := r.Session
 				if r.Err != nil {
 					failed++
-					fmt.Printf("%s%s %-9s %-24s ✗ %v\n", stamp, s.ShortID(), s.Account, session.Clip(s.Repo(), 24), r.Err)
+					line(stamp, r.Session, "✗ "+r.Err.Error())
 					return
 				}
 				done++
-				fmt.Printf("%s%s %-9s %-24s → %q\n", stamp, s.ShortID(), s.Account, session.Clip(s.Repo(), 24), r.Name)
+				proposals = append(proposals, autoname.Proposal{SessionID: r.Session.ID, Path: r.Session.Path, Name: r.Name})
+				line(stamp, r.Session, fmt.Sprintf("→ %q", r.Name))
 			})
 			verb := "named"
 			if dryRun {
 				verb = "would name"
 			}
 			fmt.Printf("%s%s %d, failed %d\n", stamp, verb, done, failed)
+			if dryRun && len(proposals) > 0 {
+				if err := autoname.SaveProposals(proposalsPath, proposals); err != nil {
+					return err
+				}
+				fmt.Println("saved; run `unpause autoname --apply` to write exactly these names")
+			}
 			if failed > 0 && done == 0 {
 				return fmt.Errorf("every naming call failed")
 			}
 			return nil
 		},
 	}
-	autonameCmd.Flags().Bool("dry-run", false, "show proposed names without writing them")
+	autonameCmd.Flags().Bool("dry-run", false, "show proposed names and save them for --apply, without writing")
+	autonameCmd.Flags().Bool("apply", false, "write the names the last --dry-run saved, without asking Haiku again")
 	autonameCmd.Flags().String("session", "", "name only this session id (used by the SessionEnd hook)")
 	autonameCmd.Flags().Duration("delay", 0, "wait this long before starting")
 	_ = autonameCmd.Flags().MarkHidden("delay")

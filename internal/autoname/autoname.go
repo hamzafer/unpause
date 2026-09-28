@@ -30,6 +30,9 @@ const GuardEnv = "UNPAUSE_AUTONAME"
 // maxNameLen caps a generated name so a chatty reply can't flood the list.
 const maxNameLen = 60
 
+// maxNameWords is the longest reply still treated as a name; the prompt asks for 3 to 6.
+const maxNameWords = 8
+
 // callTimeout bounds one model call; a normal one takes under ten seconds.
 const callTimeout = 90 * time.Second
 
@@ -77,7 +80,13 @@ func Clean(raw string) string {
 	line = strings.Trim(line, junk)
 	line = strings.TrimRight(line, ".!")
 	line = strings.Trim(line, junk)
-	line = strings.Join(strings.Fields(line), " ")
+	words := strings.Fields(line)
+	// A question or a paragraph means the model talked instead of naming, e.g. when the
+	// session has too little in it to go on.
+	if strings.Contains(line, "?") || len(words) > maxNameWords {
+		return ""
+	}
+	line = strings.Join(words, " ")
 	if len(line) > maxNameLen {
 		end := maxNameLen
 		for end > 0 && !utf8.RuneStart(line[end]) {
@@ -209,6 +218,43 @@ func ReadHookInput(r io.Reader) (HookInput, error) {
 		return h, errors.New("hook input has no session_id")
 	}
 	return h, nil
+}
+
+// Proposal is one name a dry run came up with, saved so --apply writes exactly that.
+type Proposal struct {
+	SessionID string `json:"session_id"`
+	Path      string `json:"path"`
+	Name      string `json:"name"`
+}
+
+// ProposalsPath is where a dry run saves its proposals.
+func ProposalsPath(cacheFile string) string {
+	return filepath.Join(filepath.Dir(cacheFile), "autoname-proposals.json")
+}
+
+// SaveProposals replaces the saved proposals with ps.
+func SaveProposals(path string, ps []Proposal) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	b, err := json.MarshalIndent(ps, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, append(b, '\n'), 0o644)
+}
+
+// LoadProposals reads what the last dry run saved. A missing file wraps os.ErrNotExist.
+func LoadProposals(path string) ([]Proposal, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var ps []Proposal
+	if err := json.Unmarshal(b, &ps); err != nil {
+		return nil, fmt.Errorf("reading %s: %w", path, err)
+	}
+	return ps, nil
 }
 
 // LogPath is where the detached hook job writes what it did.
