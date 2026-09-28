@@ -94,3 +94,87 @@ func TestSessionEndHookGuardAndBadInput(t *testing.T) {
 		t.Errorf("hook input without session_id should fail, got success: %s", out)
 	}
 }
+
+// TestAutonameDryRunThenApply checks that --apply writes the name the dry run showed,
+// even when the model would answer differently the second time.
+func TestAutonameDryRunThenApply(t *testing.T) {
+	bin := buildBinary(t)
+	home := t.TempDir()
+	id := "99999999-aaaa-bbbb-cccc-dddddddddddd"
+	proj := filepath.Join(home, ".claude", "projects", "-tmp-repo")
+	transcript := filepath.Join(proj, id+".jsonl")
+	lines := `{"type":"user","message":{"role":"user","content":"add a dark mode toggle"},"timestamp":"2026-09-28T10:00:00Z","cwd":"/tmp/repo","sessionId":"` + id + `"}` + "\n"
+	// The fake claude answers with a counter, so a second call would give a different name.
+	fake := filepath.Join(home, "claude")
+	script := "#!/bin/sh\ncat >/dev/null\nn=$(cat " + home + "/n 2>/dev/null || echo 0); n=$((n+1)); echo $n > " + home + "/n\necho \"Dark mode take $n\"\n"
+	cfgDir := filepath.Join(home, ".config", "unpause")
+	for dir, files := range map[string]map[string]string{
+		proj:   {transcript: lines},
+		cfgDir: {filepath.Join(cfgDir, "config.toml"): `claude = "` + fake + `"` + "\n"},
+		home:   {fake: script},
+	} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		for p, body := range files {
+			if err := os.WriteFile(p, []byte(body), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	env := append(os.Environ(), "HOME="+home, "CLAUDE_CONFIG_DIR=", "XDG_CACHE_HOME=", "XDG_CONFIG_HOME=")
+	run := func(args ...string) string {
+		cmd := exec.Command(bin, args...)
+		cmd.Env = env
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("%v: %v\n%s", args, err, out)
+		}
+		return string(out)
+	}
+
+	if out := run("autoname", "--dry-run"); !strings.Contains(out, "Dark mode take 1") {
+		t.Fatalf("dry run output: %s", out)
+	}
+	if b, _ := os.ReadFile(transcript); strings.Contains(string(b), "custom-title") {
+		t.Fatal("dry run wrote to the transcript")
+	}
+	// A write that fails keeps its name saved so the next --apply can retry it.
+	if err := os.Chmod(transcript, 0o444); err != nil {
+		t.Fatal(err)
+	}
+	if out := run("autoname", "--apply"); !strings.Contains(out, "kept 1") {
+		t.Fatalf("failed apply should keep the proposal: %s", out)
+	}
+	if err := os.Chmod(transcript, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("autoname", "--apply")
+	b, _ := os.ReadFile(transcript)
+	if !strings.Contains(string(b), `"customTitle":"Dark mode take 1"`) {
+		t.Errorf("apply should write the dry-run name, transcript:\n%s", b)
+	}
+	cmd := exec.Command(bin, "autoname", "--apply")
+	cmd.Env = env
+	if out, err := cmd.CombinedOutput(); err == nil || !strings.Contains(string(out), "--dry-run` first") {
+		t.Errorf("second apply should say to dry-run first, got %v: %s", err, out)
+	}
+
+	// Now that the session is named, a new dry run finds nothing, and that must also
+	// clear any proposals left from before so --apply can't write stale names.
+	if err := os.WriteFile(filepath.Join(home, ".cache", "unpause", "autoname-proposals.json"), []byte(`[{"session_id":"x","path":"/nope","name":"stale"}]`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("autoname", "--dry-run")
+	cmd = exec.Command(bin, "autoname", "--apply")
+	cmd.Env = env
+	if out, err := cmd.CombinedOutput(); err == nil || strings.Contains(string(out), "stale") {
+		t.Errorf("an empty dry run should clear stale proposals, got %v: %s", err, out)
+	}
+
+	cmd = exec.Command(bin, "autoname", "--session", id, "--dry-run")
+	cmd.Env = env
+	if out, err := cmd.CombinedOutput(); err == nil {
+		t.Errorf("--session with --dry-run should be refused: %s", out)
+	}
+}

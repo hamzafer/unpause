@@ -48,7 +48,8 @@ unpause open 9e63 --print    # just print the shell command, don't run it
 unpause open 9e63 --fork     # resume as a fork (new session id, original untouched)
 unpause rename 9e63 "hertz tracker"
 unpause autoname --dry-run   # propose Haiku names for untitled sessions, write nothing
-unpause autoname             # write them
+unpause autoname --apply     # write exactly the names the dry run showed
+unpause autoname             # ask Haiku and write in one go
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause --version            # print the binary version
 ```
@@ -89,7 +90,9 @@ Claude Code titles most sessions on its own, and unpause shows that title when y
 - Just before writing, it re-reads the transcript. If a name or Claude title appeared while Haiku was thinking, it leaves the session alone.
 - It runs `claude -p --model haiku` under the session's own account, so there's no API key to set up. The call keeps no transcript and loads no hooks, tools or MCP servers.
 - The name is written with the same record as `/rename`, so it shows in Claude's own `/resume` too.
-- `--dry-run` prints the proposed names and writes nothing.
+- `--dry-run` prints the proposed names, writes nothing to any transcript, and saves the list. `--apply` then writes exactly those names without asking Haiku again, since a second call would word them differently.
+- Each dry run replaces the saved list, even when it finds nothing. `--apply` skips sessions that are running and keeps their names, plus any it failed to write, for the next `--apply`.
+- A reply that asks a question or runs past 8 words counts as no name. That happens when a session has too little in it to go on.
 
 To name sessions as they end, add a `SessionEnd` hook to each account's `settings.json` (`~/.claude/settings.json`, `~/.claude-work/settings.json`, ...):
 

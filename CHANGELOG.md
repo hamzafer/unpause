@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `unpause autoname --dry-run` saves its proposals, and `unpause autoname --apply` writes exactly those names without asking Haiku again. Before, approving a dry run and then running for real got freshly worded names.
+- Fix: a Haiku reply that asks a question or runs past 8 words is rejected instead of written as the name.
+
 ## v0.4.0, 2026-09-28
 
 - `unpause autoname` names sessions that have neither a name you gave nor a Claude title, using Claude Haiku through `claude -p` under each session's own account. `--dry-run` shows the proposed names without writing. An account whose login has expired fails once and its remaining sessions are skipped.

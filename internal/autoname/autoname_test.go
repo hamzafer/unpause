@@ -39,7 +39,8 @@ func TestClean(t *testing.T) {
 		"Name: Bike search in Oslo":             "Bike search in Oslo",
 		"\n\n  Title:  `Warp tab opener`  \nok": "Warp tab opener",
 		"   ":                                   "",
-		strings.Repeat("word ", 30):             "word word word word word word word word word word word word",
+		strings.Repeat("abcdefghij ", 7):        "abcdefghij abcdefghij abcdefghij abcdefghij abcdefghij",
+		strings.Repeat("word ", 30):             "",
 	}
 	for in, want := range cases {
 		if got := Clean(in); got != want {
@@ -204,5 +205,31 @@ func TestStillNeedsSeesTitlesWrittenMeanwhile(t *testing.T) {
 	f.Close()
 	if ok, _ := StillNeeds(path); ok {
 		t.Error("a name written during the model call must stop the write")
+	}
+}
+
+func TestCleanRejectsNonNames(t *testing.T) {
+	for _, in := range []string{
+		"What did you work on in this session? That way I can give you a name",
+		"I don't have enough context to name this session so here is a guess",
+	} {
+		if got := Clean(in); got != "" {
+			t.Errorf("Clean(%q) = %q, want it rejected", in, got)
+		}
+	}
+}
+
+func TestProposalsRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "sub", "proposals.json")
+	if _, err := LoadProposals(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("missing file: err = %v, want os.ErrNotExist", err)
+	}
+	want := []Proposal{{SessionID: "a", Path: "/x/a.jsonl", Name: "Fix login"}, {SessionID: "b", Path: "/x/b.jsonl", Name: "Dark mode"}}
+	if err := SaveProposals(path, want); err != nil {
+		t.Fatal(err)
+	}
+	got, err := LoadProposals(path)
+	if err != nil || len(got) != 2 || got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("LoadProposals = %+v, %v", got, err)
 	}
 }
