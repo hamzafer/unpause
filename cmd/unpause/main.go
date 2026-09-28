@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/hamzafer/unpause/internal/autoname"
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/index"
 	"github.com/hamzafer/unpause/internal/opener"
@@ -173,6 +174,112 @@ func main() {
 		},
 	}
 
+	autonameCmd := &cobra.Command{
+		Use:   "autoname",
+		Short: "Name untitled sessions with Claude Haiku",
+		Long: "Names every session that has neither a name you gave it nor a title Claude generated, " +
+			"using `claude -p --model haiku` under the session's own account. Live sessions are skipped. " +
+			"Use --dry-run first to see the proposed names without writing anything.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			only, _ := cmd.Flags().GetString("session")
+			delay, _ := cmd.Flags().GetDuration("delay")
+			time.Sleep(delay)
+			cfg, sessions, err := loadAll(true)
+			if err != nil {
+				return err
+			}
+			var todo []*session.Session
+			for _, s := range sessions {
+				switch {
+				case only != "":
+					// Hook mode: the session just ended, so its live marker may still be settling.
+					if s.ID == only && autoname.Needs(s) {
+						todo = append(todo, s)
+					}
+				case autoname.Needs(s) && s.Live == nil:
+					todo = append(todo, s)
+				}
+			}
+			stamp := ""
+			if only != "" {
+				stamp = time.Now().Format("2006-01-02 15:04") + " "
+				if len(todo) == 0 {
+					fmt.Printf("%s%s: already named or titled, nothing to do\n", stamp, only)
+					return nil
+				}
+			}
+			if len(todo) == 0 {
+				fmt.Println("every session already has a name or a Claude title")
+				return nil
+			}
+			if dryRun {
+				fmt.Printf("dry run: asking Haiku for %d names, nothing will be written\n", len(todo))
+			}
+			namer := autoname.Haiku(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) })
+			write := func(s *session.Session, name string) error {
+				if err := claude.Rename(s.Path, s.ID, name); err != nil {
+					return err
+				}
+				index.Invalidate(s.Path)
+				return nil
+			}
+			done, failed := 0, 0
+			autoname.Run(cmd.Context(), todo, namer, write, dryRun, func(r autoname.Result) {
+				s := r.Session
+				if r.Err != nil {
+					failed++
+					fmt.Printf("%s%s %-9s %-24s ✗ %v\n", stamp, s.ShortID(), s.Account, session.Clip(s.Repo(), 24), r.Err)
+					return
+				}
+				done++
+				fmt.Printf("%s%s %-9s %-24s → %q\n", stamp, s.ShortID(), s.Account, session.Clip(s.Repo(), 24), r.Name)
+			})
+			verb := "named"
+			if dryRun {
+				verb = "would name"
+			}
+			fmt.Printf("%s%s %d, failed %d\n", stamp, verb, done, failed)
+			if failed > 0 && done == 0 {
+				return fmt.Errorf("every naming call failed")
+			}
+			return nil
+		},
+	}
+	autonameCmd.Flags().Bool("dry-run", false, "show proposed names without writing them")
+	autonameCmd.Flags().String("session", "", "name only this session id (used by the SessionEnd hook)")
+	autonameCmd.Flags().Duration("delay", 0, "wait this long before starting")
+	_ = autonameCmd.Flags().MarkHidden("delay")
+
+	hook := &cobra.Command{
+		Use:   "hook",
+		Short: "Entry points for Claude Code hooks",
+	}
+	sessionEnd := &cobra.Command{
+		Use:   "session-end",
+		Short: "SessionEnd hook: name the session that just ended, in the background",
+		Long: "Reads Claude Code's SessionEnd hook input on stdin and starts a detached " +
+			"`unpause autoname --session <id>`, then returns at once. Output goes to autoname.log next to the index cache.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if os.Getenv(autoname.GuardEnv) != "" {
+				return nil
+			}
+			in, err := autoname.ReadHookInput(os.Stdin)
+			if err != nil {
+				return err
+			}
+			self, err := os.Executable()
+			if err != nil {
+				return err
+			}
+			// The short delay lets Claude Code finish its last transcript writes first.
+			return autoname.Spawn(self, []string{"autoname", "--session", in.SessionID, "--delay", "3s"}, autoname.LogPath(config.CachePath()))
+		},
+	}
+	hook.AddCommand(sessionEnd)
+
 	doctor := &cobra.Command{
 		Use:   "doctor",
 		Short: "Show detected roots, opener and claude binary",
@@ -199,7 +306,7 @@ func main() {
 		},
 	}
 
-	root.AddCommand(list, open, rename, doctor)
+	root.AddCommand(list, open, rename, autonameCmd, hook, doctor)
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "unpause:", err)
 		os.Exit(1)

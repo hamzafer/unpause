@@ -24,7 +24,7 @@ The coding agent a Session belongs to. Claude Code today; the slot exists for ot
 _Avoid_: tool, backend, source
 
 **Name**:
-The title a person gave a Session with `/rename` (or `unpause rename`). Optional.
+The title a Session was given with `/rename`, `unpause rename`, or `unpause autoname` (which only names Sessions that have no Name and no auto-generated summary). Optional.
 _Avoid_: custom title, label
 
 **Title**:

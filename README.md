@@ -47,6 +47,8 @@ unpause open tracker         # resume by name or id prefix, no picker
 unpause open 9e63 --print    # just print the shell command, don't run it
 unpause open 9e63 --fork     # resume as a fork (new session id, original untouched)
 unpause rename 9e63 "hertz tracker"
+unpause autoname --dry-run   # propose Haiku names for untitled sessions, write nothing
+unpause autoname             # write them
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause --version            # print the binary version
 ```
@@ -77,6 +79,30 @@ Inside the picker:
 `^r` turns the filter box into a rename prompt: `enter` saves the name, `esc` cancels without writing anything.
 
 Rows: `★` has a name, `●` running right now, `!` folder no longer exists (an orphan; opening it resumes the transcript in your home directory instead), `◷` after the age means Claude Code will ask whether to resume from a summary (the session is over 100k tokens and has been idle for more than an hour). That last one is a prediction from the transcript's last usage record: the thresholds are approximate, and unpause can't tell if you've already picked "Don't ask again".
+
+## Naming sessions automatically
+
+Claude Code titles most sessions on its own, and unpause shows that title when you haven't named one. The ones it skips, usually short ones, show the raw first prompt. `unpause autoname` gives those a name from Claude Haiku:
+
+- It only touches sessions with no name you gave and no Claude title. It never replaces your names or Claude's titles.
+- Running sessions are skipped.
+- It runs `claude -p --model haiku` under the session's own account, so there's no API key to set up. The call keeps no transcript and loads no hooks, tools or MCP servers.
+- The name is written with the same record as `/rename`, so it shows in Claude's own `/resume` too.
+- `--dry-run` prints the proposed names and writes nothing.
+
+To name sessions as they end, add a `SessionEnd` hook to each account's `settings.json` (`~/.claude/settings.json`, `~/.claude-work/settings.json`, ...):
+
+```json
+{
+  "hooks": {
+    "SessionEnd": [
+      { "hooks": [{ "type": "command", "command": "unpause hook session-end" }] }
+    ]
+  }
+}
+```
+
+It fires when you exit (Ctrl+C twice, Ctrl+D, `/exit`) or `/clear`. Claude Code only gives end-of-session hooks about 1.5 seconds, so the hook starts a detached `unpause autoname --session <id>` and returns at once. The name lands a few seconds later, and the job logs what it did to `~/.cache/unpause/autoname.log`. If a session ends without the hook firing, say the terminal was killed, the next `unpause autoname` catches it.
 
 ## Where sessions open
 
