@@ -180,12 +180,13 @@ func TestHaikuCallsClaudeAndSkipsLoggedOutAccounts(t *testing.T) {
 }
 
 func TestCleanKeepsRunesWhole(t *testing.T) {
-	got := Clean(strings.Repeat("字", 40))
+	// One ASCII byte first, so byte 60 lands in the middle of a 3-byte rune.
+	got := Clean("a" + strings.Repeat("字", 40))
 	if !utf8.ValidString(got) || got == "" {
 		t.Fatalf("Clean cut a rune: %q", got)
 	}
-	if n := utf8.RuneCountInString(got); n != maxNameLen/3 {
-		t.Errorf("kept %d runes, want %d (60 bytes of 3-byte runes)", n, maxNameLen/3)
+	if want := "a" + strings.Repeat("字", 19); got != want {
+		t.Errorf("Clean = %q, want %q", got, want)
 	}
 }
 
