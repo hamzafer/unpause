@@ -139,6 +139,16 @@ func TestAutonameDryRunThenApply(t *testing.T) {
 	if b, _ := os.ReadFile(transcript); strings.Contains(string(b), "custom-title") {
 		t.Fatal("dry run wrote to the transcript")
 	}
+	// A write that fails keeps its name saved so the next --apply can retry it.
+	if err := os.Chmod(transcript, 0o444); err != nil {
+		t.Fatal(err)
+	}
+	if out := run("autoname", "--apply"); !strings.Contains(out, "kept 1") {
+		t.Fatalf("failed apply should keep the proposal: %s", out)
+	}
+	if err := os.Chmod(transcript, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	run("autoname", "--apply")
 	b, _ := os.ReadFile(transcript)
 	if !strings.Contains(string(b), `"customTitle":"Dark mode take 1"`) {
@@ -148,5 +158,23 @@ func TestAutonameDryRunThenApply(t *testing.T) {
 	cmd.Env = env
 	if out, err := cmd.CombinedOutput(); err == nil || !strings.Contains(string(out), "--dry-run` first") {
 		t.Errorf("second apply should say to dry-run first, got %v: %s", err, out)
+	}
+
+	// Now that the session is named, a new dry run finds nothing, and that must also
+	// clear any proposals left from before so --apply can't write stale names.
+	if err := os.WriteFile(filepath.Join(home, ".cache", "unpause", "autoname-proposals.json"), []byte(`[{"session_id":"x","path":"/nope","name":"stale"}]`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("autoname", "--dry-run")
+	cmd = exec.Command(bin, "autoname", "--apply")
+	cmd.Env = env
+	if out, err := cmd.CombinedOutput(); err == nil || strings.Contains(string(out), "stale") {
+		t.Errorf("an empty dry run should clear stale proposals, got %v: %s", err, out)
+	}
+
+	cmd = exec.Command(bin, "autoname", "--session", id, "--dry-run")
+	cmd.Env = env
+	if out, err := cmd.CombinedOutput(); err == nil {
+		t.Errorf("--session with --dry-run should be refused: %s", out)
 	}
 }

@@ -190,16 +190,20 @@ func main() {
 			if dryRun && apply {
 				return fmt.Errorf("--dry-run and --apply don't go together")
 			}
+			if only != "" && (dryRun || apply) {
+				return fmt.Errorf("--session is for the SessionEnd hook and can't be combined with --dry-run or --apply")
+			}
 			time.Sleep(delay)
 			cfg, sessions, err := loadAll(true)
 			if err != nil {
 				return err
 			}
+			errTitled := errors.New("got a name or title in the meantime, left alone")
 			write := func(s *session.Session, name string) error {
 				if ok, err := autoname.StillNeeds(s.Path); err != nil {
 					return err
 				} else if !ok {
-					return fmt.Errorf("got a name or title in the meantime, left alone")
+					return errTitled
 				}
 				if err := claude.Rename(s.Path, s.ID, name); err != nil {
 					return err
@@ -222,25 +226,46 @@ func main() {
 				for _, s := range sessions {
 					byID[s.ID] = s
 				}
-				done, failed := 0, 0
+				// Names that couldn't be written yet stay saved for the next --apply;
+				// written ones and ones the session no longer needs are dropped.
+				var keep []autoname.Proposal
+				done, leftAlone := 0, 0
 				for _, p := range ps {
 					s := byID[p.SessionID]
 					if s == nil {
 						s = &session.Session{ID: p.SessionID, Path: p.Path}
 					}
-					if err := write(s, p.Name); err != nil {
-						failed++
-						line("", s, "✗ "+err.Error())
+					if s.Live != nil {
+						keep = append(keep, p)
+						line("", s, "● running now, kept for the next --apply")
 						continue
 					}
-					done++
-					line("", s, fmt.Sprintf("→ %q", p.Name))
+					switch err := write(s, p.Name); {
+					case errors.Is(err, errTitled):
+						leftAlone++
+						line("", s, "– "+err.Error())
+					case err != nil:
+						keep = append(keep, p)
+						line("", s, "✗ "+err.Error()+" (kept for the next --apply)")
+					default:
+						done++
+						line("", s, fmt.Sprintf("→ %q", p.Name))
+					}
 				}
-				if err := os.Remove(proposalsPath); err != nil {
+				fmt.Printf("named %d, left alone %d, kept %d\n", done, leftAlone, len(keep))
+				if len(keep) > 0 {
+					return autoname.SaveProposals(proposalsPath, keep)
+				}
+				if err := os.Remove(proposalsPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 					return err
 				}
-				fmt.Printf("named %d, skipped %d\n", done, failed)
 				return nil
+			}
+			if dryRun {
+				// Whatever this dry run finds replaces the last one, even when it finds nothing.
+				if err := os.Remove(proposalsPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+					return err
+				}
 			}
 			var todo []*session.Session
 			for _, s := range sessions {

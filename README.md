@@ -91,6 +91,7 @@ Claude Code titles most sessions on its own, and unpause shows that title when y
 - It runs `claude -p --model haiku` under the session's own account, so there's no API key to set up. The call keeps no transcript and loads no hooks, tools or MCP servers.
 - The name is written with the same record as `/rename`, so it shows in Claude's own `/resume` too.
 - `--dry-run` prints the proposed names, writes nothing to any transcript, and saves the list. `--apply` then writes exactly those names without asking Haiku again, since a second call would word them differently.
+- Each dry run replaces the saved list, even when it finds nothing. `--apply` skips sessions that are running and keeps their names, plus any it failed to write, for the next `--apply`.
 - A reply that asks a question or runs past 8 words counts as no name. That happens when a session has too little in it to go on.
 
 To name sessions as they end, add a `SessionEnd` hook to each account's `settings.json` (`~/.claude/settings.json`, `~/.claude-work/settings.json`, ...):
