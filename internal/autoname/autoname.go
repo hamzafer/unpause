@@ -17,7 +17,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode/utf8"
 
+	"github.com/hamzafer/unpause/internal/provider/claude"
 	"github.com/hamzafer/unpause/internal/session"
 )
 
@@ -77,13 +79,27 @@ func Clean(raw string) string {
 	line = strings.Trim(line, junk)
 	line = strings.Join(strings.Fields(line), " ")
 	if len(line) > maxNameLen {
-		cut := line[:maxNameLen]
+		end := maxNameLen
+		for end > 0 && !utf8.RuneStart(line[end]) {
+			end-- // back off to a rune boundary so a multibyte name isn't cut mid-character
+		}
+		cut := line[:end]
 		if i := strings.LastIndexByte(cut, ' '); i > 0 {
 			cut = cut[:i]
 		}
 		line = cut
 	}
 	return line
+}
+
+// StillNeeds re-reads one transcript and reports whether it is still untitled. Run's write
+// step uses it because a name or Claude title can land while the model call is in flight.
+func StillNeeds(transcriptPath string) (bool, error) {
+	s, err := claude.ScanFile(transcriptPath)
+	if err != nil {
+		return false, err
+	}
+	return Needs(s), nil
 }
 
 // Namer asks a model for a name. The reply may be messy; Run cleans it.

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/hamzafer/unpause/internal/session"
 )
@@ -175,5 +176,32 @@ func TestHaikuCallsClaudeAndSkipsLoggedOutAccounts(t *testing.T) {
 	}
 	if n := strings.Count(got, "CALL dir=/dead"); n != 1 {
 		t.Errorf("logged-out account was called %d times, want 1", n)
+	}
+}
+
+func TestCleanKeepsRunesWhole(t *testing.T) {
+	got := Clean(strings.Repeat("字", 40))
+	if !utf8.ValidString(got) || got == "" {
+		t.Fatalf("Clean cut a rune: %q", got)
+	}
+	if n := utf8.RuneCountInString(got); n != maxNameLen/3 {
+		t.Errorf("kept %d runes, want %d (60 bytes of 3-byte runes)", n, maxNameLen/3)
+	}
+}
+
+func TestStillNeedsSeesTitlesWrittenMeanwhile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.jsonl")
+	user := `{"type":"user","message":{"role":"user","content":"fix it"},"timestamp":"2026-09-28T10:00:00Z","sessionId":"s"}` + "\n"
+	if err := os.WriteFile(path, []byte(user), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if ok, err := StillNeeds(path); err != nil || !ok {
+		t.Fatalf("untitled transcript: StillNeeds = %v, %v", ok, err)
+	}
+	f, _ := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644)
+	f.WriteString(`{"type":"custom-title","customTitle":"mine","sessionId":"s"}` + "\n")
+	f.Close()
+	if ok, _ := StillNeeds(path); ok {
+		t.Error("a name written during the model call must stop the write")
 	}
 }

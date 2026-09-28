@@ -85,7 +85,8 @@ Rows: `★` has a name, `●` running right now, `!` folder no longer exists (an
 Claude Code titles most sessions on its own, and unpause shows that title when you haven't named one. The ones it skips, usually short ones, show the raw first prompt. `unpause autoname` gives those a name from Claude Haiku:
 
 - It only touches sessions with no name you gave and no Claude title. It never replaces your names or Claude's titles.
-- Running sessions are skipped.
+- `unpause autoname` skips sessions that are running. The hook doesn't, since it runs as the session ends.
+- Just before writing, it re-reads the transcript. If a name or Claude title appeared while Haiku was thinking, it leaves the session alone.
 - It runs `claude -p --model haiku` under the session's own account, so there's no API key to set up. The call keeps no transcript and loads no hooks, tools or MCP servers.
 - The name is written with the same record as `/rename`, so it shows in Claude's own `/resume` too.
 - `--dry-run` prints the proposed names and writes nothing.

@@ -219,6 +219,11 @@ func main() {
 			}
 			namer := autoname.Haiku(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) })
 			write := func(s *session.Session, name string) error {
+				if ok, err := autoname.StillNeeds(s.Path); err != nil {
+					return err
+				} else if !ok {
+					return fmt.Errorf("got a name or title while Haiku was thinking, left alone")
+				}
 				if err := claude.Rename(s.Path, s.ID, name); err != nil {
 					return err
 				}
