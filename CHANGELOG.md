@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.1, 2026-09-28
 
 - `unpause autoname --dry-run` saves its proposals, and `unpause autoname --apply` writes exactly those names without asking Haiku again. Before, approving a dry run and then running for real got freshly worded names.
 - Fix: a Haiku reply that asks a question or runs past 8 words is rejected instead of written as the name.
