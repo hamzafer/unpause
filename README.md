@@ -52,6 +52,7 @@ unpause rename 9e63 "hertz tracker"
 unpause autoname --dry-run   # propose Haiku names for untitled sessions, write nothing
 unpause autoname --apply     # write exactly the names the dry run showed
 unpause autoname             # ask Haiku and write in one go
+unpause recap --session 9e63 # write a Recap (goal, done, next) for one session, see "Recaps"
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
 unpause --version            # print the binary version
@@ -113,6 +114,30 @@ To name sessions as they end, add a `SessionEnd` hook to each account's `setting
 ```
 
 It fires when you exit (Ctrl+C twice, Ctrl+D, `/exit`) or `/clear`. Claude Code only gives end-of-session hooks about 1.5 seconds, so the hook starts a detached `unpause autoname --session <id>` and returns at once. The name lands a few seconds later, and the job logs what it did to `~/.cache/unpause/autoname.log`. If a session ends without the hook firing, say the terminal was killed, the next `unpause autoname` catches it.
+
+## Recaps
+
+The preview's last few messages show where a session stopped, not what it was about. A Recap is three short lines from Claude Haiku, shown in a box above those messages:
+
+```
+goal  cheapest padel for 4 in Oslo, 21:00-24:00
+done  top 3 found; showers confirmed at Bærum and Just Padel
+next  decide between a membership and paying per game
+```
+
+Recaps are off unless you turn them on, because each one sends part of a session's talk to Haiku. In `~/.config/unpause/config.toml`:
+
+```toml
+[recap]
+enabled = true
+```
+
+- `unpause recap --session <id>` writes the Recap for one session and prints it.
+- Haiku sees the repo, branch and title, then your prompts and Claude's replies (no tool calls, tool output or thinking), about 8,000 characters at most: the first prompt and as much of the end as fits.
+- The call is the same as autoname's: `claude -p --model haiku` under the session's own account, no transcript kept, no hooks, tools or MCP servers. Each Recap is one small Haiku call against that account's plan.
+- A reply that isn't three lines labelled `goal`, `done` and `next` is thrown away; nothing is stored.
+- Recaps live in `~/.cache/unpause/recaps.json`, never in the transcript. Deleting the file loses nothing but Recaps.
+- Cowork sessions, subagent transcripts and empty sessions get no Recap.
 
 ## Where sessions open
 
