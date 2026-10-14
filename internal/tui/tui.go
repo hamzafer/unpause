@@ -90,6 +90,8 @@ type model struct {
 	statusOK bool
 	result   Result
 	accounts []string
+	// recapHidden is set by ^t: the Recap box is hidden for the rest of this run.
+	recapHidden bool
 
 	// Deep search state (deep.go).
 	deep      bool
@@ -339,6 +341,9 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		return m.launch(s, false)
+	case "ctrl+t":
+		m.recapHidden = !m.recapHidden
+		return m, nil
 	case "ctrl+f":
 		if s := m.current(); s != nil {
 			return m.launch(s, true)
@@ -625,14 +630,22 @@ func (m model) renderRecap(s *session.Session, w int) string {
 	if m.opts.Recap == nil {
 		return ""
 	}
+	if m.recapHidden {
+		return ""
+	}
 	r, ok := m.opts.Recap(s)
 	if !ok {
 		return ""
 	}
+	// An outdated Recap was made before the Session went on: shown dim, marked earlier.
+	text, mark := func(v string) string { return v }, ""
+	if recap.Outdated(r, s) {
+		text, mark = func(v string) string { return stDim.Render(v) }, " · earlier"
+	}
 	lines := []string{
-		stDim.Render("goal  ") + r.Goal,
-		stDim.Render("done  ") + r.Done,
-		stDim.Render("next  ") + r.Next,
+		stDim.Render("goal"+mark+"  ") + text(r.Goal),
+		stDim.Render("done  ") + text(r.Done),
+		stDim.Render("next  ") + text(r.Next),
 	}
 	return stRecap.Width(max(10, w-2)).Render(strings.Join(lines, "\n"))
 }
@@ -656,6 +669,9 @@ func (m model) renderFooter() string {
 		stKey.Render("^f") + stDim.Render(" fork"),
 		stKey.Render("^r") + stDim.Render(" rename"),
 		stKey.Render("↑↓") + stDim.Render(" move"),
+	}
+	if m.opts.Recap != nil {
+		keys = append(keys, stKey.Render("^t")+stDim.Render(" recap"))
 	}
 	switch {
 	case m.deep:
