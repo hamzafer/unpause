@@ -34,8 +34,21 @@ func Load(path string) (Store, error) {
 
 // Put stores r for Session id, keeping every other Session's Recap. A corrupt file is
 // started over: it is a cache, and losing it loses nothing but Recaps. The file is
-// replaced in one rename, so a reader never sees half of it.
+// replaced in one rename, so a reader never sees half of it. The read-modify-write runs
+// under a lock on recaps.json.lock, so two writers (two hook children, or a hook child and
+// a backfill) can't lose each other's Recap.
 func Put(path, id string, r Recap) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	lock, err := os.OpenFile(path+".lock", os.O_CREATE|os.O_RDWR, 0o644)
+	if err != nil {
+		return err
+	}
+	defer lock.Close() // closing releases the lock
+	if err := lockFile(lock); err != nil {
+		return err
+	}
 	st, err := Load(path)
 	if err != nil {
 		var syn *json.SyntaxError
@@ -46,9 +59,6 @@ func Put(path, id string, r Recap) error {
 		st = Store{}
 	}
 	st[id] = r
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
 	b, err := json.MarshalIndent(st, "", "  ")
 	if err != nil {
 		return err

@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -223,5 +225,52 @@ func TestNoRecapBoxWhenRecapsAreOff(t *testing.T) {
 	m := drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude"}), tea.WindowSizeMsg{Width: 140, Height: 40})
 	if v := m.View(); strings.Contains(v, "╭") || strings.Contains(v, "hertz tracker honest") {
 		t.Errorf("Recaps off must show no box\n%s", v)
+	}
+	if v := m.View(); strings.Contains(v, "^t") {
+		t.Errorf("Recaps off must not offer ^t\n%s", v)
+	}
+	// ^t does nothing when Recaps are off.
+	if v := drive(m, tea.KeyMsg{Type: tea.KeyCtrlT}).View(); strings.Contains(v, "╭") {
+		t.Errorf("^t must not show a box when Recaps are off\n%s", v)
+	}
+}
+
+func TestRecapMadeFromSmallerTranscriptIsMarkedEarlier(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.jsonl")
+	if err := os.WriteFile(path, []byte("0123456789"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ss := sessions()
+	ss[0].Path = path
+	size := int64(10)
+	recaps := func(s *session.Session) (recap.Recap, bool) {
+		r, ok := fakeRecaps(s)
+		r.Size = size
+		return r, ok
+	}
+	m := drive(newModel(Options{Sessions: ss, Opener: &fakeOpener{}, Claude: "claude", Recap: recaps}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	if v := m.View(); strings.Contains(v, "earlier") {
+		t.Errorf("a current Recap must not say earlier\n%s", v)
+	}
+	size = 4
+	if v := m.View(); !strings.Contains(v, "goal · earlier") || !strings.Contains(v, "keep the hertz tracker honest") {
+		t.Errorf("an outdated Recap must say · earlier after the label\n%s", v)
+	}
+}
+
+func TestCtrlTTogglesTheRecapBox(t *testing.T) {
+	m := drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude", Recap: fakeRecaps}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	if v := m.View(); !strings.Contains(v, "^t") || !strings.Contains(v, "recap") {
+		t.Errorf("footer must offer ^t recap when Recaps are on\n%s", v)
+	}
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlT})
+	if v := m.View(); strings.Contains(v, "hertz tracker honest") {
+		t.Errorf("^t must hide the box\n%s", v)
+	}
+	if v := drive(m, key("down"), key("up")).View(); strings.Contains(v, "hertz tracker honest") {
+		t.Errorf("the box stays hidden while moving\n%s", v)
+	}
+	if v := drive(m, tea.KeyMsg{Type: tea.KeyCtrlT}).View(); !strings.Contains(v, "hertz tracker honest") {
+		t.Errorf("^t again must show the box\n%s", v)
 	}
 }

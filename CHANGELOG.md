@@ -4,6 +4,7 @@
 
 - Recaps: with `[recap] enabled = true` in the config, `unpause recap --session <id>` asks Claude Haiku for three short lines about a session (goal, done, next), and the picker shows them in a box between the session's details and its last messages. Only prompts and replies are sent, about 8,000 characters at most. Recaps are kept in `~/.cache/unpause/recaps.json`, never in the transcript. Off by default.
 - `unpause recap` without `--session` writes Recaps for sessions that have none or an outdated one, newest first, 20 per run (`--limit`, 0 = all); `--dry-run` lists them without calling Haiku. `unpause doctor` shows whether Recaps are on and how many sessions have one.
+- Recaps on Session end: when Recaps are on, the SessionEnd hook also writes the ending session's Recap in the background. A Recap made from an earlier, shorter transcript shows dim with `· earlier`, and `^t` hides or shows the box.
 
 ## v0.7.2, 2026-10-15
 
