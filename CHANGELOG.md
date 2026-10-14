@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.5.0, 2026-10-14
 
 - Retired worktrees: a session whose Claude Code worktree (`<repo>/.claude/worktrees/<name>`) was removed while its repo still exists gets a dim `⎇` instead of the orphan `!`, and opens in the repo (or the same subfolder of it, when that exists) instead of `~`. `unpause list` shows ` (worktree retired)` for these; the JSON keeps `cwd_missing` and adds `worktree_root`.
 - `unpause open` starts orphans in `~` and retired worktrees in their repo, like the picker. Before, it tried the missing folder.
