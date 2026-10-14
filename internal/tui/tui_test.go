@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/hamzafer/unpause/internal/opener"
+	"github.com/hamzafer/unpause/internal/recap"
 	"github.com/hamzafer/unpause/internal/session"
 )
 
@@ -189,5 +190,38 @@ func TestCoworkSessionIsReadOnly(t *testing.T) {
 	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlR}, key("x"), key("enter"))
 	if renamed || m.(model).mode == modeRename {
 		t.Error("cowork session must not be renamed")
+	}
+}
+
+// fakeRecaps stands in for the recap store: only the first Session has a Recap.
+func fakeRecaps(s *session.Session) (recap.Recap, bool) {
+	if s.ID != "aaaaaaaa-1" {
+		return recap.Recap{}, false
+	}
+	return recap.Recap{Goal: "keep the hertz tracker honest", Done: "tracker fixed", Next: "ship it"}, true
+}
+
+func TestPreviewShowsRecapBoxBetweenMetadataAndMessages(t *testing.T) {
+	m := drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude", Recap: fakeRecaps}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	v := m.View()
+	for _, want := range []string{"goal", "keep the hertz tracker honest", "done", "tracker fixed", "next", "ship it", "╭"} {
+		if !strings.Contains(v, want) {
+			t.Errorf("recap box missing %q\n%s", want, v)
+		}
+	}
+	meta, box, msgs := strings.Index(v, "4 messages"), strings.Index(v, "keep the hertz tracker honest"), strings.Index(v, "fix the tracker")
+	if !(meta < box && box < msgs) {
+		t.Errorf("box must sit between metadata (%d) and messages (%d), at %d\n%s", meta, msgs, box, v)
+	}
+	// The next Session has no Recap: no box.
+	if v := drive(m, key("down")).View(); strings.Contains(v, "╭") || strings.Contains(v, "hertz") {
+		t.Errorf("a Session without a Recap must show no box\n%s", v)
+	}
+}
+
+func TestNoRecapBoxWhenRecapsAreOff(t *testing.T) {
+	m := drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude"}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	if v := m.View(); strings.Contains(v, "╭") || strings.Contains(v, "hertz tracker honest") {
+		t.Errorf("Recaps off must show no box\n%s", v)
 	}
 }

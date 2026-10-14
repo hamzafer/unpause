@@ -169,3 +169,14 @@ exclude = ["~/ok/*", "/x/[work"]
 		t.Errorf("a bad exclude pattern must fail Load and name the pattern, got %v", err)
 	}
 }
+
+func TestRecapsAreOffUnlessEnabled(t *testing.T) {
+	writeConfig(t, "opener = \"tab\"\n")
+	if c, err := Load(); err != nil || c.Recap.Enabled {
+		t.Errorf("Recaps must be off by default: %+v, %v", c, err)
+	}
+	writeConfig(t, "[recap]\nenabled = true\n")
+	if c, err := Load(); err != nil || !c.Recap.Enabled {
+		t.Errorf("[recap] enabled = true must turn Recaps on: %+v, %v", c, err)
+	}
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/provider/claude"
+	"github.com/hamzafer/unpause/internal/recap"
 	"github.com/hamzafer/unpause/internal/session"
 )
 
@@ -27,6 +28,8 @@ type Options struct {
 	// Search runs a Deep search over the given Sessions (copies of the picker's, so a
 	// rename never races it). Nil disables ^s.
 	Search func(ctx context.Context, sessions []*session.Session, query string, progress func(done, total int)) ([]claude.Result, error)
+	// Recap returns a Session's Recap, if it has one. Nil when Recaps are off: no box.
+	Recap func(s *session.Session) (recap.Recap, bool)
 }
 
 // Result is what the picker hands back when it exits.
@@ -62,6 +65,7 @@ var (
 	stUser     = lipgloss.NewStyle().Bold(true).Foreground(colAccent)
 	stAsst     = lipgloss.NewStyle().Bold(true).Foreground(colLive)
 	stPane     = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(colDim).BorderLeft(true).PaddingLeft(1)
+	stRecap    = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(colDim).Padding(0, 1)
 )
 
 var accountPalette = []lipgloss.AdaptiveColor{
@@ -579,6 +583,11 @@ func (m model) renderPreview(w int) string {
 
 	b.WriteString("\n")
 	avail := m.listHeight() - len(meta) - 3
+	if box := m.renderRecap(s, w); box != "" {
+		b.WriteString(box)
+		b.WriteString("\n\n")
+		avail -= lipgloss.Height(box) + 1
+	}
 	if m.deep {
 		b.WriteString(m.renderSnippets(m.results[m.cursor].Snippets, w, avail))
 		return b.String()
@@ -608,6 +617,24 @@ func (m model) renderPreview(w int) string {
 	}
 	b.WriteString(strings.Join(chunks, "\n\n"))
 	return b.String()
+}
+
+// renderRecap is the bordered goal / done / next box for s, w wide, or "" when Recaps
+// are off or s has none.
+func (m model) renderRecap(s *session.Session, w int) string {
+	if m.opts.Recap == nil {
+		return ""
+	}
+	r, ok := m.opts.Recap(s)
+	if !ok {
+		return ""
+	}
+	lines := []string{
+		stDim.Render("goal  ") + r.Goal,
+		stDim.Render("done  ") + r.Done,
+		stDim.Render("next  ") + r.Next,
+	}
+	return stRecap.Width(max(10, w-2)).Render(strings.Join(lines, "\n"))
 }
 
 func (m model) renderFooter() string {

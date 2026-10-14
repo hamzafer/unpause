@@ -20,6 +20,7 @@ import (
 	"github.com/hamzafer/unpause/internal/mcpserver"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/provider/claude"
+	"github.com/hamzafer/unpause/internal/recap"
 	"github.com/hamzafer/unpause/internal/session"
 	"github.com/hamzafer/unpause/internal/tui"
 )
@@ -47,7 +48,17 @@ func main() {
 				return err
 			}
 			shown := filter(sessions, all)
+			var recapOf func(*session.Session) (recap.Recap, bool)
+			if cfg.Recap.Enabled {
+				// A store that can't be read just means no boxes; the picker still opens.
+				recaps, _ := recap.Load(recap.Path(config.CachePath()))
+				recapOf = func(s *session.Session) (recap.Recap, bool) {
+					r, ok := recaps[s.ID]
+					return r, ok
+				}
+			}
 			res, err := tui.Run(tui.Options{
+				Recap:    recapOf,
 				Sessions: shown,
 				Search:   claude.Search,
 				Opener:   op,
@@ -400,6 +411,49 @@ func main() {
 	autonameCmd.Flags().Duration("delay", 0, "wait this long before starting")
 	_ = autonameCmd.Flags().MarkHidden("delay")
 
+	recapCmd := &cobra.Command{
+		Use:   "recap",
+		Short: "Write a Recap (goal, done, next) for a session with Claude Haiku",
+		Long: "Asks `claude -p --model haiku`, under the session's own account, for three short lines about a session: " +
+			"goal, done and next. The picker shows them in a box in the preview. Only the session's talk is sent " +
+			"(prompts and replies, not tool output), about 8,000 characters at most. Recaps are kept in recaps.json " +
+			"next to the index cache, never in the transcript. Off unless [recap] enabled = true is in the config.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load()
+			if err != nil {
+				return err
+			}
+			if !cfg.Recap.Enabled {
+				return fmt.Errorf("recaps are off. Each one sends part of a session's talk to Claude Haiku; to turn them on, add\n\n"+
+					"  [recap]\n  enabled = true\n\nto %s", config.Path())
+			}
+			only, _ := cmd.Flags().GetString("session")
+			if only == "" {
+				return fmt.Errorf("--session <id> is required")
+			}
+			cfg, sessions, err := loadAll(true)
+			if err != nil {
+				return err
+			}
+			s := find(sessions, only)
+			if s == nil {
+				return fmt.Errorf("no session matches %q", only)
+			}
+			ask := autoname.Ask(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) }, recap.SystemPrompt)
+			r, err := recap.Make(cmd.Context(), s, ask)
+			if err != nil {
+				return fmt.Errorf("%s: %w", s.ShortID(), err)
+			}
+			if err := recap.Put(recap.Path(config.CachePath()), s.ID, r); err != nil {
+				return err
+			}
+			fmt.Printf("%s %-9s %s\n  goal  %s\n  done  %s\n  next  %s\n", s.ShortID(), s.Account, session.Clip(s.Title(), 60), r.Goal, r.Done, r.Next)
+			return nil
+		},
+	}
+	recapCmd.Flags().String("session", "", "write the Recap for this session (id prefix or name)")
+
 	hook := &cobra.Command{
 		Use:   "hook",
 		Short: "Entry points for Claude Code hooks",
@@ -490,7 +544,7 @@ func main() {
 		},
 	}
 
-	root.AddCommand(list, search, open, rename, autonameCmd, hook, doctor, mcpCmd)
+	root.AddCommand(list, search, open, rename, autonameCmd, recapCmd, hook, doctor, mcpCmd)
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "unpause:", err)
 		os.Exit(1)
