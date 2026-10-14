@@ -336,3 +336,26 @@ func TestDeepSearchReadsCopiesAndHandsBackOriginals(t *testing.T) {
 		t.Error("results must point at the picker's own sessions, so a rename shows")
 	}
 }
+
+func TestDeepSearchRenameTargetSurvivesNewResults(t *testing.T) {
+	fs := &fakeSearch{}
+	ss := sessions()
+	var renamed *session.Session
+	fs.results = map[string][]claude.Result{"tunnel": {{Session: ss[0], Hits: 9}, {Session: ss[1], Hits: 1}}}
+	m := drive(newModel(Options{Sessions: ss, Opener: &fakeOpener{}, Claude: "claude", Search: fs.search,
+		Rename: func(s *session.Session, _ string) error { renamed = s; return nil }}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlS})
+	m, _ = typeText(m, "tunnel")
+	m = settle(m, runCmd(func() tea.Msg { return debounceMsg{id: m.(model).searchID} }))
+	m = drive(m, tea.KeyMsg{Type: tea.KeyDown}) // second result
+	mm := m.(model)
+	want := mm.current()
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlR})
+	// A search finishing while the prompt is open moves the cursor to the top.
+	m = settle(m, []tea.Msg{searchDoneMsg{id: m.(model).searchID, results: fs.results["tunnel"]}})
+	m, _ = typeText(m, "new name")
+	m = drive(m, tea.KeyMsg{Type: tea.KeyEnter})
+	if renamed != want {
+		t.Errorf("renamed %v, want %v", renamed.ID, want.ID)
+	}
+}

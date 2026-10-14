@@ -89,10 +89,11 @@ type model struct {
 
 	// Deep search state (deep.go).
 	deep      bool
-	results   []claude.Result // ranked, shown instead of visible while deep
-	terms     []string        // the terms results were found with, for highlighting
-	searched  bool            // results belong to a finished search
-	searchErr bool            // the last search failed
+	results   []claude.Result  // ranked, shown instead of visible while deep
+	terms     []string         // the terms results were found with, for highlighting
+	searched  bool             // results belong to a finished search
+	searchErr bool             // the last search failed
+	target    *session.Session // what the rename or live-confirm prompt acts on; results can change under it
 	searchID  int
 	run       *searchRun
 }
@@ -330,7 +331,7 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if s.Live != nil && !s.Cowork {
-			m.mode = modeLiveConfirm
+			m.mode, m.target = modeLiveConfirm, s
 			return m, nil
 		}
 		return m.launch(s, false)
@@ -345,7 +346,7 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if s := m.current(); s != nil && m.opts.Rename != nil {
-			m.mode = modeRename
+			m.mode, m.target = modeRename, s
 			m.rename.SetValue(s.CustomTitle)
 			m.rename.CursorEnd()
 			m.rename.Focus()
@@ -373,7 +374,7 @@ func (m model) updateRename(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.rename.Blur()
 		return m, nil
 	case "enter":
-		s := m.current()
+		s := m.target
 		name := strings.TrimSpace(m.rename.Value())
 		m.mode = modeList
 		m.rename.Blur()
@@ -397,7 +398,7 @@ func (m model) updateRename(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) updateLiveConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	s := m.current()
+	s := m.target
 	switch msg.String() {
 	case "esc", "ctrl+c", "n":
 		m.mode = modeList
