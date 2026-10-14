@@ -79,7 +79,7 @@ Inside the picker:
 
 `^r` turns the filter box into a rename prompt: `enter` saves the name, `esc` cancels without writing anything.
 
-Rows: `★` has a name, `●` running right now, `!` folder no longer exists (an orphan; opening it resumes the transcript in your home directory instead), `◷` after the age means Claude Code will ask whether to resume from a summary (the session is over 100k tokens and has been idle for more than an hour). That last one is a prediction from the transcript's last usage record: the thresholds are approximate, and unpause can't tell if you've already picked "Don't ask again".
+Rows: `★` has a name, `●` running right now, `!` folder no longer exists (an orphan; opening it resumes the transcript in your home directory instead), `⎇` the session ran in a Claude Code worktree that has since been removed while its repo still exists (a retired worktree; opening it resumes in the repo, or the same subfolder of it when that exists), `◷` after the age means Claude Code will ask whether to resume from a summary (the session is over 100k tokens and has been idle for more than an hour). That last one is a prediction from the transcript's last usage record: the thresholds are approximate, and unpause can't tell if you've already picked "Don't ask again".
 
 ## Naming sessions automatically
 

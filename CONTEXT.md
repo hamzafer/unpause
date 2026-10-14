@@ -35,8 +35,12 @@ A Session whose agent process is running right now.
 _Avoid_: active, running, open
 
 **Orphan**:
-A Session whose working directory no longer exists on disk. Still listed, flagged, resumable elsewhere.
+A Session whose working directory no longer exists on disk and is not a Retired worktree. Still listed, flagged, resumable elsewhere.
 _Avoid_: stale, broken, dead
+
+**Retired worktree**:
+A Session whose Claude Code worktree (`<repo>/.claude/worktrees/<name>`) was removed while its repo still exists. Listed calmly, not flagged; resumes in the repo.
+_Avoid_: finished, merged, closed
 
 **Opener**:
 The strategy for where a resumed Session appears: a new tab of the current terminal, a tmux window, or in place of the unpause process.

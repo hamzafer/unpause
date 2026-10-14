@@ -2,6 +2,7 @@ package session
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -51,4 +52,18 @@ func Tokens(n int) string {
 	default:
 		return fmt.Sprintf("%d", n)
 	}
+}
+
+// Tilde abbreviates a path under home to ~/...
+func Tilde(path, home string) string {
+	if home == "" || home == "/" {
+		return path
+	}
+	if path == home {
+		return "~"
+	}
+	if strings.HasPrefix(path, home+string(filepath.Separator)) {
+		return "~" + path[len(home):]
+	}
+	return path
 }

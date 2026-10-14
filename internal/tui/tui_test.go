@@ -69,6 +69,25 @@ func TestViewListsAndFilters(t *testing.T) {
 	}
 }
 
+func TestRetiredWorktreeIsCalmAndOpensInRepo(t *testing.T) {
+	repo := t.TempDir()
+	s := &session.Session{Provider: "claude", ID: "dddddddd-4", Account: "work", Root: "/r/work", CWD: repo + "/.claude/worktrees/pow-796", AITitle: "Proof of work",
+		CWDMissing: true, WorktreeRoot: repo, LastActive: time.Now(), Messages: 2}
+	fo := &fakeOpener{}
+	m := drive(newModel(Options{Sessions: []*session.Session{s}, Opener: fo, Claude: "claude"}), tea.WindowSizeMsg{Width: 140, Height: 30})
+	v := m.View()
+	if !strings.Contains(v, "⎇ Proof of work") || !strings.Contains(v, "⎇ worktree removed; will open in") {
+		t.Errorf("retired worktree not shown\n%s", v)
+	}
+	if strings.Contains(v, "!") {
+		t.Errorf("retired worktree must not look like an orphan\n%s", v)
+	}
+	drive(m, key("enter"))
+	if len(fo.got) != 1 || fo.got[0].CWD != repo {
+		t.Errorf("expected launch in %s, got %+v", repo, fo.got)
+	}
+}
+
 func TestEnterOpensWithRightAccount(t *testing.T) {
 	fo := &fakeOpener{}
 	m := drive(newModel(Options{Sessions: sessions(), Opener: fo, Claude: "claude"}), tea.WindowSizeMsg{Width: 120, Height: 30}, key("down"), key("enter"))

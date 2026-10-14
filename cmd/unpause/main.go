@@ -89,7 +89,10 @@ func main() {
 					live = "●"
 				}
 				flag := ""
-				if s.CWDMissing {
+				switch {
+				case s.WorktreeRoot != "":
+					flag = " (worktree retired)"
+				case s.CWDMissing:
 					flag = " (cwd missing)"
 				}
 				age := session.Age(s.LastActive)
@@ -122,7 +125,7 @@ func main() {
 				openWith = cfg.Opener
 			}
 			fork, _ := cmd.Flags().GetBool("fork")
-			l := opener.Launch{Claude: cfg.Claude, SessionID: s.ID, CWD: s.CWD, ConfigDir: config.EnvFor(s.Root), Title: s.Title(), Fork: fork}
+			l := opener.Launch{Claude: cfg.Claude, SessionID: s.ID, CWD: s.OpenDir(homeDir()), ConfigDir: config.EnvFor(s.Root), Title: s.Title(), Fork: fork}
 			if p, _ := cmd.Flags().GetBool("print"); p {
 				if j, _ := cmd.Flags().GetBool("json"); j {
 					enc := json.NewEncoder(os.Stdout)
@@ -447,4 +450,13 @@ func find(sessions []*session.Session, q string) *session.Session {
 		}
 	}
 	return nil
+}
+
+// homeDir is where an Orphan opens; Claude Code resumes the transcript regardless of cwd.
+func homeDir() string {
+	h, err := os.UserHomeDir()
+	if err != nil {
+		return "/"
+	}
+	return h
 }
