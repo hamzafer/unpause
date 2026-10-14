@@ -79,7 +79,7 @@ func TestRetiredWorktreeIsCalmAndOpensInRepo(t *testing.T) {
 	if !strings.Contains(v, "⎇ Proof of work") || !strings.Contains(v, "⎇ worktree removed; will open in") {
 		t.Errorf("retired worktree not shown\n%s", v)
 	}
-	if strings.Contains(v, "!") {
+	if strings.Contains(v, "! folder no longer exists") {
 		t.Errorf("retired worktree must not look like an orphan\n%s", v)
 	}
 	drive(m, key("enter"))

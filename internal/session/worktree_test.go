@@ -9,10 +9,13 @@ import (
 func TestRetiredWorktreeRoot(t *testing.T) {
 	tmp := t.TempDir()
 	repo := filepath.Join(tmp, "repo")
-	if err := os.MkdirAll(filepath.Join(repo, "here"), 0o755); err != nil {
-		t.Fatal(err)
-	}
 	wt := filepath.Join(repo, ".claude", "worktrees")
+	for _, d := range []string{filepath.Join(repo, "here"), filepath.Join(wt, "a")} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sep := string(filepath.Separator)
 	cases := []struct {
 		name string
 		cwd  string
@@ -24,6 +27,10 @@ func TestRetiredWorktreeRoot(t *testing.T) {
 		{"not a worktree", filepath.Join(tmp, "elsewhere", "project"), ""},
 		{"worktrees dir itself", filepath.Join(repo, ".claude", "worktrees"), ""},
 		{"cwd present", filepath.Join(repo, "here"), ""},
+		{"trailing slash", filepath.Join(wt, "x") + sep, repo},
+		{"dot-dot cleans to a worktree", repo + sep + "nope" + sep + ".." + sep + filepath.Join(".claude", "worktrees", "x"), repo},
+		// Nested worktrees resolve to the innermost repo that exists (LastIndex).
+		{"nested worktree", filepath.Join(wt, "a", ".claude", "worktrees", "b"), filepath.Join(wt, "a")},
 	}
 	for _, c := range cases {
 		// Mirrors internal/index: only a missing cwd is checked.
