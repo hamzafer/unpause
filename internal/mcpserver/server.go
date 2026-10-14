@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -66,7 +65,7 @@ type ListOutput struct {
 
 // SearchInput is search_sessions' arguments.
 type SearchInput struct {
-	Query   string `json:"query" jsonschema:"plain text, matched case-insensitively as a substring"`
+	Query   string `json:"query" jsonschema:"terms separated by spaces, all of which must appear (case-insensitive substrings); wrap words in double quotes for an exact phrase"`
 	Account string `json:"account,omitempty" jsonschema:"only this Account label, exact"`
 	Project string `json:"project,omitempty" jsonschema:"case-insensitive substring of the working directory"`
 	Limit   int    `json:"limit,omitempty" jsonschema:"page size, default 10, max 50"`
@@ -76,7 +75,7 @@ type SearchInput struct {
 // SearchHit is one matching Session.
 type SearchHit struct {
 	Summary
-	Hits     int      `json:"hits" jsonschema:"number of matches"`
+	Hits     int      `json:"hits" jsonschema:"total matches of all terms"`
 	Snippets []string `json:"snippets" jsonschema:"up to 3 excerpts around a match"`
 }
 
@@ -126,8 +125,11 @@ func New(version string, load Loader) *mcp.Server {
 	}, h.list)
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "search_sessions",
-		Description: "Find sessions containing some text. Plain case-insensitive substring match over the title and every user and assistant record " +
-			"(text, tool calls, tool results, thinking). No ranking: matching sessions come newest first, with a match count and up to 3 snippets.",
+		Description: "Find sessions by what was said in them. Searches the talk only: the text of user prompts and assistant replies, plus the title " +
+			"when it is a name, Claude Desktop title or AI title. Tool calls, tool results and thinking are not searched. " +
+			"The query is split into terms on whitespace, and \"double quotes\" make one phrase; each term is a case-insensitive substring, " +
+			"and a session matches only when every term appears somewhere in it, not necessarily in the same message. " +
+			"Results are ranked by total matches, ties newest first, with a match count and up to 3 snippets.",
 		Annotations: ro,
 	}, h.search)
 	mcp.AddTool(s, &mcp.Tool{
@@ -201,54 +203,13 @@ func (h *handlers) search(ctx context.Context, _ *mcp.CallToolRequest, in Search
 			cands = append(cands, s)
 		}
 	}
-	m := claude.NewMatcher(in.Query)
-	results := make([]*claude.SearchResult, len(cands))
-
-	// Scan transcripts in parallel; a file that can't be read just doesn't match.
-	jobs := make(chan int)
-	var wg sync.WaitGroup
-	for w := 0; w < runtime.GOMAXPROCS(0); w++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for i := range jobs {
-				s := cands[i]
-				r, err := m.SearchFile(ctx, s.Path)
-				if err != nil {
-					r = &claude.SearchResult{}
-				}
-				if s.CustomTitle != "" || s.DesktopTitle != "" || s.AITitle != "" {
-					// A title made from the first prompt would count that prompt twice.
-					r.Hits += m.MatchTitle(s.Title())
-				}
-				results[i] = r
-			}
-		}()
-	}
-feed:
-	for i := range cands {
-		select {
-		case jobs <- i:
-		case <-ctx.Done():
-			break feed
-		}
-	}
-	close(jobs)
-	wg.Wait()
-	if err := ctx.Err(); err != nil {
+	results, err := claude.Search(ctx, cands, in.Query, nil)
+	if err != nil {
 		return nil, SearchOutput{}, err
 	}
-
-	var hits []SearchHit
-	for i, r := range results {
-		if r.Hits == 0 {
-			continue
-		}
-		snips := r.Snippets
-		if snips == nil {
-			snips = []string{}
-		}
-		hits = append(hits, SearchHit{Summary: summarize(cands[i]), Hits: r.Hits, Snippets: snips})
+	hits := make([]SearchHit, 0, len(results))
+	for _, r := range results {
+		hits = append(hits, SearchHit{Summary: summarize(r.Session), Hits: r.Hits, Snippets: r.Snippets})
 	}
 	limit := clamp(in.Limit, searchDefault, searchMax)
 	offset := max(in.Offset, 0)

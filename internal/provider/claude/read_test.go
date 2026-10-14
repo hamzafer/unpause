@@ -1,7 +1,6 @@
 package claude
 
 import (
-	"context"
 	"encoding/json"
 	"math"
 	"os"
@@ -111,58 +110,5 @@ func TestReadMessagesHugeLine(t *testing.T) {
 	msgs, total, err := ReadMessages(p, 0, 10, 100)
 	if err != nil || total != 2 || !strings.HasSuffix(msgs[1].Blocks[0].Text, "[… 3145628 more chars]") {
 		t.Fatalf("err=%v total=%d", err, total)
-	}
-}
-
-func TestSearchFile(t *testing.T) {
-	m := NewMatcher("needle")
-	r, err := m.SearchFile(context.Background(), "testdata/blocks.jsonl")
-	if err != nil {
-		t.Fatal(err)
-	}
-	// "Needle" (prompt), "needle" (tool input), "NEEDLE" and "needle2" (tool result).
-	// "where is it" has none; the system line is not a message.
-	if r.Hits != 4 {
-		t.Errorf("hits = %d, want 4", r.Hits)
-	}
-	if len(r.Snippets) != 3 || !strings.Contains(r.Snippets[0], "Find the Needle in config") {
-		t.Errorf("snippets = %q", r.Snippets)
-	}
-
-	r, _ = NewMatcher(`says "quoted" and`).SearchFile(context.Background(), "testdata/blocks.jsonl")
-	if r.Hits != 1 {
-		t.Errorf("query with quotes: hits = %d, want 1", r.Hits)
-	}
-	r, _ = NewMatcher("and\nspans").SearchFile(context.Background(), "testdata/blocks.jsonl")
-	if r.Hits != 1 {
-		t.Errorf("query with newline: hits = %d, want 1", r.Hits)
-	}
-	// A tool's name counts, so a session that only called Grep is found by "grep".
-	r, _ = NewMatcher("grep").SearchFile(context.Background(), "testdata/blocks.jsonl")
-	if r.Hits != 1 || len(r.Snippets) != 1 || r.Snippets[0] != "Grep" {
-		t.Errorf("tool name: %+v", r)
-	}
-	r, _ = NewMatcher("nowhere-to-be-found").SearchFile(context.Background(), "testdata/blocks.jsonl")
-	if r.Hits != 0 || len(r.Snippets) != 0 {
-		t.Errorf("miss: %+v", r)
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	if _, err := m.SearchFile(ctx, "testdata/blocks.jsonl"); err == nil {
-		t.Error("cancelled context must stop the scan")
-	}
-}
-
-func TestSnippetWindow(t *testing.T) {
-	text := strings.Repeat("a ", 200) + "TARGET" + strings.Repeat(" b", 200)
-	m := NewMatcher("target")
-	r := &SearchResult{}
-	m.match(text, r)
-	if r.Hits != 1 || len(r.Snippets) != 1 {
-		t.Fatalf("%+v", r)
-	}
-	s := r.Snippets[0]
-	if !strings.Contains(s, "TARGET") || len([]rune(s)) > 210 || !strings.HasPrefix(s, "…") || !strings.HasSuffix(s, "…") {
-		t.Errorf("snippet = %q (%d runes)", s, len([]rune(s)))
 	}
 }

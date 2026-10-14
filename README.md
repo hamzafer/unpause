@@ -23,7 +23,7 @@ unpause  158 sessions · personal, work
                                                                      │ claude
                                                                      │ The drift comes from the 50 ms poll…
 
-enter open  ^f fork  ^r rename  ↑↓ move  esc clear/quit   opens via ghostty-tab
+enter open  ^f fork  ^r rename  ↑↓ move  ^s deep search  esc clear/quit   opens via ghostty-tab
 ```
 
 ## Install
@@ -43,6 +43,8 @@ unpause --open tmux          # override the opener for this run
 unpause list                 # plain text, newest first
 unpause list --json          # for scripts
 unpause list --all           # include empty sessions and subagent transcripts
+unpause search tunnel key    # sessions where both words were said, most matches first
+unpause search "a phrase"    # one quoted argument is a phrase; --json, --limit N (0 = all)
 unpause open tracker         # resume by name or id prefix, no picker
 unpause open 9e63 --print    # just print the shell command, don't run it
 unpause open 9e63 --fork     # resume as a fork (new session id, original untouched)
@@ -65,10 +67,11 @@ Inside the picker:
 | `enter` | open the session (asks first if it's running, see below) |
 | `^f` | open as a fork (new session id, original untouched) |
 | `^r` | rename (writes the same record Claude Code's `/rename` does) |
+| `^s` | Deep search: search inside what was said, see below (`^s` again to go back) |
 | `↑`/`↓`, `^p`/`^n`, `^k`/`^j` | move the cursor one row |
 | `pgup`/`pgdown` | move a page at a time |
 | `home`/`end` | jump to the first/last row |
-| `esc` | clear the filter, then quit |
+| `esc` | clear the filter, then quit (in Deep search: back to the filter) |
 
 `enter` on a row that's running right now (`●`) doesn't resume it; it opens a small prompt instead:
 
@@ -79,6 +82,8 @@ Inside the picker:
 | `esc` | cancel |
 
 `^r` turns the filter box into a rename prompt: `enter` saves the name, `esc` cancels without writing anything.
+
+`^s` turns the filter box into Deep search (`deep › `), with whatever you'd typed as the first query. It searches what was said in each session, the same way as `unpause search`: your prompts, Claude's replies, and the session's name or generated title, not tool calls, tool output or thinking. Every word has to appear somewhere in the session and `"double quotes"` keep a phrase together. The search starts when you stop typing, the header counts the transcripts as they're scanned (`searching 430/1175`), and the list shows only matching sessions, most matches first, with the match count (`12×`) before the title. The preview shows up to 3 snippets with your words highlighted. `enter`, `^f` and `^r` work on the results as usual. `^s` or `esc` goes back to the normal filter.
 
 Rows: `★` has a name, `●` running right now, `!` folder no longer exists (an orphan; opening it resumes the transcript in your home directory instead), `⎇` the session ran in a Claude Code worktree that has since been removed while its repo still exists (a retired worktree; opening it resumes in the repo, or the same subfolder of it when that exists), `◷` after the age means Claude Code will ask whether to resume from a summary (the session is over 100k tokens and has been idle for more than an hour). That last one is a prediction from the transcript's last usage record: the thresholds are approximate, and unpause can't tell if you've already picked "Don't ask again".
 
@@ -154,7 +159,7 @@ path = "/Volumes/lab/.claude"
 `unpause mcp` is a read-only MCP server that speaks over stdin and stdout. Another assistant can use it to read your sessions. It has three tools:
 
 - `list_sessions`: sessions newest first, with title, account, project, folder, branch, times, message count and whether it's running. Filters: `account`, `project`, `live`. Pages with `limit` and `offset`.
-- `search_sessions`: plain, case-insensitive text search over titles and everything in the transcripts: prompts, replies, tool calls, tool output and thinking. Matching sessions come newest first, with a match count and up to 3 snippets. No ranking.
+- `search_sessions`: the same search as `unpause search`. It looks at what was said (your prompts, Claude's replies, and the session's name or generated title), not tool calls, tool output or thinking. Every word of the query has to appear somewhere in a session, and `"double quotes"` keep a phrase together. Results are ranked by match count, newest first on ties, with up to 3 snippets.
 - `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut.
 
 It never writes to a transcript, and it sees the same sessions as `unpause list`, re-read on every call.

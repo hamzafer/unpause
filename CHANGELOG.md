@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Deep search in the picker: `^s` switches the filter box to searching inside what was said, with the same rules as `unpause search`. It starts 300 ms after you stop typing, shows scan progress in the header, lists matching sessions ranked with a `12×` match count, and previews up to 3 snippets with your words highlighted. Whatever you'd typed in the filter becomes the first query; `^s` or `esc` goes back.
+- `unpause search <words>` finds sessions by what was said in them: your prompts, Claude's replies, and the session's name or generated title. Every word has to appear somewhere in the session, `"double quotes"` keep a phrase together, and results are ranked by match count with the first snippet under each line. `--json`, `--all` and `--limit N` (default 20, 0 for all) work as you'd expect.
+- `search_sessions` in `unpause mcp` uses the same search. It no longer looks at tool calls, tool output or thinking, needs every word instead of one exact string, and ranks by match count instead of newest first, so it finds fewer, better sessions.
+
 ## v0.6.0, 2026-10-14
 
 - Claude Desktop's Cowork sessions are listed under a read-only `cowork` account, titled the way Claude Desktop shows them. The picker, `unpause open` and `unpause rename` refuse them with a pointer to Claude Desktop, `autoname` skips them, and `unpause doctor` sums them up in one line.

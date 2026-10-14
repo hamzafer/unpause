@@ -266,6 +266,80 @@ func TestCoworkSessionsListedButReadOnly(t *testing.T) {
 	}
 }
 
+func TestSearch(t *testing.T) {
+	bin := buildBinary(t)
+	home := t.TempDir()
+	proj := filepath.Join(home, ".claude", "projects", "-tmp-repo")
+	if err := os.MkdirAll(proj, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	line := func(id, role, text, at string) string {
+		content, _ := json.Marshal(text)
+		if role == "assistant" {
+			content, _ = json.Marshal([]map[string]string{{"type": "text", "text": text}})
+		}
+		return `{"type":"` + role + `","message":{"role":"` + role + `","content":` + string(content) + `},"timestamp":"` + at + `","cwd":"/tmp/repo","sessionId":"` + id + `"}` + "\n"
+	}
+	for id, body := range map[string]string{
+		// 3 hits: tunnel in the prompt, keychain in prompt and reply.
+		"aaaaaaaa-0000-0000-0000-000000000000": line("aaaaaaaa-0000-0000-0000-000000000000", "user", "the tunnel needs the keychain", "2026-09-01T10:00:00Z") +
+			line("aaaaaaaa-0000-0000-0000-000000000000", "assistant", "keychain is set", "2026-09-01T10:01:00Z"),
+		// keychain without tunnel: not a match.
+		"bbbbbbbb-0000-0000-0000-000000000000": line("bbbbbbbb-0000-0000-0000-000000000000", "user", "keychain only here", "2026-09-03T10:00:00Z"),
+		// 2 hits, newer than aaaaaaaa but fewer hits.
+		"cccccccc-0000-0000-0000-000000000000": line("cccccccc-0000-0000-0000-000000000000", "user", "keychain for the tunnel", "2026-09-02T10:00:00Z"),
+	} {
+		if err := os.WriteFile(filepath.Join(proj, id+".jsonl"), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	env := append(os.Environ(), "HOME="+home, "CLAUDE_CONFIG_DIR=", "XDG_CACHE_HOME=", "XDG_CONFIG_HOME=")
+	run := func(args ...string) string {
+		cmd := exec.Command(bin, args...)
+		cmd.Env = env
+		out, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("%v: %v\n%s", args, err, out)
+		}
+		return string(out)
+	}
+
+	out := run("search", "tunnel", "keychain")
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	if len(lines) != 4 {
+		t.Fatalf("want 2 results of 2 lines each, got:\n%s", out)
+	}
+	if !strings.Contains(lines[0], "3×  aaaaaaaa") || !strings.Contains(lines[2], "2×  cccccccc") {
+		t.Errorf("ranked by hits:\n%s", out)
+	}
+	if !strings.HasPrefix(lines[1], "       ") || !strings.Contains(lines[1], "the tunnel needs the keychain") {
+		t.Errorf("snippet line:\n%s", out)
+	}
+
+	if out := run("search", "tunnel", "keychain", "--limit", "1"); strings.Count(out, "\n") != 2 || !strings.Contains(out, "aaaaaaaa") {
+		t.Errorf("--limit 1:\n%s", out)
+	}
+	if out := run("search", `"for the tunnel"`); !strings.Contains(out, "cccccccc") || strings.Contains(out, "aaaaaaaa") {
+		t.Errorf("phrase:\n%s", out)
+	}
+
+	var rs []struct {
+		Session  struct{ ID string }
+		Hits     int
+		Snippets []string
+	}
+	if err := json.Unmarshal([]byte(run("search", "tunnel", "keychain", "--json")), &rs); err != nil {
+		t.Fatal(err)
+	}
+	if len(rs) != 2 || rs[0].Session.ID[:8] != "aaaaaaaa" || rs[0].Hits != 3 || len(rs[0].Snippets) != 2 {
+		t.Errorf("--json: %+v", rs)
+	}
+
+	if out := run("search", "nowhere"); out != "" {
+		t.Errorf("no match should print nothing, got %q", out)
+	}
+}
+
 func TestMCPStdoutIsOnlyProtocol(t *testing.T) {
 	bin := buildBinary(t)
 	env := emptyAccountEnv(t)
@@ -374,5 +448,21 @@ func TestMCPRefusesBadExcludePattern(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "/x/[work") {
 		t.Errorf("mcp must refuse a bad exclude pattern and name it, got %v: %s", err, out)
+	}
+}
+
+func TestSearchQueryKeepsShellQuotedPhrase(t *testing.T) {
+	for _, c := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"tunnel", "keychain"}, "tunnel keychain"},
+		{[]string{"secure tunnel"}, `"secure tunnel"`},
+		{[]string{`"secure tunnel" key`}, `"secure tunnel" key`},
+		{[]string{"tunnel"}, "tunnel"},
+	} {
+		if got := searchQuery(c.args); got != c.want {
+			t.Errorf("%q: got %q, want %q", c.args, got, c.want)
+		}
 	}
 }

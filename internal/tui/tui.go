@@ -2,6 +2,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/opener"
+	"github.com/hamzafer/unpause/internal/provider/claude"
 	"github.com/hamzafer/unpause/internal/session"
 )
 
@@ -22,6 +24,9 @@ type Options struct {
 	Opener   opener.Opener
 	Claude   string
 	Rename   func(s *session.Session, name string) error
+	// Search runs a Deep search over the given Sessions (copies of the picker's, so a
+	// rename never races it). Nil disables ^s.
+	Search func(ctx context.Context, sessions []*session.Session, query string, progress func(done, total int)) ([]claude.Result, error)
 }
 
 // Result is what the picker hands back when it exits.
@@ -81,6 +86,16 @@ type model struct {
 	statusOK bool
 	result   Result
 	accounts []string
+
+	// Deep search state (deep.go).
+	deep      bool
+	results   []claude.Result  // ranked, shown instead of visible while deep
+	terms     []string         // the terms results were found with, for highlighting
+	searched  bool             // results belong to a finished search
+	searchErr bool             // the last search failed
+	target    *session.Session // what the rename or live-confirm prompt acts on; results can change under it
+	searchID  int
+	run       *searchRun
 }
 
 // Run starts the picker and blocks until it exits.
@@ -96,8 +111,8 @@ func Run(o Options) (Result, error) {
 
 func newModel(o Options) model {
 	q := textinput.New()
-	q.Placeholder = "type to filter  ·  name, repo, account, branch, id"
-	q.Prompt = "› "
+	q.Placeholder = filterPlaceholder
+	q.Prompt = filterPrompt
 	q.PromptStyle = stKey
 	q.Focus()
 
@@ -126,11 +141,26 @@ func newModel(o Options) model {
 
 func (m model) Init() tea.Cmd { return textinput.Blink }
 
+// rows is how many rows the list has: Deep search results, or filtered Sessions.
+func (m *model) rows() int {
+	if m.deep {
+		return len(m.results)
+	}
+	return len(m.visible)
+}
+
+func (m *model) row(i int) *session.Session {
+	if m.deep {
+		return m.results[i].Session
+	}
+	return m.all[m.visible[i]]
+}
+
 func (m *model) current() *session.Session {
-	if len(m.visible) == 0 || m.cursor >= len(m.visible) {
+	if m.cursor >= m.rows() {
 		return nil
 	}
-	return m.all[m.visible[m.cursor]]
+	return m.row(m.cursor)
 }
 
 func haystack(s *session.Session) string {
@@ -180,10 +210,11 @@ func (m *model) clampOffset() {
 }
 
 func (m *model) move(d int) {
-	if len(m.visible) == 0 {
+	n := m.rows()
+	if n == 0 {
 		return
 	}
-	m.cursor = (m.cursor + d + len(m.visible)) % len(m.visible)
+	m.cursor = (m.cursor + d + n) % n
 	m.clampOffset()
 }
 
@@ -234,6 +265,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateLiveConfirm(msg)
 		}
 		return m.updateList(msg)
+	case debounceMsg:
+		return m, m.startSearch(msg.id)
+	case progressMsg:
+		if m.run != nil && m.run.id == msg.id {
+			return m, progressTick(msg.id)
+		}
+		return m, nil
+	case searchDoneMsg:
+		m.searchDone(msg)
+		return m, nil
 	}
 	var cmd tea.Cmd
 	m.query, cmd = m.query.Update(msg)
@@ -244,7 +285,20 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c":
 		return m, tea.Quit
+	case "ctrl+s":
+		if m.opts.Search == nil {
+			return m, nil
+		}
+		if m.deep {
+			m.leaveDeep()
+			return m, nil
+		}
+		return m, m.enterDeep()
 	case "esc":
+		if m.deep {
+			m.leaveDeep()
+			return m, nil
+		}
 		if m.query.Value() != "" {
 			m.query.SetValue("")
 			m.refilter()
@@ -268,7 +322,7 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.clampOffset()
 		return m, nil
 	case "end":
-		m.cursor = max(0, len(m.visible)-1)
+		m.cursor = max(0, m.rows()-1)
 		m.clampOffset()
 		return m, nil
 	case "enter":
@@ -277,7 +331,7 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if s.Live != nil && !s.Cowork {
-			m.mode = modeLiveConfirm
+			m.mode, m.target = modeLiveConfirm, s
 			return m, nil
 		}
 		return m.launch(s, false)
@@ -292,7 +346,7 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if s := m.current(); s != nil && m.opts.Rename != nil {
-			m.mode = modeRename
+			m.mode, m.target = modeRename, s
 			m.rename.SetValue(s.CustomTitle)
 			m.rename.CursorEnd()
 			m.rename.Focus()
@@ -303,6 +357,9 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	before := m.query.Value()
 	m.query, cmd = m.query.Update(msg)
+	if m.query.Value() != before && m.deep {
+		return m, tea.Batch(cmd, m.queryChangedDeep())
+	}
 	if m.query.Value() != before {
 		m.cursor = 0
 		m.refilter()
@@ -317,7 +374,7 @@ func (m model) updateRename(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.rename.Blur()
 		return m, nil
 	case "enter":
-		s := m.current()
+		s := m.target
 		name := strings.TrimSpace(m.rename.Value())
 		m.mode = modeList
 		m.rename.Blur()
@@ -330,7 +387,9 @@ func (m model) updateRename(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		s.CustomTitle = name
 		m.setStatus(fmt.Sprintf("renamed to %q", name), true)
-		m.refilter()
+		if !m.deep {
+			m.refilter()
+		}
 		return m, nil
 	}
 	var cmd tea.Cmd
@@ -339,7 +398,7 @@ func (m model) updateRename(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) updateLiveConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	s := m.current()
+	s := m.target
 	switch msg.String() {
 	case "esc", "ctrl+c", "n":
 		m.mode = modeList
@@ -371,7 +430,9 @@ func (m model) View() string {
 	previewW := m.width - listW - 3
 
 	header := stTitle.Render("unpause") + stDim.Render(fmt.Sprintf("  %d sessions · %s", len(m.all), strings.Join(m.accounts, ", ")))
-	if q := strings.TrimSpace(m.query.Value()); q != "" {
+	if m.deep {
+		header += stDim.Render(m.deepHeader())
+	} else if q := strings.TrimSpace(m.query.Value()); q != "" {
 		header += stDim.Render(fmt.Sprintf(" · %d match", len(m.visible)))
 	}
 
@@ -397,22 +458,33 @@ func (m model) View() string {
 
 func (m model) renderList(w int) string {
 	h := m.listHeight()
-	if len(m.visible) == 0 {
+	if m.rows() == 0 {
+		if m.deep {
+			return stDim.Render(m.deepEmpty())
+		}
 		return stDim.Render("  nothing matches")
 	}
 	lines := make([]string, 0, h)
-	end := min(len(m.visible), m.offset+h)
+	end := min(m.rows(), m.offset+h)
 	// column widths
 	repoW := 18
 	if w < 80 {
 		repoW = 12
 	}
 	titleW := w - 2 - 2 - repoW - 1 - 9 - 1 - 5 - 1
+	// Deep search puts a hit count, right-aligned, before the title.
+	hitW := 0
+	if m.deep {
+		for _, r := range m.results {
+			hitW = max(hitW, len(fmt.Sprint(r.Hits))+1)
+		}
+		titleW -= hitW + 1
+	}
 	if titleW < 10 {
 		titleW = 10
 	}
 	for i := m.offset; i < end; i++ {
-		s := m.all[m.visible[i]]
+		s := m.row(i)
 		cur := i == m.cursor
 		prefix := "  "
 		if cur {
@@ -441,7 +513,12 @@ func (m model) renderList(w int) string {
 		if s.WillOfferSummary(time.Now()) {
 			ageS = stWarn.Render(fmt.Sprintf("%4s◷", session.Age(s.LastActive)))
 		}
-		lines = append(lines, prefix+dot+" "+title+" "+repo+" "+acct+" "+ageS)
+		hits := ""
+		if m.deep {
+			n := fmt.Sprint(m.results[i].Hits)
+			hits = stDim.Render(strings.Repeat(" ", hitW-len(n)-1)+n+"×") + " "
+		}
+		lines = append(lines, prefix+dot+" "+hits+title+" "+repo+" "+acct+" "+ageS)
 	}
 	for len(lines) < h {
 		lines = append(lines, "")
@@ -502,6 +579,10 @@ func (m model) renderPreview(w int) string {
 
 	b.WriteString("\n")
 	avail := m.listHeight() - len(meta) - 3
+	if m.deep {
+		b.WriteString(m.renderSnippets(m.results[m.cursor].Snippets, w, avail))
+		return b.String()
+	}
 	msgs := s.Preview
 	// Show as many trailing messages as fit, each capped to a few lines.
 	var chunks []string
@@ -548,7 +629,14 @@ func (m model) renderFooter() string {
 		stKey.Render("^f") + stDim.Render(" fork"),
 		stKey.Render("^r") + stDim.Render(" rename"),
 		stKey.Render("↑↓") + stDim.Render(" move"),
-		stKey.Render("esc") + stDim.Render(" clear/quit"),
+	}
+	switch {
+	case m.deep:
+		keys = append(keys, stKey.Render("^s")+stDim.Render(" back"))
+	case m.opts.Search != nil:
+		keys = append(keys, stKey.Render("^s")+stDim.Render(" deep search"), stKey.Render("esc")+stDim.Render(" clear/quit"))
+	default:
+		keys = append(keys, stKey.Render("esc")+stDim.Render(" clear/quit"))
 	}
 	return strings.Join(keys, "  ") + stDim.Render("   opens via "+m.opts.Opener.Name())
 }

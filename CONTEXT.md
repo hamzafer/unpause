@@ -30,6 +30,10 @@ _Avoid_: custom title, label
 **Title**:
 What a Session is called in the list: its Name if it has one, else the title Claude Desktop shows (Cowork Sessions only), else the agent's auto-generated summary, else the first prompt.
 
+**Deep search**:
+Finding a Session by what was said in it: its talk (your prompts and Claude's replies, not tool calls, tool output or thinking) plus its Title, unless that is just the first prompt. Every term must appear; ranked by matches. Shared by the picker, `unpause search` and the MCP server.
+_Avoid_: full-text search, grep
+
 **Live**:
 A Session whose agent process is running right now.
 _Avoid_: active, running, open

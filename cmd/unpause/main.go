@@ -46,8 +46,10 @@ func main() {
 			if err != nil {
 				return err
 			}
+			shown := filter(sessions, all)
 			res, err := tui.Run(tui.Options{
-				Sessions: filter(sessions, all),
+				Sessions: shown,
+				Search:   claude.Search,
 				Opener:   op,
 				Claude:   cfg.Claude,
 				Rename: func(s *session.Session, name string) error {
@@ -112,6 +114,55 @@ func main() {
 	}
 	list.Flags().BoolP("all", "a", false, "include empty sessions and subagent transcripts")
 	list.Flags().Bool("json", false, "output JSON")
+
+	search := &cobra.Command{
+		Use:   "search <query...>",
+		Short: "Deep search: find sessions by what was said in them",
+		Long: "Searches the talk of every session (your prompts, Claude's replies, and the name or generated title), " +
+			"not tool calls, tool output or thinking. The arguments are joined with spaces; every word must appear somewhere " +
+			"in a session, and \"double quotes\" keep a phrase together. Results are ranked by match count, newest first on ties.",
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, sessions, err := loadAll(true)
+			if err != nil {
+				return err
+			}
+			all, _ := cmd.Flags().GetBool("all")
+			asJSON, _ := cmd.Flags().GetBool("json")
+			limit, _ := cmd.Flags().GetInt("limit")
+			results, err := claude.Search(cmd.Context(), filter(sessions, all), searchQuery(args), nil)
+			if err != nil {
+				return err
+			}
+			if limit > 0 && len(results) > limit {
+				results = results[:limit]
+			}
+			if asJSON {
+				if results == nil {
+					results = []claude.Result{}
+				}
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", "  ")
+				return enc.Encode(results)
+			}
+			for _, r := range results {
+				s := r.Session
+				live := " "
+				if s.Live != nil {
+					live = "●"
+				}
+				fmt.Printf("%s%4s  %-8s  %-9s %-24s %-4s %s\n", live, fmt.Sprintf("%d×", r.Hits), s.ShortID(), s.Account,
+					session.Clip(s.Repo(), 24), session.Age(s.LastActive), session.Clip(s.Title(), 60))
+				if len(r.Snippets) > 0 {
+					fmt.Printf("       %s\n", r.Snippets[0])
+				}
+			}
+			return nil
+		},
+	}
+	search.Flags().BoolP("all", "a", false, "include empty sessions and subagent transcripts")
+	search.Flags().Bool("json", false, "output JSON: [{session, hits, snippets}]")
+	search.Flags().Int("limit", 20, "show at most this many results (0 = all)")
 
 	open := &cobra.Command{
 		Use:   "open <id-or-name>",
@@ -439,7 +490,7 @@ func main() {
 		},
 	}
 
-	root.AddCommand(list, open, rename, autonameCmd, hook, doctor, mcpCmd)
+	root.AddCommand(list, search, open, rename, autonameCmd, hook, doctor, mcpCmd)
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "unpause:", err)
 		os.Exit(1)
@@ -495,4 +546,13 @@ func homeDir() string {
 		return "/"
 	}
 	return h
+}
+
+// searchQuery joins search's args into one query. A single argument with spaces and no
+// quotes of its own was quoted in the shell, so it is searched as one phrase.
+func searchQuery(args []string) string {
+	if len(args) == 1 && strings.ContainsAny(args[0], " \t") && !strings.Contains(args[0], `"`) {
+		return `"` + args[0] + `"`
+	}
+	return strings.Join(args, " ")
 }
