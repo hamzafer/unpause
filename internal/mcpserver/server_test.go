@@ -79,7 +79,7 @@ func setup(t *testing.T, exclude ...string) *env {
 		{id: "aaaa0002-0000-0000-0000-000000000000", account: "personal", cwd: "/x/dev/other", at: base.Add(-1 * time.Hour), prompts: []string{"fix the Widget", "widget fixed"}},
 		{id: "bbbb0003-0000-0000-0000-000000000000", account: "work", cwd: "/x/work/client", at: base.Add(-2 * time.Hour), prompts: []string{"client secret stuff", "ok"}},
 		{id: "bbbb0004-0000-0000-0000-000000000000", account: "work", cwd: "/x/work/client/sub/deeper", at: base.Add(-3 * time.Hour), prompts: []string{"deeper secret stuff", "ok"}},
-		{id: "cccc0005-0000-0000-0000-000000000000", account: "work", cwd: "/x/dev/secret-repo", at: base.Add(-4 * time.Hour), prompts: []string{"repo secret", "ok"}},
+		{id: "cccc0005-0000-0000-0000-000000000000", account: "work", cwd: "/x/dev/secret-repo", at: base.Add(-4 * time.Hour), prompts: []string{"repo secret", "ok", "the secret is out"}},
 	}
 	for i := 0; i < 5; i++ {
 		fixtures = append(fixtures, fixture{
@@ -275,8 +275,8 @@ func TestExclude(t *testing.T) {
 
 	var sr SearchOutput
 	e.call(t, "search_sessions", map[string]any{"query": "secret"}, &sr)
-	// Only basic.jsonl (cwd /tmp/repo, thinking "secret") is left.
-	if sr.Total != 1 || sr.Results[0].ID[:8] != "11111111" {
+	// Only basic.jsonl is left, and its "secret" is in thinking, which is not searched.
+	if sr.Total != 0 {
 		t.Errorf("search found excluded sessions: %v", ids(summaries(sr.Results)))
 	}
 
@@ -409,7 +409,7 @@ func TestPagingAtMaxOffset(t *testing.T) {
 		t.Errorf("list at MaxInt: %v %+v", err, lo)
 	}
 	_, so, err := h.search(ctx, nil, SearchInput{Query: "secret", Offset: math.MaxInt, Limit: searchMax})
-	if err != nil || len(so.Results) != 0 || so.NextOffset != nil || so.Total != 4 {
+	if err != nil || len(so.Results) != 0 || so.NextOffset != nil || so.Total != 3 {
 		t.Errorf("search at MaxInt: %v %+v", err, so)
 	}
 	_, g, err := h.get(ctx, nil, GetInput{ID: "22222222", Offset: math.MaxInt, Limit: getMax})
@@ -451,21 +451,44 @@ func TestSearchSessions(t *testing.T) {
 	}
 
 	e.call(t, "search_sessions", map[string]any{"query": "needle"}, &out)
-	if out.Total != 1 || out.Results[0].ID[:8] != "22222222" || out.Results[0].Hits != 4 {
-		t.Errorf("needle across tool input and results: %+v", out)
+	// Talk only: the prompt counts, the Grep input and its tool result don't.
+	if out.Total != 1 || out.Results[0].ID[:8] != "22222222" || out.Results[0].Hits != 1 {
+		t.Errorf("needle in talk only: %+v", out)
+	}
+	for _, q := range []string{"grep", "permission denied", "where is it"} {
+		e.call(t, "search_sessions", map[string]any{"query": `"` + q + `"`}, &out)
+		if out.Total != 0 {
+			t.Errorf("%q is only in a tool call, tool result or thinking: %+v", q, out)
+		}
 	}
 
 	e.call(t, "search_sessions", map[string]any{"query": "secret"}, &out)
-	// bbbb0003, bbbb0004, cccc0005 in prompts, and 1111 (basic) has thinking "secret".
-	if strings.Join(ids(summaries(out.Results)), ",") != "bbbb0003,bbbb0004,cccc0005,11111111" {
-		t.Errorf("secret, newest first: %v", ids(summaries(out.Results)))
+	// cccc0005 says it twice, so it ranks first; bbbb0003 and bbbb0004 tie and come newest first.
+	// basic.jsonl's "secret" is thinking and doesn't count.
+	if strings.Join(ids(summaries(out.Results)), ",") != "cccc0005,bbbb0003,bbbb0004" || out.Results[0].Hits != 2 {
+		t.Errorf("secret, ranked: %v", ids(summaries(out.Results)))
+	}
+
+	// Every term, in different messages; a phrase must appear as is.
+	// "fix" is in the prompt and, as a substring, in the reply's "fixed": 2 + 1 hits.
+	e.call(t, "search_sessions", map[string]any{"query": "fix FIXED"}, &out)
+	if out.Total != 1 || out.Results[0].ID[:8] != "aaaa0002" || out.Results[0].Hits != 3 {
+		t.Errorf("every term across messages: %+v", out)
+	}
+	e.call(t, "search_sessions", map[string]any{"query": "widget kenobi"}, &out)
+	if out.Total != 0 {
+		t.Errorf("terms in different sessions must not match: %+v", out)
+	}
+	e.call(t, "search_sessions", map[string]any{"query": `"secret stuff"`}, &out)
+	if strings.Join(ids(summaries(out.Results)), ",") != "bbbb0003,bbbb0004" {
+		t.Errorf("phrase: %v", ids(summaries(out.Results)))
 	}
 	e.call(t, "search_sessions", map[string]any{"query": "secret", "account": "work", "limit": 2}, &out)
 	if out.Total != 3 || len(out.Results) != 2 || out.NextOffset == nil || *out.NextOffset != 2 {
 		t.Errorf("paged and filtered: total=%d next=%v", out.Total, out.NextOffset)
 	}
 	e.call(t, "search_sessions", map[string]any{"query": "secret", "account": "work", "limit": 2, "offset": 2}, &out)
-	if len(out.Results) != 1 || out.NextOffset != nil || out.Results[0].ID[:8] != "cccc0005" {
+	if len(out.Results) != 1 || out.NextOffset != nil || out.Results[0].ID[:8] != "bbbb0004" {
 		t.Errorf("page 2: %+v", out)
 	}
 	e.call(t, "search_sessions", map[string]any{"query": "secret", "project": "client"}, &out)

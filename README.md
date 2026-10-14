@@ -154,7 +154,7 @@ path = "/Volumes/lab/.claude"
 `unpause mcp` is a read-only MCP server that speaks over stdin and stdout. Another assistant can use it to read your sessions. It has three tools:
 
 - `list_sessions`: sessions newest first, with title, account, project, folder, branch, times, message count and whether it's running. Filters: `account`, `project`, `live`. Pages with `limit` and `offset`.
-- `search_sessions`: plain, case-insensitive text search over titles and everything in the transcripts: prompts, replies, tool calls, tool output and thinking. Matching sessions come newest first, with a match count and up to 3 snippets. No ranking.
+- `search_sessions`: the same search as `unpause search`. It looks at what was said (your prompts, Claude's replies, and the session's name or generated title), not tool calls, tool output or thinking. Every word of the query has to appear somewhere in a session, and `"double quotes"` keep a phrase together. Results are ranked by match count, newest first on ties, with up to 3 snippets.
 - `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut.
 
 It never writes to a transcript, and it sees the same sessions as `unpause list`, re-read on every call.
