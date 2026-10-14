@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -116,5 +117,65 @@ func TestRecapRejectsABadReplyAndStoresNothing(t *testing.T) {
 	}
 	if _, err := os.Stat(store); err == nil {
 		t.Error("a bad reply must store nothing")
+	}
+}
+
+// makeLive marks recapHome's Session as running: a Claude Code sessions file whose pid is
+// this test process, which is alive.
+func makeLive(t *testing.T, home string) {
+	t.Helper()
+	dir := filepath.Join(home, ".claude", "sessions")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	body := `{"pid":` + strconv.Itoa(os.Getpid()) + `,"sessionId":"77777777-aaaa-bbbb-cccc-dddddddddddd","status":"busy"}`
+	if err := os.WriteFile(filepath.Join(dir, "live.json"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRecapRefusesALiveSession(t *testing.T) {
+	bin := buildBinary(t)
+	home, _, store, env := recapHome(t, true)
+	fakeClaude(t, home, "printf 'goal  a\\ndone  b\\nnext  c\\n'\n")
+	makeLive(t, home)
+	cmd := exec.Command(bin, "recap", "--session", "77777777")
+	cmd.Env = env
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Errorf("a Live Session must exit non-zero: %s", out)
+	}
+	if !strings.Contains(string(out), "running") {
+		t.Errorf("must say the session is running, got: %s", out)
+	}
+	if _, err := os.Stat(filepath.Join(home, "calls")); err == nil {
+		t.Error("Haiku must not be asked about a Live Session")
+	}
+	if _, err := os.Stat(store); err == nil {
+		t.Error("nothing may be stored for a Live Session")
+	}
+}
+
+// The SessionEnd hook's child (it passes --delay) finds the Session still running when
+// Claude Code was only cleared or resumed elsewhere: that is a skip, not a failure.
+func TestRecapFromTheHookSkipsALiveSession(t *testing.T) {
+	bin := buildBinary(t)
+	home, _, store, env := recapHome(t, true)
+	fakeClaude(t, home, "printf 'goal  a\\ndone  b\\nnext  c\\n'\n")
+	makeLive(t, home)
+	cmd := exec.Command(bin, "recap", "--session", "77777777", "--delay", "1ms")
+	cmd.Env = env
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Errorf("the hook's child must not fail on a Live Session: %v\n%s", err, out)
+	}
+	if !strings.Contains(string(out), "skipped") {
+		t.Errorf("must log the skip, got: %s", out)
+	}
+	if _, err := os.Stat(filepath.Join(home, "calls")); err == nil {
+		t.Error("Haiku must not be asked about a Live Session")
+	}
+	if _, err := os.Stat(store); err == nil {
+		t.Error("nothing may be stored for a Live Session")
 	}
 }

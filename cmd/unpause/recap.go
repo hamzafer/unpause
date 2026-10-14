@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hamzafer/unpause/internal/config"
@@ -58,7 +59,7 @@ func recapStatus(cfg *config.Config) string {
 	if !cfg.Recap.Enabled {
 		return "off ([recap] enabled = true in the config turns them on)"
 	}
-	_, sessions, err := loadAll(true)
+	sessions, err := loadSessions(cfg, true)
 	if err != nil {
 		return "on (sessions: " + err.Error() + ")"
 	}
@@ -68,7 +69,8 @@ func recapStatus(cfg *config.Config) string {
 	}
 	var can []*session.Session
 	for _, s := range sessions {
-		if recap.Can(s) == nil {
+		// A Live Session gets its Recap when it ends, so it still counts.
+		if err := recap.Can(s); err == nil || errors.Is(err, recap.ErrLive) {
 			can = append(can, s)
 		}
 	}

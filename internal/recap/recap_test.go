@@ -87,3 +87,13 @@ func TestParseRejectsBadReplies(t *testing.T) {
 		}
 	}
 }
+
+// Message text keeps its line breaks in the model input; only the length is cut.
+func TestClipKeepingNewlines(t *testing.T) {
+	if got := clipKeepingNewlines("one\ntwo\nthree", 8); got != "one\ntwo…" {
+		t.Errorf("got %q", got)
+	}
+	if got := clipKeepingNewlines("short\nline", 50); got != "short\nline" {
+		t.Errorf("got %q", got)
+	}
+}

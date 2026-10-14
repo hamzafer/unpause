@@ -1,6 +1,8 @@
 package claude
 
 import (
+	"io"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -12,13 +14,20 @@ import (
 // user prompts and assistant replies, with no thinking, tool calls, tool output or text
 // Claude Code injected. A record's text blocks are joined into one message.
 func ReadTalk(path string) ([]session.Message, error) {
+	return ReadTalkUpTo(path, math.MaxInt64)
+}
+
+// ReadTalkUpTo is ReadTalk over only the first size bytes of the transcript, so the talk
+// matches a size stat'ed earlier even if the file has grown since. A line cut at size is
+// incomplete JSON and is skipped.
+func ReadTalkUpTo(path string, size int64) ([]session.Message, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 	var out []session.Message
-	err = eachLine(f, func(raw []byte) error {
+	err = eachLine(io.LimitReader(f, size), func(raw []byte) error {
 		if !isMessageLine(raw) || isMeta(raw) {
 			return nil
 		}

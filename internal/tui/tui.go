@@ -28,8 +28,16 @@ type Options struct {
 	// Search runs a Deep search over the given Sessions (copies of the picker's, so a
 	// rename never races it). Nil disables ^s.
 	Search func(ctx context.Context, sessions []*session.Session, query string, progress func(done, total int)) ([]claude.Result, error)
-	// Recap returns a Session's Recap, if it has one. Nil when Recaps are off: no box.
-	Recap func(s *session.Session) (recap.Recap, bool)
+	// Recap returns a Session's Recap, whether it is outdated, and whether there is one.
+	// It may touch the disk, so the picker calls it once per Session. Nil when Recaps are
+	// off: no box.
+	Recap func(s *session.Session) (r recap.Recap, outdated, ok bool)
+}
+
+// shownRecap is a looked-up Recap, cached per Session id for the run.
+type shownRecap struct {
+	recap.Recap
+	outdated, ok bool
 }
 
 // Result is what the picker hands back when it exits.
@@ -92,6 +100,8 @@ type model struct {
 	accounts []string
 	// recapHidden is set by ^t: the Recap box is hidden for the rest of this run.
 	recapHidden bool
+	// recaps caches opts.Recap by Session id. A map, so View (value receiver) can fill it.
+	recaps map[string]shownRecap
 
 	// Deep search state (deep.go).
 	deep      bool
@@ -140,7 +150,7 @@ func newModel(o Options) model {
 		stAccount[a] = lipgloss.NewStyle().Foreground(accountPalette[i%len(accountPalette)])
 	}
 
-	m := model{opts: o, all: o.Sessions, query: q, rename: r, accounts: accounts}
+	m := model{opts: o, all: o.Sessions, query: q, rename: r, accounts: accounts, recaps: map[string]shownRecap{}}
 	m.refilter()
 	return m
 }
@@ -627,19 +637,20 @@ func (m model) renderPreview(w int) string {
 // renderRecap is the bordered goal / done / next box for s, w wide, or "" when Recaps
 // are off or s has none.
 func (m model) renderRecap(s *session.Session, w int) string {
-	if m.opts.Recap == nil {
+	if m.opts.Recap == nil || m.recapHidden {
 		return ""
 	}
-	if m.recapHidden {
-		return ""
+	r, cached := m.recaps[s.ID]
+	if !cached {
+		r.Recap, r.outdated, r.ok = m.opts.Recap(s)
+		m.recaps[s.ID] = r
 	}
-	r, ok := m.opts.Recap(s)
-	if !ok {
+	if !r.ok {
 		return ""
 	}
 	// An outdated Recap was made before the Session went on: shown dim, marked earlier.
 	text, mark := func(v string) string { return v }, ""
-	if recap.Outdated(r, s) {
+	if r.outdated {
 		text, mark = func(v string) string { return stDim.Render(v) }, " · earlier"
 	}
 	lines := []string{

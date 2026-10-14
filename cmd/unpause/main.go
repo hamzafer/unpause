@@ -48,13 +48,13 @@ func main() {
 				return err
 			}
 			shown := filter(sessions, all)
-			var recapOf func(*session.Session) (recap.Recap, bool)
+			var recapOf func(*session.Session) (recap.Recap, bool, bool)
 			if cfg.Recap.Enabled {
 				// A store that can't be read just means no boxes; the picker still opens.
 				recaps, _ := recap.Load(recap.Path(config.CachePath()))
-				recapOf = func(s *session.Session) (recap.Recap, bool) {
+				recapOf = func(s *session.Session) (recap.Recap, bool, bool) {
 					r, ok := recaps[s.ID]
-					return r, ok
+					return r, ok && recap.Outdated(r, s), ok
 				}
 			}
 			res, err := tui.Run(tui.Options{
@@ -438,7 +438,7 @@ func main() {
 			}
 			delay, _ := cmd.Flags().GetDuration("delay")
 			time.Sleep(delay)
-			cfg, sessions, err := loadAll(true)
+			sessions, err := loadSessions(cfg, true)
 			if err != nil {
 				return err
 			}
@@ -451,6 +451,12 @@ func main() {
 				return fmt.Errorf("no session matches %q", only)
 			}
 			r, err := recap.Make(cmd.Context(), s, ask)
+			if errors.Is(err, recap.ErrLive) && delay > 0 {
+				// Only the SessionEnd hook passes --delay. A Session still running then (it
+				// was cleared or resumed elsewhere) gets its Recap at its next end.
+				fmt.Printf("%s skipped: %v\n", s.ShortID(), err)
+				return nil
+			}
 			if err != nil {
 				return fmt.Errorf("%s: %w", s.ShortID(), err)
 			}
@@ -577,9 +583,15 @@ func loadAll(quiet bool) (*config.Config, []*session.Session, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	sessions, err := loadSessions(cfg, quiet)
+	return cfg, sessions, err
+}
+
+// loadSessions indexes every Session under cfg's roots, for a caller that already has cfg.
+func loadSessions(cfg *config.Config, quiet bool) ([]*session.Session, error) {
 	roots := cfg.ResolveRoots()
 	if len(roots) == 0 {
-		return nil, nil, fmt.Errorf("no Claude Code config dirs found (looked for ~/.claude and ~/.claude-*); add roots in %s", config.Path())
+		return nil, fmt.Errorf("no Claude Code config dirs found (looked for ~/.claude and ~/.claude-*); add roots in %s", config.Path())
 	}
 	var progress index.Progress
 	if !quiet {
@@ -592,8 +604,7 @@ func loadAll(quiet bool) (*config.Config, []*session.Session, error) {
 			}
 		}
 	}
-	sessions, err := index.Build(roots, progress)
-	return cfg, sessions, err
+	return index.Build(roots, progress)
 }
 
 func filter(in []*session.Session, all bool) []*session.Session {

@@ -8,12 +8,12 @@ import (
 )
 
 // Todo picks the Sessions backfill should recap: those with no Recap or an outdated one,
-// newest first, at most limit of them (0 means all). Live Sessions are skipped because
-// they are unfinished, and so is every Session Can refuses (Cowork, empty, sidechain).
+// newest first, at most limit of them (0 means all). Every Session Can refuses (Live,
+// Cowork, empty, sidechain) is skipped.
 func Todo(sessions []*session.Session, st Store, limit int) []*session.Session {
 	var out []*session.Session
 	for _, s := range sessions {
-		if s.Live != nil || Can(s) != nil {
+		if Can(s) != nil {
 			continue
 		}
 		if r, ok := st[s.ID]; ok && !Outdated(r, s) {

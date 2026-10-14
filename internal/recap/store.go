@@ -16,7 +16,7 @@ func Path(cacheFile string) string {
 	return filepath.Join(filepath.Dir(cacheFile), "recaps.json")
 }
 
-// Load reads the store. A missing file is an empty store.
+// Load reads the store. A missing file, or one holding JSON null, is an empty store.
 func Load(path string) (Store, error) {
 	b, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
@@ -28,6 +28,9 @@ func Load(path string) (Store, error) {
 	st := Store{}
 	if err := json.Unmarshal(b, &st); err != nil {
 		return nil, fmt.Errorf("reading %s: %w", path, err)
+	}
+	if st == nil { // the file held JSON null
+		st = Store{}
 	}
 	return st, nil
 }

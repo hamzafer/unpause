@@ -1,8 +1,6 @@
 package tui
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -196,11 +194,11 @@ func TestCoworkSessionIsReadOnly(t *testing.T) {
 }
 
 // fakeRecaps stands in for the recap store: only the first Session has a Recap.
-func fakeRecaps(s *session.Session) (recap.Recap, bool) {
+func fakeRecaps(s *session.Session) (recap.Recap, bool, bool) {
 	if s.ID != "aaaaaaaa-1" {
-		return recap.Recap{}, false
+		return recap.Recap{}, false, false
 	}
-	return recap.Recap{Goal: "keep the hertz tracker honest", Done: "tracker fixed", Next: "ship it"}, true
+	return recap.Recap{Goal: "keep the hertz tracker honest", Done: "tracker fixed", Next: "ship it"}, false, true
 }
 
 func TestPreviewShowsRecapBoxBetweenMetadataAndMessages(t *testing.T) {
@@ -235,26 +233,42 @@ func TestNoRecapBoxWhenRecapsAreOff(t *testing.T) {
 	}
 }
 
-func TestRecapMadeFromSmallerTranscriptIsMarkedEarlier(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "s.jsonl")
-	if err := os.WriteFile(path, []byte("0123456789"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	ss := sessions()
-	ss[0].Path = path
-	size := int64(10)
-	recaps := func(s *session.Session) (recap.Recap, bool) {
-		r, ok := fakeRecaps(s)
-		r.Size = size
-		return r, ok
-	}
-	m := drive(newModel(Options{Sessions: ss, Opener: &fakeOpener{}, Claude: "claude", Recap: recaps}), tea.WindowSizeMsg{Width: 140, Height: 40})
+func TestOutdatedRecapIsMarkedEarlier(t *testing.T) {
+	m := drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude", Recap: fakeRecaps}), tea.WindowSizeMsg{Width: 140, Height: 40})
 	if v := m.View(); strings.Contains(v, "earlier") {
 		t.Errorf("a current Recap must not say earlier\n%s", v)
 	}
-	size = 4
+	outdated := func(s *session.Session) (recap.Recap, bool, bool) {
+		r, _, ok := fakeRecaps(s)
+		return r, true, ok
+	}
+	m = drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude", Recap: outdated}), tea.WindowSizeMsg{Width: 140, Height: 40})
 	if v := m.View(); !strings.Contains(v, "goal · earlier") || !strings.Contains(v, "keep the hertz tracker honest") {
 		t.Errorf("an outdated Recap must say · earlier after the label\n%s", v)
+	}
+}
+
+// Looking a Recap up checks the transcript on disk, so the picker does it once per
+// Session, not on every render.
+func TestRecapIsLookedUpOncePerSession(t *testing.T) {
+	calls := map[string]int{}
+	counted := func(s *session.Session) (recap.Recap, bool, bool) {
+		calls[s.ID]++
+		return fakeRecaps(s)
+	}
+	m := drive(newModel(Options{Sessions: sessions(), Opener: &fakeOpener{}, Claude: "claude", Recap: counted}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	for range 3 {
+		m.View()
+	}
+	m = drive(m, key("down"), key("up"))
+	m.View()
+	for id, n := range calls {
+		if n != 1 {
+			t.Errorf("Recap for %s looked up %d times, want once", id, n)
+		}
+	}
+	if calls["aaaaaaaa-1"] != 1 {
+		t.Errorf("the shown Session's Recap was never looked up: %v", calls)
 	}
 }
 

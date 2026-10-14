@@ -90,3 +90,21 @@ func TestLoadRejectsACorruptFile(t *testing.T) {
 		t.Error("a corrupt file should be an error")
 	}
 }
+
+// A recaps.json holding JSON null decodes to a nil map; Put must still store into it.
+func TestPutOverANullStore(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recaps.json")
+	if err := os.WriteFile(path, []byte("null\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if st, err := Load(path); err != nil || st == nil {
+		t.Fatalf("a null store must load as an empty one, got %v, %v", st, err)
+	}
+	r := Recap{Goal: "g", Done: "d", Next: "n", Size: 1}
+	if err := Put(path, "aaa", r); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := Load(path); got["aaa"] != r {
+		t.Errorf("store = %+v", got)
+	}
+}

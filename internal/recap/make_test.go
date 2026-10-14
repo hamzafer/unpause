@@ -72,14 +72,57 @@ func TestMakeRefusesSessionsWithoutRecaps(t *testing.T) {
 		"cowork":    func(s *session.Session) { s.Cowork = true },
 		"sidechain": func(s *session.Session) { s.Sidechain = true },
 		"empty":     func(s *session.Session) { s.Messages = 0 },
+		"live":      func(s *session.Session) { s.Live = &session.Live{PID: 1} },
 	} {
 		s := transcriptSession(t)
 		mut(s)
-		if _, err := Make(context.Background(), s, model); err == nil {
+		_, err := Make(context.Background(), s, model)
+		if err == nil {
 			t.Errorf("%s: want an error", name)
+		}
+		if name == "live" && !errors.Is(err, ErrLive) {
+			t.Errorf("live: want ErrLive, got %v", err)
 		}
 	}
 	if called {
 		t.Error("the model must not be called for a Session that can't have a Recap")
+	}
+}
+
+// The transcript can grow between the stat and the read (the SessionEnd hook runs while
+// Claude Code may still be writing). The stored Size must not be smaller than what the
+// model saw, so only the stat'ed bytes are read.
+func TestMakeReadsOnlyTheStatedSize(t *testing.T) {
+	s := transcriptSession(t)
+	before, err := os.Stat(s.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stat = func(path string) (os.FileInfo, error) {
+		fi, err := os.Stat(path)
+		f, ferr := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0)
+		if ferr != nil {
+			t.Fatal(ferr)
+		}
+		defer f.Close()
+		if _, ferr := f.WriteString(`{"type":"user","message":{"role":"user","content":"written after the stat"},"timestamp":"2026-10-15T12:00:00Z"}` + "\n"); ferr != nil {
+			t.Fatal(ferr)
+		}
+		return fi, err
+	}
+	t.Cleanup(func() { stat = os.Stat })
+	var input string
+	r, err := Make(context.Background(), s, func(_ context.Context, _ *session.Session, in string) (string, error) {
+		input = in
+		return goodReply, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Size != before.Size() {
+		t.Errorf("Size = %d, want the stat'ed %d", r.Size, before.Size())
+	}
+	if strings.Contains(input, "written after the stat") {
+		t.Errorf("the model saw bytes past the stored Size:\n%s", input)
 	}
 }

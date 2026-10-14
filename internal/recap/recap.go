@@ -30,7 +30,7 @@ func Input(s *session.Session, talk []session.Message) string {
 	if s.Branch != "" {
 		fmt.Fprintf(&b, "Branch: %s\n", s.Branch)
 	}
-	fmt.Fprintf(&b, "Title: %s\n\nConversation:\n", clip(s.Title(), 200))
+	fmt.Fprintf(&b, "Title: %s\n\nConversation:\n", session.Clip(s.Title(), 200))
 	header := b.String()
 
 	first := -1
@@ -126,11 +126,13 @@ func line(m session.Message, max int) string {
 	if m.Role == "user" {
 		who = "User"
 	}
-	return who + ": " + clip(strings.TrimSpace(m.Text), max) + "\n"
+	return who + ": " + clipKeepingNewlines(strings.TrimSpace(m.Text), max) + "\n"
 }
 
-// clip cuts s to at most max characters, ending in "…" when it was cut.
-func clip(s string, max int) string {
+// clipKeepingNewlines cuts s to at most max characters, ending in "…" when it was cut.
+// Unlike session.Clip, which collapses whitespace for one-line display, it leaves line
+// breaks alone, so a message keeps its shape in the model's input.
+func clipKeepingNewlines(s string, max int) string {
 	if utf8.RuneCountInString(s) <= max {
 		return s
 	}
