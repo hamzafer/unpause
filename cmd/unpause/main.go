@@ -46,10 +46,14 @@ func main() {
 			if err != nil {
 				return err
 			}
+			shown := filter(sessions, all)
 			res, err := tui.Run(tui.Options{
-				Sessions: filter(sessions, all),
-				Opener:   op,
-				Claude:   cfg.Claude,
+				Sessions: shown,
+				Search: func(ctx context.Context, query string, progress func(done, total int)) ([]claude.Result, error) {
+					return claude.Search(ctx, shown, query, progress)
+				},
+				Opener: op,
+				Claude: cfg.Claude,
 				Rename: func(s *session.Session, name string) error {
 					if s.Cowork {
 						return session.ErrCoworkRename
