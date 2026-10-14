@@ -127,6 +127,8 @@ Running sessions are never resumed twice; see the fork/open-anyway prompt above.
 
 Every `~/.claude` and `~/.claude-*` directory with a `projects/` folder is an account. `~/.claude` is labelled `personal`, `~/.claude-work` is `work`, and so on. `$CLAUDE_CONFIG_DIR` is honoured too. The `personal` account (`~/.claude`) always launches with `CLAUDE_CONFIG_DIR` unset, never set to its own path: Claude Code treats an explicitly-set value as a request to look for `.claude.json` inside that directory, finds nothing, and opens the login wizard instead of resuming. Other accounts launch with the variable set to their path.
 
+On macOS, Claude Desktop's Cowork sessions show up too, under one account called `cowork`, with the title Claude Desktop gives them. They are listed and readable, but unpause won't open, rename or autoname them: they ran inside Claude Desktop's VM, so open them in Claude Desktop. `no_auto_detect = true` hides them along with the rest of auto-detection.
+
 To relabel an account or add one at a path unpause wouldn't otherwise find:
 
 ```toml

@@ -192,6 +192,10 @@ func (m *model) setStatus(s string, ok bool) {
 }
 
 func (m *model) launch(s *session.Session, fork bool) (tea.Model, tea.Cmd) {
+	if s.Cowork {
+		m.setStatus("Cowork session: open it in Claude Desktop", false)
+		return *m, nil
+	}
 	l := opener.Launch{
 		Claude:    m.opts.Claude,
 		SessionID: s.ID,
@@ -272,7 +276,7 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if s == nil {
 			return m, nil
 		}
-		if s.Live != nil {
+		if s.Live != nil && !s.Cowork {
 			m.mode = modeLiveConfirm
 			return m, nil
 		}
@@ -283,6 +287,10 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case "ctrl+r":
+		if s := m.current(); s != nil && s.Cowork {
+			m.setStatus("Cowork session: rename it in Claude Desktop", false)
+			return m, nil
+		}
 		if s := m.current(); s != nil && m.opts.Rename != nil {
 			m.mode = modeRename
 			m.rename.SetValue(s.CustomTitle)

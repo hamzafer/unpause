@@ -48,6 +48,9 @@ func main() {
 				Opener:   op,
 				Claude:   cfg.Claude,
 				Rename: func(s *session.Session, name string) error {
+					if s.Cowork {
+						return session.ErrCoworkRename
+					}
 					if err := claude.Rename(s.Path, s.ID, name); err != nil {
 						return err
 					}
@@ -120,6 +123,9 @@ func main() {
 			if s == nil {
 				return fmt.Errorf("no session matches %q", args[0])
 			}
+			if s.Cowork {
+				return session.ErrCowork
+			}
 			openWith, _ := cmd.Flags().GetString("open")
 			if openWith == "" {
 				openWith = cfg.Opener
@@ -167,6 +173,9 @@ func main() {
 			s := find(sessions, args[0])
 			if s == nil {
 				return fmt.Errorf("no session matches %q", args[0])
+			}
+			if s.Cowork {
+				return session.ErrCoworkRename
 			}
 			name := strings.Join(args[1:], " ")
 			if err := claude.Rename(s.Path, s.ID, name); err != nil {
@@ -378,10 +387,19 @@ func main() {
 			}
 			fmt.Printf("opener:  %s (config: %s, TERM_PROGRAM=%s, TMUX=%v)\n", opener.Detect().Name(), cfg.Opener, os.Getenv("TERM_PROGRAM"), os.Getenv("TMUX") != "")
 			fmt.Println("roots:")
+			coworkRoots, coworkTranscripts := 0, 0
 			for _, r := range cfg.ResolveRoots() {
 				ts, _ := claude.ListTranscripts(r)
+				if r.Cowork {
+					coworkRoots++
+					coworkTranscripts += len(ts)
+					continue
+				}
 				live := claude.LiveSessions(r.Path)
 				fmt.Printf("  %-10s %s  (%d transcripts, %d live)\n", r.Label, r.Path, len(ts), len(live))
+			}
+			if coworkRoots > 0 {
+				fmt.Printf("  %-10s %d roots, %d transcripts\n", config.CoworkLabel, coworkRoots, coworkTranscripts)
 			}
 			return nil
 		},

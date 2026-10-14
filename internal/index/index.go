@@ -13,7 +13,7 @@ import (
 	"github.com/hamzafer/unpause/internal/session"
 )
 
-const cacheVersion = 4
+const cacheVersion = 5
 
 type entry struct {
 	ModTime int64            `json:"mtime"`
@@ -50,6 +50,7 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 			if e, ok := cache.Entries[t.Path]; ok && e.ModTime == t.ModTime && e.Size == t.Size && e.Session != nil {
 				e.Session.Root = r.Path
 				e.Session.Account = r.Label
+				e.Session.Cowork = r.Cowork
 				fresh.Entries[t.Path] = e
 				sessions = append(sessions, e.Session)
 				continue
@@ -80,6 +81,7 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 			}
 			s.Root = j.t.Root.Path
 			s.Account = j.t.Root.Label
+			s.Cowork = j.t.Root.Cowork
 			fresh.Entries[j.t.Path] = entry{ModTime: j.t.ModTime, Size: j.t.Size, Session: s}
 			sessions = append(sessions, s)
 		}(j)
@@ -90,8 +92,16 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 		_ = save(fresh)
 	}
 
-	// Attach live state and cwd existence; never cached.
+	// Attach live state, cwd existence and Claude Desktop titles; never cached.
 	for _, r := range roots {
+		if r.Cowork {
+			title := claude.CoworkTitle(r.Path)
+			for _, s := range sessions {
+				if s.Root == r.Path {
+					s.DesktopTitle = title
+				}
+			}
+		}
 		live := claude.LiveSessions(r.Path)
 		for _, s := range sessions {
 			if s.Root != r.Path {
