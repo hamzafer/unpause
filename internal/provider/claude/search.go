@@ -166,8 +166,11 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 			return nil
 		}
 		for _, b := range blocks {
-			if b.Type == "text" {
-				m.match(b.Text, res)
+			if b.Type != "text" {
+				continue
+			}
+			if t, ok := talk(b.Text); ok {
+				m.match(t, res)
 			}
 		}
 		return nil
@@ -266,6 +269,48 @@ func snippet(src string, start, end int) (string, int) {
 		s += "…"
 	}
 	return s, b
+}
+
+// notTalk are the tags Claude Code wraps around text it stores as a user message
+// although nobody typed it: background task reports, command and shell output,
+// reminders and fork instructions.
+var notTalk = []string{
+	"<task-notification>", "<local-command-", "<bash-stdout>", "<bash-stderr>",
+	"<system-reminder>", "<fork-boilerplate>",
+}
+
+// talk returns the part of a text block that was actually said. Text that isn't talk
+// gives ok false. A slash command keeps its name and arguments without the wrapper
+// tags (`/goal find padel`), a shell command its input (`! ls`).
+func talk(text string) (string, bool) {
+	t := strings.TrimSpace(text)
+	for _, tag := range notTalk {
+		if strings.HasPrefix(t, tag) {
+			return "", false
+		}
+	}
+	if name, ok := between(t, "<command-name>", "</command-name>"); ok {
+		args, _ := between(t, "<command-args>", "</command-args>")
+		return strings.TrimSpace(name + " " + args), true
+	}
+	if in, ok := between(t, "<bash-input>", "</bash-input>"); ok && strings.HasPrefix(t, "<bash-input>") {
+		return "! " + strings.TrimSpace(in), true
+	}
+	return text, true
+}
+
+// between returns the text between the first open tag and the close tag after it.
+func between(s, open, close string) (string, bool) {
+	i := strings.Index(s, open)
+	if i < 0 {
+		return "", false
+	}
+	rest := s[i+len(open):]
+	j := strings.Index(rest, close)
+	if j < 0 {
+		return "", false
+	}
+	return rest[:j], true
 }
 
 // isMeta reports whether a record is marked isMeta at the top level: text Claude Code
