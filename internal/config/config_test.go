@@ -71,3 +71,23 @@ func TestEnvForDefaultRootIsEmpty(t *testing.T) {
 		t.Error("non-default root must be passed through")
 	}
 }
+
+func TestMCPExcludeExpandsTilde(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	xdg := filepath.Join(home, "xdg")
+	t.Setenv("XDG_CONFIG_HOME", xdg)
+	os.MkdirAll(filepath.Join(xdg, "unpause"), 0o755)
+	os.WriteFile(filepath.Join(xdg, "unpause", "config.toml"), []byte(`
+[mcp]
+exclude = ["~/developer/work/*", "*/secret-repo"]
+`), 0o644)
+	c, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{filepath.Join(home, "developer/work/*"), "*/secret-repo"}
+	if len(c.MCP.Exclude) != 2 || c.MCP.Exclude[0] != want[0] || c.MCP.Exclude[1] != want[1] {
+		t.Errorf("exclude = %q, want %q", c.MCP.Exclude, want)
+	}
+}

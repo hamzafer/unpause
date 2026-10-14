@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `unpause mcp` is a read-only MCP server on stdio with three tools, `list_sessions`, `search_sessions` and `get_session`, so ChatGPT can read your sessions through OpenAI's Secure MCP Tunnel. `[mcp] exclude` globs in the config hide folders from it. Setup is in the README under "Use from ChatGPT".
+
 ## v0.5.0, 2026-10-14
 
 - Retired worktrees: a session whose Claude Code worktree (`<repo>/.claude/worktrees/<name>`) was removed while its repo still exists gets a dim `⎇` instead of the orphan `!`, and opens in the repo (or the same subfolder of it, when that exists) instead of `~`. `unpause list` shows ` (worktree retired)` for these; the JSON keeps `cwd_missing` and adds `worktree_root`.
