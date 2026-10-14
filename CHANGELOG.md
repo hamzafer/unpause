@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Recaps: the model no longer answers the session's last question instead of recapping it, and a line that runs long is clipped instead of the whole Recap being thrown away. `unpause recap` errors no longer print the usage text.
+
 ## v0.8.0, 2026-10-15
 
 - Recaps: with `[recap] enabled = true` in the config, `unpause recap --session <id>` asks Claude Haiku for three short lines about a session (goal, done, next), and the picker shows them in a box between the session's details and its last messages. Only prompts and replies are sent, about 8,000 characters at most. Recaps are kept in `~/.cache/unpause/recaps.json`, never in the transcript. Off by default.

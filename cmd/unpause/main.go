@@ -412,8 +412,9 @@ func main() {
 	_ = autonameCmd.Flags().MarkHidden("delay")
 
 	recapCmd := &cobra.Command{
-		Use:   "recap",
-		Short: "Write a Recap (goal, done, next) for a session with Claude Haiku",
+		SilenceUsage: true, // a failed model call is not a usage mistake
+		Use:          "recap",
+		Short:        "Write a Recap (goal, done, next) for a session with Claude Haiku",
 		Long: "Asks `claude -p --model haiku`, under the session's own account, for three short lines about a session: " +
 			"goal, done and next. The picker shows them in a box in the preview. Only the session's talk is sent " +
 			"(prompts and replies, not tool output), about 8,000 characters at most. Recaps are kept in recaps.json " +

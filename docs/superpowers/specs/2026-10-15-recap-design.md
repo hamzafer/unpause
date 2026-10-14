@@ -47,3 +47,8 @@ Called Recap, not summary: CONTEXT.md already uses "summary" for Claude Code's a
 ## Docs
 
 ADR 0012 (Recaps live in unpause's cache, not the Transcript). CONTEXT.md term **Recap**. README section with the config flag, hook note and cost. CHANGELOG `## Unreleased`.
+
+## Amendments after the real-data check (v0.8.1)
+
+- The talk goes inside `<transcript>` tags with the task repeated after it, and the system prompt says the transcript is material to recap, not a conversation to join. Without this, Haiku answered the session's last question instead of recapping it.
+- A line longer than 120 characters is clipped with `…` instead of rejecting the reply; Haiku often runs long on `done`.
