@@ -20,6 +20,7 @@ import (
 	"github.com/hamzafer/unpause/internal/mcpserver"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/provider/claude"
+	"github.com/hamzafer/unpause/internal/recap"
 	"github.com/hamzafer/unpause/internal/session"
 	"github.com/hamzafer/unpause/internal/tui"
 )
@@ -47,7 +48,17 @@ func main() {
 				return err
 			}
 			shown := filter(sessions, all)
+			var recapOf func(*session.Session) (recap.Recap, bool, bool)
+			if cfg.Recap.Enabled {
+				// A store that can't be read just means no boxes; the picker still opens.
+				recaps, _ := recap.Load(recap.Path(config.CachePath()))
+				recapOf = func(s *session.Session) (recap.Recap, bool, bool) {
+					r, ok := recaps[s.ID]
+					return r, ok && recap.Outdated(r, s), ok
+				}
+			}
 			res, err := tui.Run(tui.Options{
+				Recap:    recapOf,
 				Sessions: shown,
 				Search:   claude.Search,
 				Opener:   op,
@@ -400,6 +411,68 @@ func main() {
 	autonameCmd.Flags().Duration("delay", 0, "wait this long before starting")
 	_ = autonameCmd.Flags().MarkHidden("delay")
 
+	recapCmd := &cobra.Command{
+		Use:   "recap",
+		Short: "Write a Recap (goal, done, next) for a session with Claude Haiku",
+		Long: "Asks `claude -p --model haiku`, under the session's own account, for three short lines about a session: " +
+			"goal, done and next. The picker shows them in a box in the preview. Only the session's talk is sent " +
+			"(prompts and replies, not tool output), about 8,000 characters at most. Recaps are kept in recaps.json " +
+			"next to the index cache, never in the transcript. Off unless [recap] enabled = true is in the config.\n\n" +
+			"Without --session it catches up: sessions with no Recap or an outdated one, newest first, at most --limit " +
+			"of them. Running, Cowork, empty and subagent sessions are skipped.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load()
+			if err != nil {
+				return err
+			}
+			if !cfg.Recap.Enabled {
+				return fmt.Errorf("recaps are off. Each one sends part of a session's talk to Claude Haiku; to turn them on, add\n\n"+
+					"  [recap]\n  enabled = true\n\nto %s", config.Path())
+			}
+			only, _ := cmd.Flags().GetString("session")
+			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			limit, _ := cmd.Flags().GetInt("limit")
+			if only != "" && (dryRun || cmd.Flags().Changed("limit")) {
+				return fmt.Errorf("--session can't be combined with --dry-run or --limit")
+			}
+			delay, _ := cmd.Flags().GetDuration("delay")
+			time.Sleep(delay)
+			sessions, err := loadSessions(cfg, true)
+			if err != nil {
+				return err
+			}
+			ask := autoname.Ask(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) }, recap.SystemPrompt)
+			if only == "" {
+				return recapBackfill(cmd.Context(), sessions, ask, limit, dryRun)
+			}
+			s := find(sessions, only)
+			if s == nil {
+				return fmt.Errorf("no session matches %q", only)
+			}
+			r, err := recap.Make(cmd.Context(), s, ask)
+			if errors.Is(err, recap.ErrLive) && delay > 0 {
+				// Only the SessionEnd hook passes --delay. A Session still running then (it
+				// was cleared or resumed elsewhere) gets its Recap at its next end.
+				fmt.Printf("%s skipped: %v\n", s.ShortID(), err)
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("%s: %w", s.ShortID(), err)
+			}
+			if err := recap.Put(recap.Path(config.CachePath()), s.ID, r); err != nil {
+				return err
+			}
+			fmt.Printf("%s %-9s %s\n  goal  %s\n  done  %s\n  next  %s\n", s.ShortID(), s.Account, session.Clip(s.Title(), 60), r.Goal, r.Done, r.Next)
+			return nil
+		},
+	}
+	recapCmd.Flags().String("session", "", "write the Recap for this session (id prefix or name)")
+	recapCmd.Flags().Int("limit", 20, "without --session: recap at most this many sessions, newest first (0 = all)")
+	recapCmd.Flags().Bool("dry-run", false, "without --session: list the sessions that would get a Recap, and stop")
+	recapCmd.Flags().Duration("delay", 0, "wait this long before starting")
+	_ = recapCmd.Flags().MarkHidden("delay")
+
 	hook := &cobra.Command{
 		Use:   "hook",
 		Short: "Entry points for Claude Code hooks",
@@ -408,7 +481,8 @@ func main() {
 		Use:   "session-end",
 		Short: "SessionEnd hook: name the session that just ended, in the background",
 		Long: "Reads Claude Code's SessionEnd hook input on stdin and starts a detached " +
-			"`unpause autoname --session <id>`, then returns at once. Output goes to autoname.log next to the index cache.",
+			"`unpause autoname --session <id>` (and `unpause recap --session <id>` when Recaps are on), then returns at once. " +
+			"Output goes to autoname.log next to the index cache.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if os.Getenv(autoname.GuardEnv) != "" {
@@ -422,8 +496,14 @@ func main() {
 			if err != nil {
 				return err
 			}
-			// The short delay lets Claude Code finish its last transcript writes first.
-			return autoname.Spawn(self, []string{"autoname", "--session", in.SessionID, "--delay", "3s"}, autoname.LogPath(config.CachePath()))
+			// A config that can't be read still names the Session; only the Recap waits for a fix.
+			cfg, err := config.Load()
+			for _, job := range sessionEndJobs(in.SessionID, err == nil && cfg.Recap.Enabled) {
+				if err := autoname.Spawn(self, job, autoname.LogPath(config.CachePath())); err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	}
 	hook.AddCommand(sessionEnd)
@@ -459,6 +539,7 @@ func main() {
 			if coworkRoots > 0 {
 				fmt.Printf("  %-10s %d roots, %d transcripts\n", config.CoworkLabel, coworkRoots, coworkTranscripts)
 			}
+			fmt.Printf("recaps:  %s\n", recapStatus(cfg))
 			return nil
 		},
 	}
@@ -490,7 +571,7 @@ func main() {
 		},
 	}
 
-	root.AddCommand(list, search, open, rename, autonameCmd, hook, doctor, mcpCmd)
+	root.AddCommand(list, search, open, rename, autonameCmd, recapCmd, hook, doctor, mcpCmd)
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "unpause:", err)
 		os.Exit(1)
@@ -502,9 +583,15 @@ func loadAll(quiet bool) (*config.Config, []*session.Session, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	sessions, err := loadSessions(cfg, quiet)
+	return cfg, sessions, err
+}
+
+// loadSessions indexes every Session under cfg's roots, for a caller that already has cfg.
+func loadSessions(cfg *config.Config, quiet bool) ([]*session.Session, error) {
 	roots := cfg.ResolveRoots()
 	if len(roots) == 0 {
-		return nil, nil, fmt.Errorf("no Claude Code config dirs found (looked for ~/.claude and ~/.claude-*); add roots in %s", config.Path())
+		return nil, fmt.Errorf("no Claude Code config dirs found (looked for ~/.claude and ~/.claude-*); add roots in %s", config.Path())
 	}
 	var progress index.Progress
 	if !quiet {
@@ -517,8 +604,7 @@ func loadAll(quiet bool) (*config.Config, []*session.Session, error) {
 			}
 		}
 	}
-	sessions, err := index.Build(roots, progress)
-	return cfg, sessions, err
+	return index.Build(roots, progress)
 }
 
 func filter(in []*session.Session, all bool) []*session.Session {

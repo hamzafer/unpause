@@ -33,6 +33,15 @@ type Config struct {
 	NoAutoDetect bool `toml:"no_auto_detect"`
 	// MCP configures `unpause mcp`.
 	MCP MCP `toml:"mcp"`
+	// Recap configures Recaps.
+	Recap Recap `toml:"recap"`
+}
+
+// Recap is the [recap] table.
+type Recap struct {
+	// Enabled turns Recaps on. Off by default, because each Recap sends part of a
+	// Session's talk to Claude Haiku (ADR 0012).
+	Enabled bool `toml:"enabled"`
 }
 
 // MCP is the [mcp] table.

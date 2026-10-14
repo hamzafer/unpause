@@ -181,6 +181,20 @@ func TestHaikuCallsClaudeAndSkipsLoggedOutAccounts(t *testing.T) {
 	}
 }
 
+func TestAskSendsItsOwnSystemPromptAndInput(t *testing.T) {
+	bin, calls := fakeClaude(t)
+	ask := Ask(bin, func(s *session.Session) string { return s.Root }, "RECAP SYSTEM PROMPT")
+	if _, err := ask(context.Background(), &session.Session{Root: "/work"}, "RECAP INPUT"); err != nil {
+		t.Fatal(err)
+	}
+	log, _ := os.ReadFile(calls)
+	for _, want := range []string{"--model haiku", "--strict-mcp-config", "RECAP SYSTEM PROMPT", "RECAP INPUT", "guard=1", "dir=/work"} {
+		if !strings.Contains(string(log), want) {
+			t.Errorf("call log missing %q:\n%s", want, log)
+		}
+	}
+}
+
 func TestCleanKeepsRunesWhole(t *testing.T) {
 	// One ASCII byte first, so byte 60 lands in the middle of a 3-byte rune.
 	got := Clean("a" + strings.Repeat("字", 40))

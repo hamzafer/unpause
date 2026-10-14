@@ -12,8 +12,10 @@ Fixture-based tests live next to the code they test, e.g. `internal/provider/cla
 ## Where things live
 
 - `internal/session`: the provider-agnostic `Session` model and small formatting helpers (`Age`, `Clip`, `Tokens`). Every provider parses into this struct; the TUI and `list`/`open`/`rename` only ever see it.
-- `internal/provider/claude`: the Claude Code parser (`scan.go`), the rename writer (`rename.go`), live-session detection (`live.go`), transcript discovery (`provider.go`), the full reader behind `get_session` (`read.go`), and Deep search (`search.go`: the matcher and the parallel `Search` the picker, `unpause search` and the MCP server share).
+- `internal/provider/claude`: the Claude Code parser (`scan.go`), the rename writer (`rename.go`), live-session detection (`live.go`), transcript discovery (`provider.go`), the full reader behind `get_session` (`read.go`), and Deep search (`search.go`: the matcher and the parallel `Search` the picker, `unpause search` and the MCP server share), and `talk.go` (a transcript's talk by the same rules, for Recaps).
 - `internal/index`: builds the full session list across accounts, with the mtime-and-size cache.
+- `internal/autoname`: Haiku names for untitled sessions, and `Ask`, the `claude -p --model haiku` call other features reuse (ADR 0008).
+- `internal/recap`: Recaps: the bounded talk input, reply parsing and the `recaps.json` store (ADR 0012).
 - `internal/config`: reads `~/.config/unpause/config.toml` and auto-detects `~/.claude*` accounts.
 - `internal/opener`: where a resumed session appears (new tab, tmux window, in place).
 - `internal/tui`: the interactive picker (Bubble Tea).

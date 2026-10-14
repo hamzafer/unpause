@@ -52,6 +52,9 @@ unpause rename 9e63 "hertz tracker"
 unpause autoname --dry-run   # propose Haiku names for untitled sessions, write nothing
 unpause autoname --apply     # write exactly the names the dry run showed
 unpause autoname             # ask Haiku and write in one go
+unpause recap --session 9e63 # write a Recap (goal, done, next) for one session, see "Recaps"
+unpause recap --dry-run      # list the sessions missing a Recap or with an outdated one
+unpause recap                # write Recaps for the newest 20 of those (--limit 0 for all)
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
 unpause --version            # print the binary version
@@ -68,6 +71,7 @@ Inside the picker:
 | `^f` | open as a fork (new session id, original untouched) |
 | `^r` | rename (writes the same record Claude Code's `/rename` does) |
 | `^s` | Deep search: search inside what was said, see below (`^s` again to go back) |
+| `^t` | hide or show the Recap box for this run (only when Recaps are on) |
 | `↑`/`↓`, `^p`/`^n`, `^k`/`^j` | move the cursor one row |
 | `pgup`/`pgdown` | move a page at a time |
 | `home`/`end` | jump to the first/last row |
@@ -113,6 +117,34 @@ To name sessions as they end, add a `SessionEnd` hook to each account's `setting
 ```
 
 It fires when you exit (Ctrl+C twice, Ctrl+D, `/exit`) or `/clear`. Claude Code only gives end-of-session hooks about 1.5 seconds, so the hook starts a detached `unpause autoname --session <id>` and returns at once. The name lands a few seconds later, and the job logs what it did to `~/.cache/unpause/autoname.log`. If a session ends without the hook firing, say the terminal was killed, the next `unpause autoname` catches it.
+
+## Recaps
+
+The preview's last few messages show where a session stopped, not what it was about. A Recap is three short lines from Claude Haiku, shown in a box above those messages:
+
+```
+goal  cheapest padel for 4 in Oslo, 21:00-24:00
+done  top 3 found; showers confirmed at Bærum and Just Padel
+next  decide between a membership and paying per game
+```
+
+Recaps are off unless you turn them on, because each one sends part of a session's talk to Haiku. In `~/.config/unpause/config.toml`:
+
+```toml
+[recap]
+enabled = true
+```
+
+- `unpause recap --session <id>` writes the Recap for one session and prints it.
+- `unpause recap` catches up: sessions with no Recap, or one made before the transcript grew, newest first, 20 at a time (`--limit N`, 0 = all). `--dry-run` lists them and asks Haiku nothing. Running sessions are skipped until they end. If an account's login fails, its other sessions are skipped for that run.
+- `unpause doctor` shows whether Recaps are on and how many sessions have one.
+- With the SessionEnd hook installed (see autoname), every session that ends also gets a Recap in the background. Its output goes to `autoname.log`.
+- A Recap made before the session went on is shown dim, with `· earlier` after `goal`, until it's written again.
+- Haiku sees the repo, branch and title, then your prompts and Claude's replies (no tool calls, tool output or thinking), about 8,000 characters at most: the first prompt and as much of the end as fits.
+- The call is the same as autoname's: `claude -p --model haiku` under the session's own account, no transcript kept, no hooks, tools or MCP servers. Each Recap is one small Haiku call against that account's plan.
+- A reply that isn't three lines labelled `goal`, `done` and `next` is thrown away; nothing is stored.
+- Recaps live in `~/.cache/unpause/recaps.json`, never in the transcript. Deleting the file loses nothing but Recaps.
+- Cowork sessions, subagent transcripts and empty sessions get no Recap.
 
 ## Where sessions open
 

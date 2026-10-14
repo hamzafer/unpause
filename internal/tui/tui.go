@@ -15,6 +15,7 @@ import (
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/provider/claude"
+	"github.com/hamzafer/unpause/internal/recap"
 	"github.com/hamzafer/unpause/internal/session"
 )
 
@@ -27,6 +28,16 @@ type Options struct {
 	// Search runs a Deep search over the given Sessions (copies of the picker's, so a
 	// rename never races it). Nil disables ^s.
 	Search func(ctx context.Context, sessions []*session.Session, query string, progress func(done, total int)) ([]claude.Result, error)
+	// Recap returns a Session's Recap, whether it is outdated, and whether there is one.
+	// It may touch the disk, so the picker calls it once per Session. Nil when Recaps are
+	// off: no box.
+	Recap func(s *session.Session) (r recap.Recap, outdated, ok bool)
+}
+
+// shownRecap is a looked-up Recap, cached per Session id for the run.
+type shownRecap struct {
+	recap.Recap
+	outdated, ok bool
 }
 
 // Result is what the picker hands back when it exits.
@@ -62,6 +73,7 @@ var (
 	stUser     = lipgloss.NewStyle().Bold(true).Foreground(colAccent)
 	stAsst     = lipgloss.NewStyle().Bold(true).Foreground(colLive)
 	stPane     = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(colDim).BorderLeft(true).PaddingLeft(1)
+	stRecap    = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(colDim).Padding(0, 1)
 )
 
 var accountPalette = []lipgloss.AdaptiveColor{
@@ -86,6 +98,10 @@ type model struct {
 	statusOK bool
 	result   Result
 	accounts []string
+	// recapHidden is set by ^t: the Recap box is hidden for the rest of this run.
+	recapHidden bool
+	// recaps caches opts.Recap by Session id. A map, so View (value receiver) can fill it.
+	recaps map[string]shownRecap
 
 	// Deep search state (deep.go).
 	deep      bool
@@ -134,7 +150,7 @@ func newModel(o Options) model {
 		stAccount[a] = lipgloss.NewStyle().Foreground(accountPalette[i%len(accountPalette)])
 	}
 
-	m := model{opts: o, all: o.Sessions, query: q, rename: r, accounts: accounts}
+	m := model{opts: o, all: o.Sessions, query: q, rename: r, accounts: accounts, recaps: map[string]shownRecap{}}
 	m.refilter()
 	return m
 }
@@ -335,6 +351,9 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		return m.launch(s, false)
+	case "ctrl+t":
+		m.recapHidden = !m.recapHidden
+		return m, nil
 	case "ctrl+f":
 		if s := m.current(); s != nil {
 			return m.launch(s, true)
@@ -579,6 +598,11 @@ func (m model) renderPreview(w int) string {
 
 	b.WriteString("\n")
 	avail := m.listHeight() - len(meta) - 3
+	if box := m.renderRecap(s, w); box != "" {
+		b.WriteString(box)
+		b.WriteString("\n\n")
+		avail -= lipgloss.Height(box) + 1
+	}
 	if m.deep {
 		b.WriteString(m.renderSnippets(m.results[m.cursor].Snippets, w, avail))
 		return b.String()
@@ -610,6 +634,33 @@ func (m model) renderPreview(w int) string {
 	return b.String()
 }
 
+// renderRecap is the bordered goal / done / next box for s, w wide, or "" when Recaps
+// are off or s has none.
+func (m model) renderRecap(s *session.Session, w int) string {
+	if m.opts.Recap == nil || m.recapHidden {
+		return ""
+	}
+	r, cached := m.recaps[s.ID]
+	if !cached {
+		r.Recap, r.outdated, r.ok = m.opts.Recap(s)
+		m.recaps[s.ID] = r
+	}
+	if !r.ok {
+		return ""
+	}
+	// An outdated Recap was made before the Session went on: shown dim, marked earlier.
+	text, mark := func(v string) string { return v }, ""
+	if r.outdated {
+		text, mark = func(v string) string { return stDim.Render(v) }, " · earlier"
+	}
+	lines := []string{
+		stDim.Render("goal"+mark+"  ") + text(r.Goal),
+		stDim.Render("done  ") + text(r.Done),
+		stDim.Render("next  ") + text(r.Next),
+	}
+	return stRecap.Width(max(10, w-2)).Render(strings.Join(lines, "\n"))
+}
+
 func (m model) renderFooter() string {
 	if m.status != "" {
 		st := stLive
@@ -629,6 +680,9 @@ func (m model) renderFooter() string {
 		stKey.Render("^f") + stDim.Render(" fork"),
 		stKey.Render("^r") + stDim.Render(" rename"),
 		stKey.Render("↑↓") + stDim.Render(" move"),
+	}
+	if m.opts.Recap != nil {
+		keys = append(keys, stKey.Render("^t")+stDim.Render(" recap"))
 	}
 	switch {
 	case m.deep:
