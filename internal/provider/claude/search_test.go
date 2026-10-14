@@ -283,6 +283,7 @@ func TestTalkDropsWrappersAndInjectedText(t *testing.T) {
 		"<bash-stdout>padel</bash-stdout><bash-stderr></bash-stderr>",
 		"<system-reminder>You are in a worktree</system-reminder>",
 		"<fork-boilerplate>You are a worker fork</fork-boilerplate>",
+		"<command-message>reviews the current diff</command-message>",
 	} {
 		if _, ok := talk(in); ok {
 			t.Errorf("%q should not be talk", in)
@@ -304,5 +305,17 @@ func TestSearchFileCountsASlashCommandOnce(t *testing.T) {
 	r := search(t, "padel", path)
 	if r.Hits != 1 || len(r.Snippets) != 1 || r.Snippets[0] != "/goal find padel courts" {
 		t.Errorf("%+v", r)
+	}
+	// The phrase only exists once the tags are gone; the raw-line pre-filter must not skip it.
+	if r := search(t, `"/goal find padel"`, path); r.Hits != 1 {
+		t.Errorf("phrase across the command name: %+v", r)
+	}
+	// Claude's replies are never unwrapped or dropped.
+	reply := `{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"<bash-stdout> is where padel output goes"}]},"timestamp":"2026-09-03T10:00:01.000Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(body+reply), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if r := search(t, "padel", path); r.Hits != 2 {
+		t.Errorf("assistant text: %+v", r)
 	}
 }

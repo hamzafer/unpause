@@ -158,10 +158,13 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 		// The pre-filter only knows each term's canonical JSON escaping. A line with
 		// \u or \/ escapes may spell a term differently, so it is always decoded.
 		lower = lowerInto(lower[:0], raw, m.ascii)
-		if !m.anyRaw(lower) && !bytes.Contains(raw, []byte(`\u`)) && !bytes.Contains(raw, []byte(`\/`)) {
+		// A slash command is searched as "/name args", which the raw line spells with
+		// tags in between, so it is always decoded too.
+		if !m.anyRaw(lower) && !bytes.Contains(raw, []byte(`\u`)) && !bytes.Contains(raw, []byte(`\/`)) &&
+			!bytes.Contains(raw, []byte(`<command-name>`)) {
 			return nil
 		}
-		_, _, blocks, ok := decodeMessage(raw)
+		role, _, blocks, ok := decodeMessage(raw)
 		if !ok {
 			return nil
 		}
@@ -169,7 +172,9 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 			if b.Type != "text" {
 				continue
 			}
-			if t, ok := talk(b.Text); ok {
+			if role != "user" {
+				m.match(b.Text, res)
+			} else if t, ok := talk(b.Text); ok {
 				m.match(t, res)
 			}
 		}
@@ -279,9 +284,10 @@ var notTalk = []string{
 	"<system-reminder>", "<fork-boilerplate>",
 }
 
-// talk returns the part of a text block that was actually said. Text that isn't talk
-// gives ok false. A slash command keeps its name and arguments without the wrapper
-// tags (`/goal find padel`), a shell command its input (`! ls`).
+// talk returns the part of a user text block that was actually said. Text that isn't
+// talk gives ok false. A slash command keeps its name and arguments without the wrapper
+// tags (`/goal find padel`), a shell command its input (`! ls`). Only tags that start
+// the text count, so prose that mentions them stays as it is.
 func talk(text string) (string, bool) {
 	t := strings.TrimSpace(text)
 	for _, tag := range notTalk {
@@ -289,7 +295,11 @@ func talk(text string) (string, bool) {
 			return "", false
 		}
 	}
-	if name, ok := between(t, "<command-name>", "</command-name>"); ok {
+	if strings.HasPrefix(t, "<command-") {
+		name, ok := between(t, "<command-name>", "</command-name>")
+		if !ok {
+			return "", false // a command description on its own, not typed
+		}
 		args, _ := between(t, "<command-args>", "</command-args>")
 		return strings.TrimSpace(name + " " + args), true
 	}
