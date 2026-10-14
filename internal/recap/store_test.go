@@ -1,11 +1,43 @@
 package recap
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
+
+// Two writers (hook children, or a hook child and a backfill) must not lose each other's
+// Recap: Put's read-modify-write runs under a lock.
+func TestConcurrentPutsKeepEveryRecap(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "unpause", "recaps.json")
+	const n = 40
+	var wg sync.WaitGroup
+	errs := make(chan error, n)
+	for i := range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs <- Put(path, fmt.Sprintf("s%02d", i), Recap{Goal: "g", Done: "d", Next: "n", Size: int64(i)})
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	st, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(st) != n {
+		t.Errorf("store has %d Recaps after %d concurrent Puts, want all of them", len(st), n)
+	}
+}
 
 func TestPathSitsNextToTheIndex(t *testing.T) {
 	if got := Path("/c/unpause/index.json"); got != "/c/unpause/recaps.json" {
@@ -42,8 +74,9 @@ func TestStoreRoundTrip(t *testing.T) {
 	if got, _ := Load(path); got["aaa"].Goal != "g1 again" || got["bbb"] != b {
 		t.Errorf("a new Recap replaces only its own Session's: %+v", got)
 	}
+	// Only the store and its lock file, which stays: removing it would race a waiting writer.
 	entries, _ := os.ReadDir(filepath.Dir(path))
-	if len(entries) != 1 {
+	if len(entries) != 2 || entries[0].Name() != "recaps.json" || entries[1].Name() != "recaps.json.lock" {
 		t.Errorf("no temp files should be left behind: %v", entries)
 	}
 }
