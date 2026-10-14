@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `unpause search <words>` finds sessions by what was said in them: your prompts, Claude's replies, and the session's name or generated title. Every word has to appear somewhere in the session, `"double quotes"` keep a phrase together, and results are ranked by match count with the first snippet under each line. `--json`, `--all` and `--limit N` (default 20, 0 for all) work as you'd expect.
+- `search_sessions` in `unpause mcp` uses the same search. It no longer looks at tool calls, tool output or thinking, needs every word instead of one exact string, and ranks by match count instead of newest first, so it finds fewer, better sessions.
+
 ## v0.6.0, 2026-10-14
 
 - Claude Desktop's Cowork sessions are listed under a read-only `cowork` account, titled the way Claude Desktop shows them. The picker, `unpause open` and `unpause rename` refuse them with a pointer to Claude Desktop, `autoname` skips them, and `unpause doctor` sums them up in one line.

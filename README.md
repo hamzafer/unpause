@@ -43,6 +43,8 @@ unpause --open tmux          # override the opener for this run
 unpause list                 # plain text, newest first
 unpause list --json          # for scripts
 unpause list --all           # include empty sessions and subagent transcripts
+unpause search tunnel key    # sessions where both words were said, most matches first
+unpause search '"a phrase"'  # quotes keep a phrase together; --json, --limit N (0 = all)
 unpause open tracker         # resume by name or id prefix, no picker
 unpause open 9e63 --print    # just print the shell command, don't run it
 unpause open 9e63 --fork     # resume as a fork (new session id, original untouched)
