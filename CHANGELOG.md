@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Claude Desktop's Cowork sessions are listed under a read-only `cowork` account, titled the way Claude Desktop shows them. The picker, `unpause open` and `unpause rename` refuse them with a pointer to Claude Desktop, `autoname` skips them, and `unpause doctor` sums them up in one line.
+- `unpause mcp` is a read-only MCP server on stdio with three tools, `list_sessions`, `search_sessions` and `get_session`, so ChatGPT can read your sessions through OpenAI's Secure MCP Tunnel. `[mcp] exclude` globs in the config hide folders from it: a session is hidden if any folder it worked in matches, Cowork sessions included through the folders you gave them in Claude Desktop. A broken pattern stops the server from starting. Search also matches tool names. Setup is in the README under "Use from ChatGPT".
+
 ## v0.5.0, 2026-10-14
 
 - Retired worktrees: a session whose Claude Code worktree (`<repo>/.claude/worktrees/<name>`) was removed while its repo still exists gets a dim `⎇` instead of the orphan `!`, and opens in the repo (or the same subfolder of it, when that exists) instead of `~`. `unpause list` shows ` (worktree retired)` for these; the JSON keeps `cwd_missing` and adds `worktree_root`.

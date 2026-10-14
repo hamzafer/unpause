@@ -41,7 +41,7 @@ const systemPrompt = "You name coding sessions for a session picker. Reply with 
 
 // Needs reports whether s should get a generated name.
 func Needs(s *session.Session) bool {
-	return !s.Named() && s.AITitle == "" && !s.Empty() && !s.Sidechain
+	return !s.Named() && s.AITitle == "" && !s.Empty() && !s.Sidechain && !s.Cowork
 }
 
 // Prompt is what the model sees: the repo, the first prompt and the last few messages.

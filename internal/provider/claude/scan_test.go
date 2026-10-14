@@ -1,6 +1,7 @@
 package claude
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -120,5 +121,31 @@ func TestListTranscriptsSkipsSubagentDirs(t *testing.T) {
 	}
 	if len(ts) != 1 || !strings.HasSuffix(ts[0].Path, "abc.jsonl") {
 		t.Errorf("got %+v", ts)
+	}
+}
+
+func TestScanKeepsEveryCWD(t *testing.T) {
+	rec := func(cwd string) string {
+		return `{"type":"user","message":{"role":"user","content":"hi"},"timestamp":"2026-09-01T10:00:00Z","cwd":"` + cwd + `"}` + "\n"
+	}
+	s, err := Scan(strings.NewReader(rec("/a") + rec("/b") + rec("/a") + rec("") + rec("/c")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.CWD != "/c" {
+		t.Errorf("cwd = %q, want the last one", s.CWD)
+	}
+	if got := strings.Join(s.Dirs, ","); got != "/a,/b,/c" {
+		t.Errorf("dirs = %q, want every distinct cwd in first-seen order", got)
+	}
+
+	// No cap: a dropped folder would let an Excluded Session through.
+	var b strings.Builder
+	for i := 0; i < 100; i++ {
+		b.WriteString(rec(fmt.Sprintf("/d/%d", i)))
+	}
+	s, _ = Scan(strings.NewReader(b.String()))
+	if len(s.Dirs) != 100 {
+		t.Errorf("dirs kept = %d, want all 100", len(s.Dirs))
 	}
 }

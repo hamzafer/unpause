@@ -51,6 +51,7 @@ unpause autoname --dry-run   # propose Haiku names for untitled sessions, write 
 unpause autoname --apply     # write exactly the names the dry run showed
 unpause autoname             # ask Haiku and write in one go
 unpause doctor                 # what it detected: accounts, opener, claude binary
+unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
 unpause --version            # print the binary version
 ```
 
@@ -127,6 +128,8 @@ Running sessions are never resumed twice; see the fork/open-anyway prompt above.
 
 Every `~/.claude` and `~/.claude-*` directory with a `projects/` folder is an account. `~/.claude` is labelled `personal`, `~/.claude-work` is `work`, and so on. `$CLAUDE_CONFIG_DIR` is honoured too. The `personal` account (`~/.claude`) always launches with `CLAUDE_CONFIG_DIR` unset, never set to its own path: Claude Code treats an explicitly-set value as a request to look for `.claude.json` inside that directory, finds nothing, and opens the login wizard instead of resuming. Other accounts launch with the variable set to their path.
 
+On macOS, Claude Desktop's Cowork sessions show up too, under one account called `cowork`, with the title Claude Desktop gives them. They are listed and readable, but unpause won't open, rename or autoname them: they ran inside Claude Desktop's VM, so open them in Claude Desktop. `no_auto_detect = true` hides them along with the rest of auto-detection.
+
 To relabel an account or add one at a path unpause wouldn't otherwise find:
 
 ```toml
@@ -145,6 +148,42 @@ path = "/Volumes/lab/.claude"
 ```
 
 `opener` and `claude` are optional and default to `auto` and `claude`. `[[roots]]` entries add accounts or override the label of an auto-detected one at the same path; `~` is expanded.
+
+## Use from ChatGPT
+
+`unpause mcp` is a read-only MCP server that speaks over stdin and stdout. Another assistant can use it to read your sessions. It has three tools:
+
+- `list_sessions`: sessions newest first, with title, account, project, folder, branch, times, message count and whether it's running. Filters: `account`, `project`, `live`. Pages with `limit` and `offset`.
+- `search_sessions`: plain, case-insensitive text search over titles and everything in the transcripts: prompts, replies, tool calls, tool output and thinking. Matching sessions come newest first, with a match count and up to 3 snippets. No ranking.
+- `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut.
+
+It never writes to a transcript, and it sees the same sessions as `unpause list`, re-read on every call.
+
+**Everything in a transcript can be read through it, tool output included.** That means file contents, command output and any secrets that showed up in them. To keep folders out, list them in the config:
+
+```toml
+# ~/.config/unpause/config.toml
+[mcp]
+exclude = ["~/developer/work/*", "*/secret-repo"]
+```
+
+Each entry is a glob on a folder (`*` matches within one folder name, `~` is expanded). A session is hidden if any folder it ever worked in matches, not only the last one. An entry also covers every folder below a match, and an entry that doesn't start with `/` or `~` can match the last folders of any path, so `*/secret-repo` covers every `secret-repo` folder. On macOS case doesn't matter, and symlinked folders are matched on their real path too. Cowork sessions are matched by the folders you gave them in Claude Desktop. A broken pattern stops `unpause mcp` from starting, and while any entry is set, a session with no folder at all is hidden too. Excluded sessions don't exist as far as the MCP server knows. The picker and `unpause list` still show them.
+
+To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `unpause mcp` as a child process and polls OpenAI over outbound HTTPS, so nothing on your Mac listens for connections:
+
+1. Create a tunnel at https://platform.openai.com/settings/organization/tunnels and note its `tunnel_...` id.
+2. With `CONTROL_PLANE_API_KEY` exported (see OpenAI's tunnel docs for which key), run:
+
+   ```sh
+   tunnel-client init --sample sample_mcp_stdio_local --profile unpause \
+     --tunnel-id tunnel_... --mcp-command "unpause mcp"
+   tunnel-client doctor --profile unpause --explain
+   tunnel-client run --profile unpause
+   ```
+
+3. In ChatGPT, open Plugins, add a custom MCP server and pick Connection: Tunnel.
+
+While `tunnel-client run` is going, whatever ChatGPT asks for, full transcripts and tool output included, is sent to OpenAI. Stop it when you're done; unpause doesn't start it for you.
 
 ## How it works
 

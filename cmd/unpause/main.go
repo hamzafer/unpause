@@ -2,12 +2,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -15,6 +17,7 @@ import (
 	"github.com/hamzafer/unpause/internal/autoname"
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/index"
+	"github.com/hamzafer/unpause/internal/mcpserver"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/provider/claude"
 	"github.com/hamzafer/unpause/internal/session"
@@ -48,6 +51,9 @@ func main() {
 				Opener:   op,
 				Claude:   cfg.Claude,
 				Rename: func(s *session.Session, name string) error {
+					if s.Cowork {
+						return session.ErrCoworkRename
+					}
 					if err := claude.Rename(s.Path, s.ID, name); err != nil {
 						return err
 					}
@@ -120,6 +126,9 @@ func main() {
 			if s == nil {
 				return fmt.Errorf("no session matches %q", args[0])
 			}
+			if s.Cowork {
+				return session.ErrCowork
+			}
 			openWith, _ := cmd.Flags().GetString("open")
 			if openWith == "" {
 				openWith = cfg.Opener
@@ -168,6 +177,9 @@ func main() {
 			if s == nil {
 				return fmt.Errorf("no session matches %q", args[0])
 			}
+			if s.Cowork {
+				return session.ErrCoworkRename
+			}
 			name := strings.Join(args[1:], " ")
 			if err := claude.Rename(s.Path, s.ID, name); err != nil {
 				return err
@@ -203,6 +215,10 @@ func main() {
 			}
 			errTitled := errors.New("got a name or title in the meantime, left alone")
 			write := func(s *session.Session, name string) error {
+				if s.Cowork {
+					// Claude Desktop owns Cowork transcripts; a stale --apply must not write one.
+					return session.ErrCoworkRename
+				}
 				if ok, err := autoname.StillNeeds(s.Path); err != nil {
 					return err
 				} else if !ok {
@@ -244,7 +260,7 @@ func main() {
 						continue
 					}
 					switch err := write(s, p.Name); {
-					case errors.Is(err, errTitled):
+					case errors.Is(err, errTitled), errors.Is(err, session.ErrCoworkRename):
 						leftAlone++
 						line("", s, "– "+err.Error())
 					case err != nil:
@@ -378,16 +394,52 @@ func main() {
 			}
 			fmt.Printf("opener:  %s (config: %s, TERM_PROGRAM=%s, TMUX=%v)\n", opener.Detect().Name(), cfg.Opener, os.Getenv("TERM_PROGRAM"), os.Getenv("TMUX") != "")
 			fmt.Println("roots:")
+			coworkRoots, coworkTranscripts := 0, 0
 			for _, r := range cfg.ResolveRoots() {
 				ts, _ := claude.ListTranscripts(r)
+				if r.Cowork {
+					coworkRoots++
+					coworkTranscripts += len(ts)
+					continue
+				}
 				live := claude.LiveSessions(r.Path)
 				fmt.Printf("  %-10s %s  (%d transcripts, %d live)\n", r.Label, r.Path, len(ts), len(live))
+			}
+			if coworkRoots > 0 {
+				fmt.Printf("  %-10s %d roots, %d transcripts\n", config.CoworkLabel, coworkRoots, coworkTranscripts)
 			}
 			return nil
 		},
 	}
 
-	root.AddCommand(list, open, rename, autonameCmd, hook, doctor)
+	mcpCmd := &cobra.Command{
+		Use:   "mcp",
+		Short: "Serve sessions read-only over MCP on stdio",
+		Long: "Runs a read-only MCP server on stdin/stdout with three tools: list_sessions, search_sessions and get_session. " +
+			"It never writes to a transcript. Sessions that worked in a folder matching an [mcp] exclude glob in the config are invisible to it, " +
+			"and so are sessions with no folder at all while any exclude is set. A broken exclude pattern stops it from starting. " +
+			"Meant to be started by an MCP client, such as OpenAI's tunnel-client for ChatGPT.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Check the config now: a bad exclude pattern must stop the server, not fail every call.
+			if _, err := config.Load(); err != nil {
+				return err
+			}
+			// Tool calls may run concurrently; one index build at a time keeps the cache file sane.
+			var mu sync.Mutex
+			return mcpserver.Run(cmd.Context(), version, func(context.Context) ([]*session.Session, []string, error) {
+				mu.Lock()
+				defer mu.Unlock()
+				cfg, sessions, err := loadAll(true)
+				if err != nil {
+					return nil, nil, err
+				}
+				return filter(sessions, false), cfg.MCP.Exclude, nil
+			})
+		},
+	}
+
+	root.AddCommand(list, open, rename, autonameCmd, hook, doctor, mcpCmd)
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "unpause:", err)
 		os.Exit(1)
@@ -433,23 +485,7 @@ func filter(in []*session.Session, all bool) []*session.Session {
 }
 
 func find(sessions []*session.Session, q string) *session.Session {
-	q = strings.ToLower(strings.TrimSpace(q))
-	for _, s := range sessions {
-		if strings.HasPrefix(strings.ToLower(s.ID), q) {
-			return s
-		}
-	}
-	for _, s := range sessions {
-		if strings.ToLower(s.CustomTitle) == q {
-			return s
-		}
-	}
-	for _, s := range sessions {
-		if strings.Contains(strings.ToLower(s.Title()), q) {
-			return s
-		}
-	}
-	return nil
+	return session.Find(sessions, q)
 }
 
 // homeDir is where an Orphan opens; Claude Code resumes the transcript regardless of cwd.

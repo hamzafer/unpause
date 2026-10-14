@@ -169,3 +169,25 @@ func TestEscQuitsWhenFilterEmpty(t *testing.T) {
 		t.Fatal("esc with filter must only clear")
 	}
 }
+
+func TestCoworkSessionIsReadOnly(t *testing.T) {
+	s := &session.Session{Provider: "claude", ID: "eeeeeeee-5", Account: "cowork", Root: "/r/cowork", CWD: "/sessions/x", DesktopTitle: "Make a deck", Cowork: true, LastActive: time.Now(), Messages: 2}
+	fo := &fakeOpener{}
+	renamed := false
+	m := drive(newModel(Options{Sessions: []*session.Session{s}, Opener: fo, Claude: "claude", Rename: func(*session.Session, string) error { renamed = true; return nil }}),
+		tea.WindowSizeMsg{Width: 140, Height: 30}, key("enter"))
+	if len(fo.got) != 0 {
+		t.Fatalf("cowork session must not open, got %+v", fo.got)
+	}
+	if !strings.Contains(m.View(), "Cowork session: open it in Claude Desktop") {
+		t.Errorf("status missing\n%s", m.View())
+	}
+	m = drive(m, key("ctrl+f"))
+	if len(fo.got) != 0 {
+		t.Fatalf("cowork session must not fork, got %+v", fo.got)
+	}
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlR}, key("x"), key("enter"))
+	if renamed || m.(model).mode == modeRename {
+		t.Error("cowork session must not be renamed")
+	}
+}

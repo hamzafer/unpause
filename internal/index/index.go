@@ -13,7 +13,7 @@ import (
 	"github.com/hamzafer/unpause/internal/session"
 )
 
-const cacheVersion = 4
+const cacheVersion = 6
 
 type entry struct {
 	ModTime int64            `json:"mtime"`
@@ -50,6 +50,7 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 			if e, ok := cache.Entries[t.Path]; ok && e.ModTime == t.ModTime && e.Size == t.Size && e.Session != nil {
 				e.Session.Root = r.Path
 				e.Session.Account = r.Label
+				e.Session.Cowork = r.Cowork
 				fresh.Entries[t.Path] = e
 				sessions = append(sessions, e.Session)
 				continue
@@ -80,6 +81,7 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 			}
 			s.Root = j.t.Root.Path
 			s.Account = j.t.Root.Label
+			s.Cowork = j.t.Root.Cowork
 			fresh.Entries[j.t.Path] = entry{ModTime: j.t.ModTime, Size: j.t.Size, Session: s}
 			sessions = append(sessions, s)
 		}(j)
@@ -90,8 +92,21 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 		_ = save(fresh)
 	}
 
-	// Attach live state and cwd existence; never cached.
+	// Attach live state, cwd existence and Claude Desktop metadata (title, selected
+	// folders); never cached. The cache was saved above, before these are set.
 	for _, r := range roots {
+		if r.Cowork {
+			meta := claude.ReadCowork(r.Path)
+			for _, s := range sessions {
+				if s.Root == r.Path {
+					s.DesktopTitle = meta.Title
+					claude.AddDir(s, meta.CWD)
+					for _, f := range meta.Folders {
+						claude.AddDir(s, f)
+					}
+				}
+			}
+		}
 		live := claude.LiveSessions(r.Path)
 		for _, s := range sessions {
 			if s.Root != r.Path {
@@ -104,7 +119,8 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 		}
 	}
 	for _, s := range sessions {
-		if s.CWD != "" {
+		// A Cowork Session's cwd is a path inside Claude Desktop's VM; it never opens here, so no orphan flag.
+		if s.CWD != "" && !s.Cowork {
 			if _, err := os.Stat(s.CWD); err != nil {
 				s.CWDMissing = true
 				s.WorktreeRoot = session.RetiredWorktreeRoot(s.CWD)
@@ -147,9 +163,25 @@ func save(c cacheFile) error {
 	if err != nil {
 		return err
 	}
-	tmp := p + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+	// A temp file of its own per writer, so `unpause mcp`, the picker and the hook can
+	// save at the same time; the last rename wins and the file is never half-written.
+	f, err := os.CreateTemp(filepath.Dir(p), filepath.Base(p)+".*.tmp")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, p)
+	tmp := f.Name()
+	_, err = f.Write(b)
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Chmod(tmp, 0o644)
+	}
+	if err == nil {
+		err = os.Rename(tmp, p)
+	}
+	if err != nil {
+		_ = os.Remove(tmp)
+	}
+	return err
 }

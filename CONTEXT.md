@@ -28,7 +28,7 @@ The title a Session was given with `/rename`, `unpause rename`, or `unpause auto
 _Avoid_: custom title, label
 
 **Title**:
-What a Session is called in the list: its Name if it has one, else the agent's auto-generated summary, else the first prompt.
+What a Session is called in the list: its Name if it has one, else the title Claude Desktop shows (Cowork Sessions only), else the agent's auto-generated summary, else the first prompt.
 
 **Live**:
 A Session whose agent process is running right now.
@@ -49,3 +49,15 @@ _Avoid_: launcher, target, spawner
 **Fork**:
 Resuming a Session under a new session id so the original is left untouched.
 _Avoid_: copy, branch, clone
+
+**Cowork Session**:
+A Session that Claude Desktop's Cowork mode ran inside its VM. Listed under the `cowork` Account and readable, but never opened, renamed or autonamed by unpause.
+_Avoid_: desktop session, agent-mode session
+
+**MCP server**:
+`unpause mcp`: the read-only stdio server that lets another assistant (ChatGPT, through OpenAI's tunnel) list, search and read Sessions.
+_Avoid_: plugin, connector, API
+
+**Excluded**:
+A Session that worked in a folder matching an `[mcp] exclude` glob: any cwd it ever had, or, for a Cowork Session, a folder the user gave it in Claude Desktop. While any glob is set, a Session with no folder at all is Excluded too. Invisible to the MCP server, still shown in the picker.
+_Avoid_: hidden, blocked, denylisted
