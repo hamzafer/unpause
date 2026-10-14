@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Claude Desktop's Cowork sessions are listed under a read-only `cowork` account, titled the way Claude Desktop shows them. The picker, `unpause open` and `unpause rename` refuse them with a pointer to Claude Desktop, `autoname` skips them, and `unpause doctor` sums their roots in one line.
+
 ## v0.5.0, 2026-10-14
 
 - Retired worktrees: a session whose Claude Code worktree (`<repo>/.claude/worktrees/<name>`) was removed while its repo still exists gets a dim `⎇` instead of the orphan `!`, and opens in the repo (or the same subfolder of it, when that exists) instead of `~`. `unpause list` shows ` (worktree retired)` for these; the JSON keeps `cwd_missing` and adds `worktree_root`.

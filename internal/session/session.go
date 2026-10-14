@@ -2,6 +2,7 @@
 package session
 
 import (
+	"errors"
 	"path/filepath"
 	"time"
 )
@@ -32,13 +33,17 @@ type Session struct {
 	Branch string `json:"branch,omitempty"`
 
 	CustomTitle string `json:"custom_title,omitempty"`
-	AITitle     string `json:"ai_title,omitempty"`
-	FirstPrompt string `json:"first_prompt,omitempty"`
+	// DesktopTitle is the title Claude Desktop shows for a Cowork session.
+	DesktopTitle string `json:"desktop_title,omitempty"`
+	AITitle      string `json:"ai_title,omitempty"`
+	FirstPrompt  string `json:"first_prompt,omitempty"`
 
 	Created    time.Time `json:"created"`
 	LastActive time.Time `json:"last_active"`
 	Messages   int       `json:"messages"` // user prompts + assistant replies
 	Sidechain  bool      `json:"sidechain"`
+	// Cowork is set for sessions from a Claude Desktop Cowork root. They are read-only to unpause.
+	Cowork bool `json:"cowork,omitempty"`
 	// ContextTokens is the context size reported by the last assistant reply
 	// (input + cache creation + cache read). Zero when unknown.
 	ContextTokens int `json:"context_tokens,omitempty"`
@@ -53,11 +58,14 @@ type Session struct {
 	WorktreeRoot string `json:"worktree_root,omitempty"`
 }
 
-// Title is the best human name we have: /rename name, else Claude's auto title, else the first prompt.
+// Title is the best human name we have: /rename name, else Claude Desktop's title,
+// else Claude's auto title, else the first prompt.
 func (s *Session) Title() string {
 	switch {
 	case s.CustomTitle != "":
 		return s.CustomTitle
+	case s.DesktopTitle != "":
+		return s.DesktopTitle
 	case s.AITitle != "":
 		return s.AITitle
 	case s.FirstPrompt != "":
@@ -65,6 +73,12 @@ func (s *Session) Title() string {
 	}
 	return s.ShortID()
 }
+
+// ErrCowork is returned when asked to open a Cowork session, which only Claude Desktop may resume.
+var ErrCowork = errors.New("cowork session: open it in Claude Desktop")
+
+// ErrCoworkRename is returned when asked to rename a Cowork session.
+var ErrCoworkRename = errors.New("cowork session: rename it in Claude Desktop")
 
 // Named reports whether the user gave this session a name with /rename.
 func (s *Session) Named() bool { return s.CustomTitle != "" }

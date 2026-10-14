@@ -178,3 +178,83 @@ func TestAutonameDryRunThenApply(t *testing.T) {
 		t.Errorf("--session with --dry-run should be refused: %s", out)
 	}
 }
+
+// coworkHome builds a temp HOME with two Cowork sessions laid out like Claude Desktop does:
+// one whose metadata has a title and one whose metadata title is empty.
+func coworkHome(t *testing.T) (home string, env []string) {
+	t.Helper()
+	home = t.TempDir()
+	base := filepath.Join(home, "Library", "Application Support", "Claude", "local-agent-mode-sessions", "org", "user")
+	write := func(p, body string) {
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, c := range []struct{ local, id, title, prompt string }{
+		{"local_aaa", "c0c0c0c0-1111-2222-3333-444444444444", "Build metrics dashboard", "make me a dashboard"},
+		{"local_bbb", "c1c1c1c1-1111-2222-3333-444444444444", "", "translate this letter"},
+	} {
+		write(filepath.Join(base, c.local+".json"), `{"sessionId":"`+c.local+`","cliSessionId":"`+c.id+`","title":"`+c.title+`","createdAt":1769460665209,"lastActivityAt":1769460775175,"isArchived":false,"cwd":"/sessions/x"}`)
+		write(filepath.Join(base, c.local, ".claude", "projects", "-sessions-x", c.id+".jsonl"),
+			`{"type":"user","message":{"role":"user","content":"`+c.prompt+`"},"timestamp":"2026-09-28T10:00:00Z","cwd":"/sessions/x","sessionId":"`+c.id+`"}`+"\n"+
+				`{"type":"ai-title","aiTitle":"Generated `+c.prompt+`","sessionId":"`+c.id+`"}`+"\n")
+	}
+	if err := os.MkdirAll(filepath.Join(home, ".claude", "projects"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return home, append(os.Environ(), "HOME="+home, "CLAUDE_CONFIG_DIR=", "XDG_CACHE_HOME=", "XDG_CONFIG_HOME=")
+}
+
+func TestCoworkSessionsListedButReadOnly(t *testing.T) {
+	bin := buildBinary(t)
+	home, env := coworkHome(t)
+	run := func(args ...string) (string, error) {
+		cmd := exec.Command(bin, args...)
+		cmd.Env = env
+		out, err := cmd.CombinedOutput()
+		return string(out), err
+	}
+
+	out, err := run("list")
+	if err != nil {
+		t.Fatalf("list: %v\n%s", err, out)
+	}
+	for _, want := range []string{"c0c0c0c0 cowork", "Build metrics dashboard", "c1c1c1c1 cowork", "Generated translate this letter"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("list missing %q\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Generated make me a dashboard") {
+		t.Errorf("Claude Desktop's title must win over the transcript's ai-title\n%s", out)
+	}
+
+	out, err = run("list", "--json")
+	if err != nil || !strings.Contains(out, `"cowork": true`) || !strings.Contains(out, `"desktop_title": "Build metrics dashboard"`) {
+		t.Errorf("list --json: %v\n%s", err, out)
+	}
+
+	for _, args := range [][]string{{"open", "c0c0c0c0"}, {"open", "c0c0c0c0", "--print"}} {
+		if out, err := run(args...); err == nil || !strings.Contains(out, "cowork session: open it in Claude Desktop") {
+			t.Errorf("%v should refuse, got %v: %s", args, err, out)
+		}
+	}
+	transcript := filepath.Join(home, "Library", "Application Support", "Claude", "local-agent-mode-sessions", "org", "user", "local_bbb", ".claude", "projects", "-sessions-x", "c1c1c1c1-1111-2222-3333-444444444444.jsonl")
+	before, _ := os.ReadFile(transcript)
+	if out, err := run("rename", "c1c1c1c1", "new name"); err == nil || !strings.Contains(out, "cowork session") {
+		t.Errorf("rename should refuse, got %v: %s", err, out)
+	}
+	if after, _ := os.ReadFile(transcript); string(after) != string(before) {
+		t.Error("rename wrote into a Cowork transcript")
+	}
+
+	out, err = run("doctor")
+	if err != nil {
+		t.Fatalf("doctor: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "cowork     2 roots, 2 transcripts") || strings.Contains(out, "local_aaa") {
+		t.Errorf("doctor should collapse cowork roots into one line\n%s", out)
+	}
+}

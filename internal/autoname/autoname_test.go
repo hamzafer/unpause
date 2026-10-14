@@ -23,6 +23,7 @@ func TestNeeds(t *testing.T) {
 		{"auto titled by Claude", session.Session{Messages: 3, AITitle: "Add login page"}, false},
 		{"empty", session.Session{}, false},
 		{"subagent", session.Session{Messages: 3, Sidechain: true}, false},
+		{"cowork", session.Session{Messages: 3, FirstPrompt: "make a deck", Cowork: true}, false},
 	}
 	for _, c := range cases {
 		if got := Needs(&c.s); got != c.want {

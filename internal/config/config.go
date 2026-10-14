@@ -15,6 +15,8 @@ import (
 type Root struct {
 	Label string `toml:"label"`
 	Path  string `toml:"path"`
+	// Cowork marks a root found under Claude Desktop's Cowork folder. Its sessions are read-only.
+	Cowork bool `toml:"-"`
 }
 
 // Config is the on-disk configuration. Every field is optional.
@@ -102,6 +104,17 @@ func (c *Config) ResolveRoots() []Root {
 		}
 		add(r)
 	}
+	if !c.NoAutoDetect {
+		for _, r := range detectCowork() {
+			r.Path = filepath.Clean(r.Path)
+			if prev, seen := byPath[r.Path]; seen {
+				prev.Cowork = true
+				byPath[r.Path] = prev
+				continue
+			}
+			add(r)
+		}
+	}
 
 	out := make([]Root, 0, len(order))
 	for _, p := range order {
@@ -145,6 +158,32 @@ func detect() []Root {
 		}
 		return roots[i].Label < roots[j].Label
 	})
+	return roots
+}
+
+// CoworkLabel is the Account every Claude Desktop Cowork root is listed under.
+const CoworkLabel = "cowork"
+
+// detectCowork finds the per-session config roots Claude Desktop's Cowork mode keeps at
+// ~/Library/Application Support/Claude/local-agent-mode-sessions/<a>/<b>/local_<x>/.claude.
+// The folder only exists on macOS; elsewhere this finds nothing.
+func detectCowork() []Root {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil
+	}
+	pattern := filepath.Join(home, "Library", "Application Support", "Claude", "local-agent-mode-sessions", "*", "*", "local_*", ".claude")
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil
+	}
+	sort.Strings(matches)
+	var roots []Root
+	for _, p := range matches {
+		if hasProjects(p) {
+			roots = append(roots, Root{Label: CoworkLabel, Path: p, Cowork: true})
+		}
+	}
 	return roots
 }
 

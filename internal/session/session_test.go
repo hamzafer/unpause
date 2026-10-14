@@ -27,3 +27,22 @@ func TestWillOfferSummary(t *testing.T) {
 		t.Error("Tokens formatting")
 	}
 }
+
+func TestTitleOrder(t *testing.T) {
+	s := Session{ID: "12345678-x", CustomTitle: "mine", DesktopTitle: "desktop", AITitle: "ai", FirstPrompt: "hi"}
+	for _, want := range []string{"mine", "desktop", "ai", "hi", "12345678"} {
+		if got := s.Title(); got != want {
+			t.Errorf("Title() = %q, want %q", got, want)
+		}
+		switch want {
+		case "mine":
+			s.CustomTitle = ""
+		case "desktop":
+			s.DesktopTitle = ""
+		case "ai":
+			s.AITitle = ""
+		case "hi":
+			s.FirstPrompt = ""
+		}
+	}
+}
