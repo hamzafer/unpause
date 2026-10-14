@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.0, 2026-10-15
 
 - Deep search in the picker: `^s` switches the filter box to searching inside what was said, with the same rules as `unpause search`. It starts 300 ms after you stop typing, shows scan progress in the header, lists matching sessions ranked with a `12×` match count, and previews up to 3 snippets with your words highlighted. Whatever you'd typed in the filter becomes the first query; `^s` or `esc` goes back.
 - `unpause search <words>` finds sessions by what was said in them: your prompts, Claude's replies, and the session's name or generated title. Every word has to appear somewhere in the session, `"double quotes"` keep a phrase together, and results are ranked by match count with the first snippet under each line. `--json`, `--all` and `--limit N` (default 20, 0 for all) work as you'd expect.
