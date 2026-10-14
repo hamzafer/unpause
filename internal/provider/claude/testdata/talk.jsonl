@@ -4,3 +4,4 @@
 {"type":"system","content":"keychain tunnel in a system line","sessionId":"33333333-2222-3333-4444-555555555555"}
 {"type":"user","message":{"role":"user","content":"Also check C:\\Users\\path please"},"uuid":"u3","timestamp":"2026-09-03T10:01:00.000Z","cwd":"/tmp/repo","sessionId":"33333333-2222-3333-4444-555555555555"}
 {"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Done: the keychain holds the key, the tunnel is up."}]},"uuid":"a2","timestamp":"2026-09-03T10:02:00.000Z","cwd":"/tmp/repo","sessionId":"33333333-2222-3333-4444-555555555555"}
+{"type":"user","message":{"role":"user","content":"<system-reminder>metaonly keychain tunnel</system-reminder>"},"isMeta":true,"uuid":"m1","timestamp":"2026-09-03T10:03:00.000Z","cwd":"/tmp/repo","sessionId":"33333333-2222-3333-4444-555555555555"}

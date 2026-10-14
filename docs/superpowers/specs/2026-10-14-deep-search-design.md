@@ -52,3 +52,13 @@ Tests: model tests with a fake Search: debounce produces one search, a stale res
 ## Docs
 
 ADR 0011. CONTEXT.md: **Deep search** term. README: picker keys, `unpause search`, MCP `search_sessions` text. CHANGELOG `## Unreleased`. WISHLIST: drop the "Search inside" line.
+
+## Amendments after review (PR #9 and follow-up)
+
+- The pre-filter always decodes lines containing `\u` or `\/` escapes, since a term can be spelled differently there.
+- `isMeta` user records (injected reminders, skill text) are not talk and are skipped.
+- Snippets turn control characters into spaces.
+- `unpause search "two words"`: one argument with spaces and no quotes of its own was quoted in the shell, so it is a phrase.
+- `tui.Options.Search` takes the Sessions to search: the picker passes copies taken on the Bubble Tea goroutine and maps results back to its own Sessions, so a rename never races a search.
+- The rename and live-confirm prompts act on the Session they were opened for, even if new results arrive while they are open.
+- A failed search shows `search failed` in the list until the next query.

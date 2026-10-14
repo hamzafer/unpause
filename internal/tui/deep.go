@@ -63,8 +63,7 @@ func (m *model) enterDeep() tea.Cmd {
 	m.deep = true
 	m.query.Prompt = deepPrompt
 	m.query.Placeholder = deepPlaceholder
-	m.results, m.terms, m.searched, m.searchErr = nil, nil, false, false
-	m.cursor, m.offset = 0, 0
+	m.clearResults()
 	m.searchID++
 	if strings.TrimSpace(m.query.Value()) == "" {
 		return nil
@@ -80,9 +79,14 @@ func (m *model) leaveDeep() {
 	m.query.Prompt = filterPrompt
 	m.query.Placeholder = filterPlaceholder
 	m.query.SetValue("")
+	m.clearResults()
+	m.refilter()
+}
+
+// clearResults forgets the last search's results and puts the cursor at the top.
+func (m *model) clearResults() {
 	m.results, m.terms, m.searched, m.searchErr = nil, nil, false, false
 	m.cursor, m.offset = 0, 0
-	m.refilter()
 }
 
 func (m *model) stopSearch() {
@@ -99,8 +103,7 @@ func (m *model) queryChangedDeep() tea.Cmd {
 	m.searchErr = false
 	m.searchID++
 	if strings.TrimSpace(m.query.Value()) == "" {
-		m.results, m.terms, m.searched, m.searchErr = nil, nil, false, false
-		m.cursor, m.offset = 0, 0
+		m.clearResults()
 		return nil
 	}
 	id := m.searchID
