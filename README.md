@@ -51,6 +51,7 @@ unpause autoname --dry-run   # propose Haiku names for untitled sessions, write 
 unpause autoname --apply     # write exactly the names the dry run showed
 unpause autoname             # ask Haiku and write in one go
 unpause doctor                 # what it detected: accounts, opener, claude binary
+unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
 unpause --version            # print the binary version
 ```
 
@@ -147,6 +148,42 @@ path = "/Volumes/lab/.claude"
 ```
 
 `opener` and `claude` are optional and default to `auto` and `claude`. `[[roots]]` entries add accounts or override the label of an auto-detected one at the same path; `~` is expanded.
+
+## Use from ChatGPT
+
+`unpause mcp` is a read-only MCP server that speaks over stdin and stdout. Another assistant can use it to read your sessions. It has three tools:
+
+- `list_sessions`: sessions newest first, with title, account, project, folder, branch, times, message count and whether it's running. Filters: `account`, `project`, `live`. Pages with `limit` and `offset`.
+- `search_sessions`: plain, case-insensitive text search over titles and everything in the transcripts: prompts, replies, tool calls, tool output and thinking. Matching sessions come newest first, with a match count and up to 3 snippets. No ranking.
+- `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut.
+
+It never writes to a transcript, and it sees the same sessions as `unpause list`, re-read on every call.
+
+**Everything in a transcript can be read through it, tool output included.** That means file contents, command output and any secrets that showed up in them. To keep folders out, list them in the config:
+
+```toml
+# ~/.config/unpause/config.toml
+[mcp]
+exclude = ["~/developer/work/*", "*/secret-repo"]
+```
+
+Each entry is a glob on the session's folder (`*` matches within one folder name, `~` is expanded). It also covers every folder below a match, and an entry that doesn't start with `/` or `~` can match the last folders of any path, so `*/secret-repo` covers every `secret-repo` folder. Excluded sessions don't exist as far as the MCP server knows. The picker and `unpause list` still show them.
+
+To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `unpause mcp` as a child process and polls OpenAI over outbound HTTPS, so nothing on your Mac listens for connections:
+
+1. Create a tunnel at https://platform.openai.com/settings/organization/tunnels and note its `tunnel_...` id.
+2. With `CONTROL_PLANE_API_KEY` exported (see OpenAI's tunnel docs for which key), run:
+
+   ```sh
+   tunnel-client init --sample sample_mcp_stdio_local --profile unpause \
+     --tunnel-id tunnel_... --mcp-command "unpause mcp"
+   tunnel-client doctor --profile unpause --explain
+   tunnel-client run --profile unpause
+   ```
+
+3. In ChatGPT, open Plugins, add a custom MCP server and pick Connection: Tunnel.
+
+While `tunnel-client run` is going, whatever ChatGPT asks for, full transcripts and tool output included, is sent to OpenAI. Stop it when you're done; unpause doesn't start it for you.
 
 ## How it works
 

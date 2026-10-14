@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -259,5 +263,68 @@ func TestCoworkSessionsListedButReadOnly(t *testing.T) {
 	}
 	if !strings.Contains(out, "cowork     2 roots, 2 transcripts") || strings.Contains(out, "local_aaa") {
 		t.Errorf("doctor should collapse cowork roots into one line\n%s", out)
+	}
+}
+
+func TestMCPStdoutIsOnlyProtocol(t *testing.T) {
+	bin := buildBinary(t)
+	env := emptyAccountEnv(t)
+	home := strings.TrimPrefix(env[len(env)-3], "HOME=")
+	proj := filepath.Join(home, ".claude", "projects", "-tmp-repo")
+	if err := os.MkdirAll(proj, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src, err := os.ReadFile("../../internal/provider/claude/testdata/basic.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	transcript := filepath.Join(proj, "11111111-2222-3333-4444-555555555555.jsonl")
+	if err := os.WriteFile(transcript, src, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	in := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}`,
+		`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_sessions","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_session","arguments":{"id":"1111","offset":1,"limit":1}}}`,
+	}, "\n") + "\n"
+	cmd := exec.Command(bin, "mcp")
+	cmd.Env = append(env, "XDG_CONFIG_HOME="+filepath.Join(home, "xdg"))
+	stdin, _ := cmd.StdinPipe()
+	stdout, _ := cmd.StdoutPipe()
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.WriteString(stdin, in); err != nil {
+		t.Fatal(err)
+	}
+	// Every line on stdout must be a JSON-RPC message; the three requests get three replies.
+	var lines []string
+	sc := bufio.NewScanner(stdout)
+	sc.Buffer(nil, 1<<20)
+	for len(lines) < 3 && sc.Scan() {
+		l := sc.Text()
+		var msg map[string]any
+		if err := json.Unmarshal([]byte(l), &msg); err != nil || msg["jsonrpc"] != "2.0" {
+			t.Errorf("non-protocol line on stdout: %q", l)
+		}
+		if _, ok := msg["id"]; ok {
+			lines = append(lines, l)
+		}
+	}
+	stdin.Close()
+	if err := cmd.Wait(); err != nil {
+		t.Errorf("unpause mcp exit: %v", err)
+	}
+	if len(lines) != 3 {
+		t.Fatalf("want 3 responses, got %d: %q", len(lines), lines)
+	}
+	sort.Strings(lines) // replies may come in any order; ids 1, 2, 3 sort by their prefix
+	if !strings.Contains(lines[1], "login-work") || !strings.Contains(lines[2], "hey, please add a login page") {
+		t.Errorf("unexpected responses: %q", lines)
+	}
+	after, _ := os.ReadFile(transcript)
+	if string(after) != string(src) {
+		t.Error("transcript changed")
 	}
 }

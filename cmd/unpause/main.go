@@ -2,12 +2,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -15,6 +17,7 @@ import (
 	"github.com/hamzafer/unpause/internal/autoname"
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/index"
+	"github.com/hamzafer/unpause/internal/mcpserver"
 	"github.com/hamzafer/unpause/internal/opener"
 	"github.com/hamzafer/unpause/internal/provider/claude"
 	"github.com/hamzafer/unpause/internal/session"
@@ -405,7 +408,29 @@ func main() {
 		},
 	}
 
-	root.AddCommand(list, open, rename, autonameCmd, hook, doctor)
+	mcpCmd := &cobra.Command{
+		Use:   "mcp",
+		Short: "Serve sessions read-only over MCP on stdio",
+		Long: "Runs a read-only MCP server on stdin/stdout with three tools: list_sessions, search_sessions and get_session. " +
+			"It never writes to a transcript. Sessions whose cwd matches an [mcp] exclude glob in the config are invisible to it. " +
+			"Meant to be started by an MCP client, such as OpenAI's tunnel-client for ChatGPT.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Tool calls may run concurrently; one index build at a time keeps the cache file sane.
+			var mu sync.Mutex
+			return mcpserver.Run(cmd.Context(), version, func(context.Context) ([]*session.Session, []string, error) {
+				mu.Lock()
+				defer mu.Unlock()
+				cfg, sessions, err := loadAll(true)
+				if err != nil {
+					return nil, nil, err
+				}
+				return filter(sessions, false), cfg.MCP.Exclude, nil
+			})
+		},
+	}
+
+	root.AddCommand(list, open, rename, autonameCmd, hook, doctor, mcpCmd)
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "unpause:", err)
 		os.Exit(1)
@@ -451,23 +476,7 @@ func filter(in []*session.Session, all bool) []*session.Session {
 }
 
 func find(sessions []*session.Session, q string) *session.Session {
-	q = strings.ToLower(strings.TrimSpace(q))
-	for _, s := range sessions {
-		if strings.HasPrefix(strings.ToLower(s.ID), q) {
-			return s
-		}
-	}
-	for _, s := range sessions {
-		if strings.ToLower(s.CustomTitle) == q {
-			return s
-		}
-	}
-	for _, s := range sessions {
-		if strings.Contains(strings.ToLower(s.Title()), q) {
-			return s
-		}
-	}
-	return nil
+	return session.Find(sessions, q)
 }
 
 // homeDir is where an Orphan opens; Claude Code resumes the transcript regardless of cwd.

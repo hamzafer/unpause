@@ -29,6 +29,14 @@ type Config struct {
 	Roots []Root `toml:"roots"`
 	// NoAutoDetect turns off the ~/.claude* scan; only Roots are used.
 	NoAutoDetect bool `toml:"no_auto_detect"`
+	// MCP configures `unpause mcp`.
+	MCP MCP `toml:"mcp"`
+}
+
+// MCP is the [mcp] table.
+type MCP struct {
+	// Exclude holds globs on a Session's cwd; matching Sessions are invisible to the MCP server.
+	Exclude []string `toml:"exclude"`
 }
 
 // Path returns the config file location.
@@ -70,6 +78,9 @@ func Load() (*Config, error) {
 	}
 	for i := range c.Roots {
 		c.Roots[i].Path = expand(c.Roots[i].Path)
+	}
+	for i := range c.MCP.Exclude {
+		c.MCP.Exclude[i] = expand(c.MCP.Exclude[i])
 	}
 	return c, nil
 }
