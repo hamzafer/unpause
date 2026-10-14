@@ -149,8 +149,17 @@ func Run(ctx context.Context, sessions []*session.Session, namer Namer, write fu
 // Once an account fails to authenticate, its remaining sessions fail at once with the same
 // error instead of each waiting on another doomed call.
 func Haiku(claudeBin string, configDir func(*session.Session) string) Namer {
-	loggedOut := map[string]error{}
+	ask := Ask(claudeBin, configDir, systemPrompt)
 	return func(ctx context.Context, s *session.Session) (string, error) {
+		return ask(ctx, s, Prompt(s))
+	}
+}
+
+// Ask is Haiku's model call with any system prompt and input, for other features that
+// ask Haiku about a Session the same way (Recaps). It returns the raw reply.
+func Ask(claudeBin string, configDir func(*session.Session) string, system string) func(ctx context.Context, s *session.Session, input string) (string, error) {
+	loggedOut := map[string]error{}
+	return func(ctx context.Context, s *session.Session, input string) (string, error) {
 		dir := configDir(s)
 		if err := loggedOut[dir]; err != nil {
 			return "", err
@@ -163,11 +172,11 @@ func Haiku(claudeBin string, configDir func(*session.Session) string) Namer {
 			"--settings", `{"disableAllHooks":true}`,
 			"--tools", "",
 			"--strict-mcp-config",
-			"--system-prompt", systemPrompt,
+			"--system-prompt", system,
 		)
 		cmd.Dir = os.TempDir()
 		cmd.Env = childEnv(os.Environ(), dir)
-		cmd.Stdin = strings.NewReader(Prompt(s))
+		cmd.Stdin = strings.NewReader(input)
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		out, err := cmd.Output()
