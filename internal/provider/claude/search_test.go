@@ -1,6 +1,7 @@
 package claude
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -291,11 +292,22 @@ func TestTalkDropsWrappersAndInjectedText(t *testing.T) {
 	}
 }
 
+func TestTalkKeepsProseThatMentionsTags(t *testing.T) {
+	in := "the record stores <command-name>/goal</command-name> next to the args"
+	if got, ok := talk(in); !ok || got != in {
+		t.Errorf("got %q, %v", got, ok)
+	}
+}
+
 func TestSearchFileCountsASlashCommandOnce(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "cmd.jsonl")
 	line := func(content string) string {
-		c, _ := json.Marshal(content)
-		return `{"type":"user","message":{"role":"user","content":` + string(c) + `},"timestamp":"2026-09-03T10:00:00.000Z"}` + "\n"
+		// Claude Code writes JSON without escaping <, > and &, so the fixture doesn't either.
+		var buf bytes.Buffer
+		enc := json.NewEncoder(&buf)
+		enc.SetEscapeHTML(false)
+		_ = enc.Encode(content)
+		return `{"type":"user","message":{"role":"user","content":` + strings.TrimSpace(buf.String()) + `},"timestamp":"2026-09-03T10:00:00.000Z"}` + "\n"
 	}
 	body := line("<command-name>/goal</command-name>\n<command-message>goal</command-message>\n<command-args>find padel courts</command-args>") +
 		line("<local-command-stdout>Goal set: find padel courts</local-command-stdout>")
