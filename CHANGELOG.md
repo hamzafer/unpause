@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.2, 2026-10-15
 
 - Deep search ignores the text Claude Code wraps around slash commands and stores for background tasks, command output and shell output. A `/goal …` is searched as you typed it, its "Goal set" echo no longer counts twice, and snippets no longer show `<command-args>` style tags.
 
