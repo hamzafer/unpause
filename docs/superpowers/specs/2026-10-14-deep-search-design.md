@@ -62,3 +62,4 @@ ADR 0011. CONTEXT.md: **Deep search** term. README: picker keys, `unpause search
 - `tui.Options.Search` takes the Sessions to search: the picker passes copies taken on the Bubble Tea goroutine and maps results back to its own Sessions, so a rename never races a search.
 - The rename and live-confirm prompts act on the Session they were opened for, even if new results arrive while they are open.
 - A failed search shows `search failed` in the list until the next query.
+- User text that starts with a wrapper tag nobody typed (`<task-notification>`, `<local-command-…>`, `<bash-stdout>`/`<bash-stderr>`, `<system-reminder>`, `<fork-boilerplate>`, a `<command-message>` without a command name) is skipped; a slash command is searched as `/name args` and `! cmd` input as typed. Claude's replies are searched as written.

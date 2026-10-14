@@ -1,7 +1,9 @@
 package claude
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -260,5 +262,72 @@ func TestIsMetaReadsTheTopLevelField(t *testing.T) {
 		if got := isMeta([]byte(raw)); got != want {
 			t.Errorf("%s: got %v", raw, got)
 		}
+	}
+}
+
+func TestTalkDropsWrappersAndInjectedText(t *testing.T) {
+	for in, want := range map[string]string{
+		"plain words": "plain words",
+		"<command-name>/goal</command-name>\n<command-message>goal</command-message>\n<command-args>find padel in oslo</command-args>": "/goal find padel in oslo",
+		"<command-message>loop</command-message>\n<command-name>/loop</command-name>":                                                  "/loop",
+		"<bash-input> ls -la</bash-input>": "! ls -la",
+		"see the <pasted_content> below":   "see the <pasted_content> below",
+	} {
+		if got, ok := talk(in); !ok || got != want {
+			t.Errorf("%q: got %q, %v; want %q", in, got, ok, want)
+		}
+	}
+	for _, in := range []string{
+		"<local-command-stdout>Goal set: find padel</local-command-stdout>",
+		"<local-command-caveat>Caveat: generated</local-command-caveat>",
+		"\n<task-notification>\n<task-id>x</task-id> padel report</task-notification>",
+		"<bash-stdout>padel</bash-stdout><bash-stderr></bash-stderr>",
+		"<system-reminder>You are in a worktree</system-reminder>",
+		"<fork-boilerplate>You are a worker fork</fork-boilerplate>",
+		"<command-message>reviews the current diff</command-message>",
+	} {
+		if _, ok := talk(in); ok {
+			t.Errorf("%q should not be talk", in)
+		}
+	}
+}
+
+func TestTalkKeepsProseThatMentionsTags(t *testing.T) {
+	in := "the record stores <command-name>/goal</command-name> next to the args"
+	if got, ok := talk(in); !ok || got != in {
+		t.Errorf("got %q, %v", got, ok)
+	}
+}
+
+func TestSearchFileCountsASlashCommandOnce(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "cmd.jsonl")
+	line := func(content string) string {
+		// Claude Code writes JSON without escaping <, > and &, so the fixture doesn't either.
+		var buf bytes.Buffer
+		enc := json.NewEncoder(&buf)
+		enc.SetEscapeHTML(false)
+		_ = enc.Encode(content)
+		return `{"type":"user","message":{"role":"user","content":` + strings.TrimSpace(buf.String()) + `},"timestamp":"2026-09-03T10:00:00.000Z"}` + "\n"
+	}
+	body := line("<command-name>/goal</command-name>\n<command-message>goal</command-message>\n<command-args>find padel courts</command-args>") +
+		line("<local-command-stdout>Goal set: find padel courts</local-command-stdout>")
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	r := search(t, "padel", path)
+	if r.Hits != 1 || len(r.Snippets) != 1 || r.Snippets[0] != "/goal find padel courts" {
+		t.Errorf("%+v", r)
+	}
+	// The phrase only exists once the tags are gone; the raw-line pre-filter must not skip it.
+	if r := search(t, `"/goal find padel"`, path); r.Hits != 1 {
+		t.Errorf("phrase across the command name: %+v", r)
+	}
+	// Claude's replies are never unwrapped or dropped.
+	reply := `{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"<bash-stdout> is where padel output goes"}]},"timestamp":"2026-09-03T10:00:01.000Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(body+reply), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if r := search(t, "padel", path); r.Hits != 2 {
+		t.Errorf("assistant text: %+v", r)
 	}
 }
