@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.1, 2026-10-15
 
 - Deep search skips text Claude Code injects into a session as user messages (reminders, skill instructions), so it only finds what was actually said.
 
