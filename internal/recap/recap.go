@@ -26,11 +26,11 @@ const (
 // as fits are kept and the middle is left out.
 func Input(s *session.Session, talk []session.Message) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Repo: %s\n", s.Repo())
+	fmt.Fprintf(&b, "Repo: %s\n", session.Clip(s.Repo(), 200))
 	if s.Branch != "" {
-		fmt.Fprintf(&b, "Branch: %s\n", s.Branch)
+		fmt.Fprintf(&b, "Branch: %s\n", session.Clip(s.Branch, 200))
 	}
-	fmt.Fprintf(&b, "Title: %s\n\nConversation:\n", session.Clip(s.Title(), 200))
+	fmt.Fprintf(&b, "Title: %s\n\n<transcript>\n", session.Clip(s.Title(), 200))
 	header := b.String()
 
 	first := -1
@@ -44,7 +44,7 @@ func Input(s *session.Session, talk []session.Message) string {
 	if first >= 0 {
 		head = line(talk[first], maxFirst)
 	}
-	const gapReserve = 48 // room for the "messages left out" line
+	const gapReserve = 48 + len(closing) // room for the "messages left out" line and the closing
 	budget := MaxInput - utf8.RuneCountInString(header) - utf8.RuneCountInString(head) - gapReserve
 
 	var tail []string
@@ -67,8 +67,13 @@ func Input(s *session.Session, talk []session.Message) string {
 	for i := len(tail) - 1; i >= 0; i-- {
 		b.WriteString(tail[i])
 	}
+	b.WriteString(closing)
 	return b.String()
 }
+
+// closing ends the transcript and repeats the task, so a model that read a question at
+// the end of the session recaps it instead of answering it.
+const closing = "</transcript>\n\nWrite the three-line recap (goal, done, next) of the session above.\n"
 
 // Recap is what the model said about a Session, and the transcript size it was made from.
 type Recap struct {
@@ -79,12 +84,14 @@ type Recap struct {
 	At   time.Time `json:"at"`
 }
 
-// MaxLine is the longest line Parse accepts. The model is asked for at most 100 characters.
+// MaxLine is the longest line Parse keeps; longer ones are clipped with "…". The model is
+// asked for at most 100 characters.
 const MaxLine = 120
 
 // Parse reads a model reply into a Recap. It needs exactly one line each labelled goal,
 // done and next (any case, an optional colon, list markers and bold allowed); other
-// lines are ignored. Anything else is an error, so a bad reply is never stored.
+// lines are ignored. A missing, empty or repeated label is an error, so a bad reply is
+// never stored.
 func Parse(reply string) (Recap, error) {
 	var r Recap
 	fields := map[string]*string{"goal": &r.Goal, "done": &r.Done, "next": &r.Next}
@@ -107,10 +114,7 @@ func Parse(reply string) (Recap, error) {
 		if v == "" {
 			return Recap{}, fmt.Errorf("recap reply has an empty %s line", label)
 		}
-		if utf8.RuneCountInString(v) > MaxLine {
-			return Recap{}, fmt.Errorf("recap reply's %s line is longer than %d characters", label, MaxLine)
-		}
-		*dst = v
+		*dst = session.Clip(v, MaxLine) // models run long; a clipped line beats a wasted call
 	}
 	for _, label := range []string{"goal", "done", "next"} {
 		if *fields[label] == "" {
@@ -126,7 +130,9 @@ func line(m session.Message, max int) string {
 	if m.Role == "user" {
 		who = "User"
 	}
-	return who + ": " + clipKeepingNewlines(strings.TrimSpace(m.Text), max) + "\n"
+	// A message quoting the closing tag must not end the transcript early.
+	text := strings.ReplaceAll(strings.TrimSpace(m.Text), "</transcript", "</ transcript")
+	return who + ": " + clipKeepingNewlines(text, max) + "\n"
 }
 
 // clipKeepingNewlines cuts s to at most max characters, ending in "…" when it was cut.
