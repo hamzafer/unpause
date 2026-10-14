@@ -195,14 +195,10 @@ func (m *model) launch(s *session.Session, fork bool) (tea.Model, tea.Cmd) {
 	l := opener.Launch{
 		Claude:    m.opts.Claude,
 		SessionID: s.ID,
-		CWD:       s.CWD,
+		CWD:       s.OpenDir(homeDir()),
 		ConfigDir: config.EnvFor(s.Root),
 		Title:     s.Title(),
 		Fork:      fork,
-	}
-	if s.CWDMissing || s.CWD == "" {
-		// Orphan: open in the home dir; Claude Code resumes the transcript regardless of cwd.
-		l.CWD = homeDir()
 	}
 	if opener.NeedsDetach(m.opts.Opener) {
 		m.result.Launch = &l
@@ -418,6 +414,8 @@ func (m model) renderList(w int) string {
 		switch {
 		case s.Live != nil:
 			dot = stLive.Render("●")
+		case s.WorktreeRoot != "":
+			dot = stDim.Render("⎇")
 		case s.CWDMissing:
 			dot = stWarn.Render("!")
 		}
@@ -475,7 +473,10 @@ func (m model) renderPreview(w int) string {
 	if s.Live != nil {
 		meta = append(meta, stLive.Render("● running")+stDim.Render(fmt.Sprintf("  pid %d  %s", s.Live.PID, s.Live.Status)))
 	}
-	if s.CWDMissing {
+	switch {
+	case s.WorktreeRoot != "":
+		meta = append(meta, stDim.Render("⎇ worktree removed; will open in "+session.Tilde(s.OpenDir(homeDir()), homeDir())))
+	case s.CWDMissing:
 		meta = append(meta, stWarn.Render("! folder no longer exists; will open in ~"))
 	}
 	for _, l := range meta {

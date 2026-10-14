@@ -107,6 +107,7 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 		if s.CWD != "" {
 			if _, err := os.Stat(s.CWD); err != nil {
 				s.CWDMissing = true
+				s.WorktreeRoot = session.RetiredWorktreeRoot(s.CWD)
 			}
 		}
 	}

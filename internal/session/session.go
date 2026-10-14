@@ -48,6 +48,9 @@ type Session struct {
 	// Filled at query time, never cached.
 	Live       *Live `json:"live,omitempty"`
 	CWDMissing bool  `json:"cwd_missing,omitempty"`
+	// WorktreeRoot is the repo of a Retired worktree: CWD was a Claude Code worktree
+	// that has been removed while its repo still exists. Empty otherwise.
+	WorktreeRoot string `json:"worktree_root,omitempty"`
 }
 
 // Title is the best human name we have: /rename name, else Claude's auto title, else the first prompt.
