@@ -227,3 +227,23 @@ func TestSearchEmptyQueryAndCancel(t *testing.T) {
 		t.Errorf("cancelled: err = %v", err)
 	}
 }
+
+func TestSearchFileAlternateEscapesAndControlChars(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "esc.jsonl")
+	lines := `{"type":"user","message":{"role":"user","content":"open the tunnel at a\/b"},"timestamp":"2026-09-03T10:00:00.000Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"colored \u001b[31mwidget\u001b[0m output"}]},"timestamp":"2026-09-03T10:00:01.000Z"}
+`
+	if err := os.WriteFile(path, []byte(lines), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if r := search(t, "tunnel", path); r.Hits != 1 {
+		t.Errorf(`\u escape: %+v`, r)
+	}
+	if r := search(t, "a/b", path); r.Hits != 1 {
+		t.Errorf(`\/ escape: %+v`, r)
+	}
+	r := search(t, "widget", path)
+	if r.Hits != 1 || strings.ContainsRune(r.Snippets[0], '\x1b') {
+		t.Errorf("control chars: %+v", r)
+	}
+}

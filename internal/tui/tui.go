@@ -338,6 +338,11 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case "ctrl+r":
+		if m.run != nil {
+			// The running search reads Titles from other goroutines.
+			m.setStatus("wait for the search to finish, then rename", false)
+			return m, nil
+		}
 		if s := m.current(); s != nil && s.Cowork {
 			m.setStatus("Cowork session: rename it in Claude Desktop", false)
 			return m, nil

@@ -161,6 +161,8 @@ func (m *model) deepEmpty() string {
 	switch {
 	case strings.TrimSpace(m.query.Value()) == "":
 		return `  type to search inside transcripts  ·  "quotes" for a phrase`
+	case m.status != "" && !m.statusOK:
+		return "  search failed"
 	case !m.searched:
 		return "  searching…"
 	}

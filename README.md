@@ -44,7 +44,7 @@ unpause list                 # plain text, newest first
 unpause list --json          # for scripts
 unpause list --all           # include empty sessions and subagent transcripts
 unpause search tunnel key    # sessions where both words were said, most matches first
-unpause search '"a phrase"'  # quotes keep a phrase together; --json, --limit N (0 = all)
+unpause search "a phrase"    # one quoted argument is a phrase; --json, --limit N (0 = all)
 unpause open tracker         # resume by name or id prefix, no picker
 unpause open 9e63 --print    # just print the shell command, don't run it
 unpause open 9e63 --fork     # resume as a fork (new session id, original untouched)
@@ -83,7 +83,7 @@ Inside the picker:
 
 `^r` turns the filter box into a rename prompt: `enter` saves the name, `esc` cancels without writing anything.
 
-`^s` turns the filter box into Deep search (`deep › `), with whatever you'd typed as the first query. It searches what was said in each session, the same way as `unpause search`: your prompts, Claude's replies, and the session's name or generated title, not tool calls, tool output or thinking. Every word has to appear somewhere in the session and `"double quotes"` keep a phrase together. The search starts when you stop typing, the header counts the transcripts as they're scanned (`searching 430/1175`), and the list shows only matching sessions, most matches first, with the match count (`12×`) before the title. The preview shows up to 3 snippets with your words highlighted. `enter`, `^f` and `^r` work on the results as usual. `^s` or `esc` goes back to the normal filter.
+`^s` turns the filter box into Deep search (`deep › `), with whatever you'd typed as the first query. It searches what was said in each session, the same way as `unpause search`: your prompts, Claude's replies, and the session's name or generated title, not tool calls, tool output or thinking. Every word has to appear somewhere in the session and `"double quotes"` keep a phrase together. The search starts when you stop typing, the header counts the transcripts as they're scanned (`searching 430/1175`), and the list shows only matching sessions, most matches first, with the match count (`12×`) before the title. The preview shows up to 3 snippets with your words highlighted. `enter`, `^f` and `^r` work on the results as usual (rename waits until a running search finishes). `^s` or `esc` goes back to the normal filter.
 
 Rows: `★` has a name, `●` running right now, `!` folder no longer exists (an orphan; opening it resumes the transcript in your home directory instead), `⎇` the session ran in a Claude Code worktree that has since been removed while its repo still exists (a retired worktree; opening it resumes in the repo, or the same subfolder of it when that exists), `◷` after the age means Claude Code will ask whether to resume from a summary (the session is over 100k tokens and has been idle for more than an hour). That last one is a prediction from the transcript's last usage record: the thresholds are approximate, and unpause can't tell if you've already picked "Don't ask again".
 

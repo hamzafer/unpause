@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 type fakeSearch struct {
 	queries []string
 	results map[string][]claude.Result
+	err     error
 }
 
 func (f *fakeSearch) search(ctx context.Context, q string, progress func(done, total int)) ([]claude.Result, error) {
@@ -22,7 +24,7 @@ func (f *fakeSearch) search(ctx context.Context, q string, progress func(done, t
 	if progress != nil {
 		progress(1, 3)
 	}
-	return f.results[q], nil
+	return f.results[q], f.err
 }
 
 func deepModel(fs *fakeSearch) (tea.Model, []*session.Session) {
@@ -280,5 +282,33 @@ func TestHighlightIsCaseInsensitiveAndRuneSafe(t *testing.T) {
 		if got := highlight(c.in, []string{"tunnel", "key", "keychain"}, hl); got != c.want {
 			t.Errorf("highlight(%q) = %q, want %q", c.in, got, c.want)
 		}
+	}
+}
+
+func TestDeepSearchFailureSaysSo(t *testing.T) {
+	fs := &fakeSearch{err: errors.New("disk on fire")}
+	m, _ := deepModel(fs)
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlS})
+	m, cmds := typeText(m, "x")
+	var msgs []tea.Msg
+	for _, c := range cmds {
+		msgs = append(msgs, runCmd(c)...)
+	}
+	m = settle(m, msgs)
+	v := m.View()
+	if !strings.Contains(v, "search failed") || strings.Contains(v, "searching…") {
+		t.Errorf("failure not shown cleanly\n%s", v)
+	}
+}
+
+func TestDeepSearchBlocksRenameWhileRunning(t *testing.T) {
+	fs := &fakeSearch{}
+	m, _ := deepModel(fs)
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlS})
+	m, _ = typeText(m, "tunnel")
+	m, _ = m.Update(debounceMsg{id: m.(model).searchID})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyCtrlR})
+	if m.(model).mode == modeRename || !strings.Contains(m.View(), "wait for the search") {
+		t.Error("rename must wait while a search reads Titles")
 	}
 }

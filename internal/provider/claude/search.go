@@ -155,8 +155,10 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 		if !isMessageLine(raw) {
 			return nil
 		}
+		// The pre-filter only knows each term's canonical JSON escaping. A line with
+		// \u or \/ escapes may spell a term differently, so it is always decoded.
 		lower = lowerInto(lower[:0], raw, m.ascii)
-		if !m.anyRaw(lower) {
+		if !m.anyRaw(lower) && !bytes.Contains(raw, []byte(`\u`)) && !bytes.Contains(raw, []byte(`\/`)) {
 			return nil
 		}
 		_, _, blocks, ok := decodeMessage(raw)
@@ -256,7 +258,7 @@ func snippet(src string, start, end int) (string, int) {
 		_, size := utf8.DecodeRuneInString(src[b:])
 		b += size
 	}
-	s := strings.Join(strings.Fields(src[a:b]), " ")
+	s := strings.Join(strings.Fields(stripControl(src[a:b])), " ")
 	if a > 0 {
 		s = "…" + s
 	}
@@ -264,6 +266,17 @@ func snippet(src string, start, end int) (string, int) {
 		s += "…"
 	}
 	return s, b
+}
+
+// stripControl turns control characters (terminal escapes from pasted output, for
+// example) into spaces, so a snippet can't drive the terminal it is printed to.
+func stripControl(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return ' '
+		}
+		return r
+	}, s)
 }
 
 // Result is one Session a Deep search found.

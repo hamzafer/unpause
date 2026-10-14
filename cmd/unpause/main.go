@@ -132,7 +132,7 @@ func main() {
 			all, _ := cmd.Flags().GetBool("all")
 			asJSON, _ := cmd.Flags().GetBool("json")
 			limit, _ := cmd.Flags().GetInt("limit")
-			results, err := claude.Search(cmd.Context(), filter(sessions, all), strings.Join(args, " "), nil)
+			results, err := claude.Search(cmd.Context(), filter(sessions, all), searchQuery(args), nil)
 			if err != nil {
 				return err
 			}
@@ -548,4 +548,13 @@ func homeDir() string {
 		return "/"
 	}
 	return h
+}
+
+// searchQuery joins search's args into one query. A single argument with spaces and no
+// quotes of its own was quoted in the shell, so it is searched as one phrase.
+func searchQuery(args []string) string {
+	if len(args) == 1 && strings.ContainsAny(args[0], " \t") && !strings.Contains(args[0], `"`) {
+		return `"` + args[0] + `"`
+	}
+	return strings.Join(args, " ")
 }

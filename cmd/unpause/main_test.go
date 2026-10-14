@@ -328,7 +328,7 @@ func TestSearch(t *testing.T) {
 		Hits     int
 		Snippets []string
 	}
-	if err := json.Unmarshal([]byte(run("search", "tunnel keychain", "--json")), &rs); err != nil {
+	if err := json.Unmarshal([]byte(run("search", "tunnel", "keychain", "--json")), &rs); err != nil {
 		t.Fatal(err)
 	}
 	if len(rs) != 2 || rs[0].Session.ID[:8] != "aaaaaaaa" || rs[0].Hits != 3 || len(rs[0].Snippets) != 2 {
@@ -448,5 +448,21 @@ func TestMCPRefusesBadExcludePattern(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "/x/[work") {
 		t.Errorf("mcp must refuse a bad exclude pattern and name it, got %v: %s", err, out)
+	}
+}
+
+func TestSearchQueryKeepsShellQuotedPhrase(t *testing.T) {
+	for _, c := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"tunnel", "keychain"}, "tunnel keychain"},
+		{[]string{"secure tunnel"}, `"secure tunnel"`},
+		{[]string{`"secure tunnel" key`}, `"secure tunnel" key`},
+		{[]string{"tunnel"}, "tunnel"},
+	} {
+		if got := searchQuery(c.args); got != c.want {
+			t.Errorf("%q: got %q, want %q", c.args, got, c.want)
+		}
 	}
 }
