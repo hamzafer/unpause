@@ -27,6 +27,10 @@ _Avoid_: tool, backend, source
 The title a Session was given with `/rename`, `unpause rename`, or `unpause autoname` (which only names Sessions that have no Name and no auto-generated summary). Optional.
 _Avoid_: custom title, label
 
+**Recap**:
+Three short lines (goal, done, next) a small model writes about a Session, shown in the picker's preview. Opt-in, kept in unpause's cache, never in the Transcript.
+_Avoid_: summary (that is Claude Code's auto-generated title), digest, AI summary
+
 **Title**:
 What a Session is called in the list: its Name if it has one, else the title Claude Desktop shows (Cowork Sessions only), else the agent's auto-generated summary, else the first prompt.
 
