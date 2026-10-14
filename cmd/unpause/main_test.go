@@ -227,6 +227,9 @@ func TestCoworkSessionsListedButReadOnly(t *testing.T) {
 			t.Errorf("list missing %q\n%s", want, out)
 		}
 	}
+	if strings.Contains(out, "(cwd missing)") {
+		t.Errorf("a Cowork Session's VM cwd must not be flagged as missing\n%s", out)
+	}
 	if strings.Contains(out, "Generated make me a dashboard") {
 		t.Errorf("Claude Desktop's title must win over the transcript's ai-title\n%s", out)
 	}

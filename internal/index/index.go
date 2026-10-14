@@ -114,7 +114,8 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 		}
 	}
 	for _, s := range sessions {
-		if s.CWD != "" {
+		// A Cowork Session's cwd is a path inside Claude Desktop's VM; it never opens here, so no orphan flag.
+		if s.CWD != "" && !s.Cowork {
 			if _, err := os.Stat(s.CWD); err != nil {
 				s.CWDMissing = true
 				s.WorktreeRoot = session.RetiredWorktreeRoot(s.CWD)
