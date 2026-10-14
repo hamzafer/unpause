@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -150,9 +152,10 @@ func (h *handlers) visible(ctx context.Context) ([]*session.Session, error) {
 	if len(exclude) == 0 {
 		return all, nil
 	}
+	x := newExcluder(exclude)
 	out := all[:0:0]
 	for _, s := range all {
-		if !excluded(s.CWD, exclude) {
+		if !x.hides(s) {
 			out = append(out, s)
 		}
 	}
@@ -214,7 +217,7 @@ func (h *handlers) search(ctx context.Context, _ *mcp.CallToolRequest, in Search
 				if err != nil {
 					r = &claude.SearchResult{}
 				}
-				if s.CustomTitle != "" || s.AITitle != "" {
+				if s.CustomTitle != "" || s.DesktopTitle != "" || s.AITitle != "" {
 					// A title made from the first prompt would count that prompt twice.
 					r.Hits += m.MatchTitle(s.Title())
 				}
@@ -337,16 +340,70 @@ func pageOf(total, offset, limit int) ([2]int, *int) {
 	return [2]int{start, end}, nil
 }
 
-// excluded reports whether cwd matches one of the [mcp] exclude globs (path.Match syntax).
-// A pattern also matches every folder below a match, and a pattern that does not start
-// with "/" may match the trailing folders of a path, so "*/secret-repo" matches
-// /anything/secret-repo.
-func excluded(cwd string, patterns []string) bool {
-	if cwd == "" {
+// foldCase makes exclude matching case-insensitive. macOS file systems are, by default.
+var foldCase = runtime.GOOS == "darwin"
+
+// excluder decides which Sessions the [mcp] exclude globs hide. It is built per tool
+// call and caches symlink lookups for that call.
+type excluder struct {
+	patterns []string
+	resolved map[string]string // dir -> its symlink-free path, "" when it can't be resolved
+}
+
+func newExcluder(patterns []string) *excluder {
+	x := &excluder{resolved: map[string]string{}}
+	for _, p := range patterns {
+		if foldCase {
+			p = strings.ToLower(p)
+		}
+		x.patterns = append(x.patterns, p)
+	}
+	return x
+}
+
+// hides reports whether s is Excluded: any folder it worked in (every cwd, plus a
+// Cowork Session's selected folders) matches a pattern, as is or with symlinks
+// resolved. When any pattern is set, a Session with no folder at all is hidden too.
+func (x *excluder) hides(s *session.Session) bool {
+	if len(x.patterns) == 0 {
 		return false
 	}
-	for p := path.Clean(cwd); ; p = path.Dir(p) {
-		for _, pat := range patterns {
+	dirs := s.Dirs
+	if s.CWD != "" && !slices.Contains(dirs, s.CWD) {
+		dirs = append(slices.Clip(dirs), s.CWD)
+	}
+	if len(dirs) == 0 {
+		return true
+	}
+	for _, d := range dirs {
+		if x.matches(d) {
+			return true
+		}
+		if r := x.resolve(d); r != "" && r != d && x.matches(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func (x *excluder) resolve(dir string) string {
+	r, ok := x.resolved[dir]
+	if !ok {
+		r, _ = filepath.EvalSymlinks(dir)
+		x.resolved[dir] = r
+	}
+	return r
+}
+
+// matches reports whether dir, or a folder above it, matches a pattern (path.Match syntax).
+// A pattern that does not start with "/" may match the trailing folders of a path, so
+// "*/secret-repo" matches /anything/secret-repo.
+func (x *excluder) matches(dir string) bool {
+	if foldCase {
+		dir = strings.ToLower(dir)
+	}
+	for p := path.Clean(dir); ; p = path.Dir(p) {
+		for _, pat := range x.patterns {
 			if matchPath(pat, p) {
 				return true
 			}

@@ -29,8 +29,12 @@ type Session struct {
 	Root     string `json:"root"`    // config dir the session belongs to
 	Path     string `json:"path"`    // transcript on disk
 
-	CWD    string `json:"cwd"`
-	Branch string `json:"branch,omitempty"`
+	CWD string `json:"cwd"` // the last working directory
+	// Dirs is every distinct working directory the Session had, first seen first.
+	// For a Cowork Session it also holds the folders the user gave it in Claude Desktop
+	// and its metadata cwd, added at query time.
+	Dirs   []string `json:"dirs,omitempty"`
+	Branch string   `json:"branch,omitempty"`
 
 	CustomTitle string `json:"custom_title,omitempty"`
 	// DesktopTitle is the title Claude Desktop shows for a Cowork session.

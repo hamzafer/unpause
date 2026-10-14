@@ -199,7 +199,7 @@ func ReadMessages(path string, offset, limit, maxChars int) ([]FullMessage, int,
 		}
 		i := total
 		total++
-		if i < offset || i >= offset+limit {
+		if i < offset || i-offset >= limit { // not i >= offset+limit, which overflows
 			return nil
 		}
 		for j := range blocks {
@@ -261,7 +261,7 @@ func (m *Matcher) MatchTitle(title string) int {
 }
 
 // SearchFile scans one transcript for the query in every user and assistant record:
-// text, tool inputs, tool results and thinking.
+// text, tool names and inputs, tool results and thinking.
 func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -293,6 +293,9 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 			return nil
 		}
 		for _, b := range blocks {
+			if b.Name != "" {
+				m.match(b.Name, res)
+			}
 			if b.Text != "" {
 				m.match(b.Text, res)
 			}

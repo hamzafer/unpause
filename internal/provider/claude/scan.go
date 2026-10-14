@@ -26,6 +26,9 @@ import (
 // PreviewLen is how many trailing messages we keep for the preview pane.
 const PreviewLen = 8
 
+// MaxDirs caps how many distinct working directories a Session keeps.
+const MaxDirs = 32
+
 // maxPromptLen caps stored prompt text so the cache stays small.
 const maxPromptLen = 400
 
@@ -139,6 +142,7 @@ func consume(s *session.Session, raw []byte, push func(session.Message)) {
 	case "user", "assistant":
 		if l.CWD != "" {
 			s.CWD = l.CWD
+			AddDir(s, l.CWD)
 		}
 		if l.GitBranch != "" {
 			s.Branch = l.GitBranch
@@ -171,6 +175,19 @@ func consume(s *session.Session, raw []byte, push func(session.Message)) {
 		}
 		push(session.Message{Role: l.Type, Text: truncate(text, maxPromptLen), At: at})
 	}
+}
+
+// AddDir records dir in s.Dirs unless it is empty, already there, or the list is full.
+func AddDir(s *session.Session, dir string) {
+	if dir == "" || len(s.Dirs) >= MaxDirs {
+		return
+	}
+	for _, d := range s.Dirs {
+		if d == dir {
+			return
+		}
+	}
+	s.Dirs = append(s.Dirs, dir)
 }
 
 // extractText returns the human-readable text of a message, skipping tool calls, tool results and thinking.

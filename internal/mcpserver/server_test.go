@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -65,6 +66,7 @@ type env struct {
 	dir     string
 	exclude []string
 	cs      *mcp.ClientSession
+	load    Loader
 }
 
 // setup writes the fixture root and connects an in-memory client to a server over it.
@@ -114,6 +116,12 @@ func setup(t *testing.T, exclude ...string) *env {
 		return out, exclude, nil
 	}
 
+	return &env{dir: dir, exclude: exclude, cs: connect(t, load), load: load}
+}
+
+// connect starts a server over load and returns an in-memory client session to it.
+func connect(t *testing.T, load Loader) *mcp.ClientSession {
+	t.Helper()
 	ctx := context.Background()
 	ct, st := mcp.NewInMemoryTransports()
 	srv := New("test-version", load)
@@ -126,7 +134,7 @@ func setup(t *testing.T, exclude ...string) *env {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { cs.Close() })
-	return &env{dir: dir, exclude: exclude, cs: cs}
+	return cs
 }
 
 // call runs a tool and decodes its structured output into out. It fails on tool errors.
@@ -295,12 +303,124 @@ func TestExcluded(t *testing.T) {
 		{"*/secret-repo", "/x/dev/secret-repo/pkg", true},
 		{"*/secret-repo", "/x/dev/secret-repo-2", false},
 		{"secret-repo", "/x/dev/secret-repo", true},
-		{"/x/dev/*", "", false},
+		// No folder at all: hidden whenever any exclude is set (fail closed).
+		{"/x/dev/*", "", true},
 	}
 	for _, c := range cases {
-		if got := excluded(c.cwd, []string{c.pattern}); got != c.want {
-			t.Errorf("excluded(%q, %q) = %v, want %v", c.cwd, c.pattern, got, c.want)
+		if got := newExcluder([]string{c.pattern}).hides(&session.Session{CWD: c.cwd}); got != c.want {
+			t.Errorf("hides(%q, %q) = %v, want %v", c.cwd, c.pattern, got, c.want)
 		}
+	}
+	if newExcluder(nil).hides(&session.Session{}) {
+		t.Error("with no exclude set, a Session without a folder is visible")
+	}
+}
+
+func TestExcludedChecksEveryFolder(t *testing.T) {
+	x := newExcluder([]string{"/x/work/*", "*/Downloads/foo"})
+	// Worked in a work folder first, then moved on: still hidden.
+	if !x.hides(&session.Session{CWD: "/x/dev/ok", Dirs: []string{"/x/work/client", "/x/dev/ok"}}) {
+		t.Error("a Session is Excluded when any folder it worked in matches")
+	}
+	// A Cowork Session: VM cwd, plus the host folder the user gave it.
+	if !x.hides(&session.Session{CWD: "/sessions/edison", Dirs: []string{"/sessions/edison", "/Users/me/Downloads/foo"}, Cowork: true}) {
+		t.Error("a Cowork Session is Excluded by the folders it was given")
+	}
+	if x.hides(&session.Session{CWD: "/x/dev/ok", Dirs: []string{"/x/dev/ok", "/x/dev/other"}}) {
+		t.Error("no folder matches, so the Session is visible")
+	}
+	// Dirs alone, CWD empty.
+	if !x.hides(&session.Session{Dirs: []string{"/x/work/a"}}) {
+		t.Error("Dirs count without a CWD")
+	}
+}
+
+func TestExcludedFoldsCaseOnMac(t *testing.T) {
+	old := foldCase
+	t.Cleanup(func() { foldCase = old })
+
+	foldCase = true
+	if !newExcluder([]string{"/X/Work/*"}).hides(&session.Session{CWD: "/x/WORK/client"}) {
+		t.Error("case-insensitive match expected when folding")
+	}
+	foldCase = false
+	if newExcluder([]string{"/X/Work/*"}).hides(&session.Session{CWD: "/x/WORK/client"}) {
+		t.Error("case-sensitive match expected when not folding")
+	}
+}
+
+func TestExcludedResolvesSymlinks(t *testing.T) {
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	real := filepath.Join(dir, "real", "secret")
+	if err := os.MkdirAll(real, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "link")
+	if err := os.Symlink(filepath.Join(dir, "real"), link); err != nil {
+		t.Fatal(err)
+	}
+	x := newExcluder([]string{filepath.Join(dir, "real", "*")})
+	if !x.hides(&session.Session{CWD: filepath.Join(link, "secret")}) {
+		t.Error("a folder reached through a symlink must match the pattern on its real path")
+	}
+	// The raw path still counts too.
+	if !newExcluder([]string{filepath.Join(link, "*")}).hides(&session.Session{CWD: filepath.Join(link, "secret")}) {
+		t.Error("the raw path must match as well")
+	}
+}
+
+func TestSearchCountsDesktopTitle(t *testing.T) {
+	dir := t.TempDir()
+	p := writeTranscript(t, dir, fixture{id: "eeee0001-0000-0000-0000-000000000000", cwd: "/sessions/vm", at: time.Now(), prompts: []string{"make me a chart", "done"}})
+	cs := connect(t, func(context.Context) ([]*session.Session, []string, error) {
+		s, err := claude.ScanFile(p)
+		if err != nil {
+			return nil, nil, err
+		}
+		s.Account, s.Cowork, s.DesktopTitle = "cowork", true, "Quarterly dashboard"
+		return []*session.Session{s}, nil, nil
+	})
+	e := &env{dir: dir, cs: cs}
+	var out SearchOutput
+	e.call(t, "search_sessions", map[string]any{"query": "quarterly"}, &out)
+	if out.Total != 1 || out.Results[0].Hits != 1 {
+		t.Errorf("a Desktop title must be searched: %+v", out)
+	}
+}
+
+func TestPagingAtMaxOffset(t *testing.T) {
+	e := setup(t)
+	// The SDK decodes arguments through float64, so math.MaxInt itself can't come over
+	// the wire; call the handlers directly with it.
+	h := &handlers{load: e.load}
+	ctx := context.Background()
+	_, lo, err := h.list(ctx, nil, ListInput{Offset: math.MaxInt, Limit: listMax})
+	if err != nil || len(lo.Sessions) != 0 || lo.NextOffset != nil || lo.Total != 12 {
+		t.Errorf("list at MaxInt: %v %+v", err, lo)
+	}
+	_, so, err := h.search(ctx, nil, SearchInput{Query: "secret", Offset: math.MaxInt, Limit: searchMax})
+	if err != nil || len(so.Results) != 0 || so.NextOffset != nil || so.Total != 4 {
+		t.Errorf("search at MaxInt: %v %+v", err, so)
+	}
+	_, g, err := h.get(ctx, nil, GetInput{ID: "22222222", Offset: math.MaxInt, Limit: getMax})
+	if err != nil || len(g.Messages) != 0 || g.NextOffset != nil || g.Total != 5 {
+		t.Errorf("get at MaxInt: %v total=%d next=%v msgs=%d", err, g.Total, g.NextOffset, len(g.Messages))
+	}
+
+	// Over the wire: the largest integer offset JSON carries without overflowing int.
+	const big = 1 << 62
+	var wl ListOutput
+	e.call(t, "list_sessions", map[string]any{"offset": big}, &wl)
+	if len(wl.Sessions) != 0 || wl.NextOffset != nil {
+		t.Errorf("list at 2^62: %+v", wl)
+	}
+	var wg GetOutput
+	e.call(t, "get_session", map[string]any{"id": "22222222", "offset": big}, &wg)
+	if len(wg.Messages) != 0 || wg.NextOffset != nil {
+		t.Errorf("get at 2^62: %+v", wg)
 	}
 }
 

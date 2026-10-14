@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -129,5 +130,42 @@ exclude = ["~/developer/work/*", "*/secret-repo"]
 	want := []string{filepath.Join(home, "developer/work/*"), "*/secret-repo"}
 	if len(c.MCP.Exclude) != 2 || c.MCP.Exclude[0] != want[0] || c.MCP.Exclude[1] != want[1] {
 		t.Errorf("exclude = %q, want %q", c.MCP.Exclude, want)
+	}
+}
+
+func writeConfig(t *testing.T, body string) (home string) {
+	t.Helper()
+	home = t.TempDir()
+	t.Setenv("HOME", home)
+	xdg := filepath.Join(home, "xdg")
+	t.Setenv("XDG_CONFIG_HOME", xdg)
+	os.MkdirAll(filepath.Join(xdg, "unpause"), 0o755)
+	os.WriteFile(filepath.Join(xdg, "unpause", "config.toml"), []byte(body), 0o644)
+	return home
+}
+
+func TestMCPExcludeIsNormalised(t *testing.T) {
+	home := writeConfig(t, `
+[mcp]
+exclude = ["~/developer/work/", "secret-repo/", "/x//y/../z/*"]
+`)
+	c, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{filepath.Join(home, "developer/work"), "secret-repo", "/x/z/*"}
+	if strings.Join(c.MCP.Exclude, "|") != strings.Join(want, "|") {
+		t.Errorf("exclude = %q, want %q", c.MCP.Exclude, want)
+	}
+}
+
+func TestMCPExcludeBadPatternFailsLoad(t *testing.T) {
+	writeConfig(t, `
+[mcp]
+exclude = ["~/ok/*", "/x/[work"]
+`)
+	_, err := Load()
+	if err == nil || !strings.Contains(err.Error(), "/x/[work") {
+		t.Errorf("a bad exclude pattern must fail Load and name the pattern, got %v", err)
 	}
 }

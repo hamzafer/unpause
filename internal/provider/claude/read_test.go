@@ -3,6 +3,7 @@ package claude
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,6 +72,15 @@ func TestReadMessagesPaging(t *testing.T) {
 	if total != 5 || len(msgs) != 0 {
 		t.Errorf("past the end: total=%d msgs=%+v", total, msgs)
 	}
+	// offset+limit overflows here; the page must still be empty, not everything.
+	msgs, total, _ = ReadMessages("testdata/blocks.jsonl", math.MaxInt, 50, 20000)
+	if total != 5 || len(msgs) != 0 {
+		t.Errorf("offset MaxInt: total=%d msgs=%+v", total, msgs)
+	}
+	msgs, _, _ = ReadMessages("testdata/blocks.jsonl", 1, math.MaxInt, 20000)
+	if len(msgs) != 4 || msgs[0].Index != 1 {
+		t.Errorf("limit MaxInt: msgs=%+v", msgs)
+	}
 }
 
 func TestReadMessagesTruncates(t *testing.T) {
@@ -126,6 +136,11 @@ func TestSearchFile(t *testing.T) {
 	r, _ = NewMatcher("and\nspans").SearchFile(context.Background(), "testdata/blocks.jsonl")
 	if r.Hits != 1 {
 		t.Errorf("query with newline: hits = %d, want 1", r.Hits)
+	}
+	// A tool's name counts, so a session that only called Grep is found by "grep".
+	r, _ = NewMatcher("grep").SearchFile(context.Background(), "testdata/blocks.jsonl")
+	if r.Hits != 1 || len(r.Snippets) != 1 || r.Snippets[0] != "Grep" {
+		t.Errorf("tool name: %+v", r)
 	}
 	r, _ = NewMatcher("nowhere-to-be-found").SearchFile(context.Background(), "testdata/blocks.jsonl")
 	if r.Hits != 0 || len(r.Snippets) != 0 {

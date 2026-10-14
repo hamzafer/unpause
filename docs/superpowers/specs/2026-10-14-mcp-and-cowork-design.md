@@ -18,7 +18,8 @@ Claude Desktop's Cowork mode runs Claude Code inside a VM and keeps one config r
 The metadata file has `title`, `cliSessionId`, `createdAt`, `lastActivityAt` (ms epoch), `isArchived`, `initialMessage`, `cwd`. The transcript is standard Claude Code format, so `claude.ScanFile` parses it unchanged.
 
 - `config.ResolveRoots` adds every `local_<x>/.claude` that has `projects/` as a Root labelled `cowork` (macOS only; the folder simply doesn't exist elsewhere). `no_auto_detect` turns it off with the rest of auto-detection. A Root gets a `Cowork bool`.
-- Title: the metadata `title` fills the Session's title when the transcript has no `custom-title` (it wins over the transcript's `ai-title`, because it is what Claude Desktop shows). Stored in a new `DesktopTitle` field, so `Title()` order is CustomTitle, DesktopTitle, AITitle, FirstPrompt. Cached with the session; bump `cacheVersion`.
+- Title: the metadata `title` fills the Session's title when the transcript has no `custom-title` (it wins over the transcript's `ai-title`, because it is what Claude Desktop shows). Stored in a new `DesktopTitle` field, so `Title()` order is CustomTitle, DesktopTitle, AITitle, FirstPrompt. It is re-read from the metadata file on every run, like live state, not cached, so a rename in Claude Desktop shows up at once.
+- Folders: the metadata's `userSelectedFolders` (host folders the user gave the session) and its `cwd` are added to the Session's `Dirs` on every run, also not cached. `[mcp] exclude` matches against them (see Exclude below).
 - A Session gets `Cowork bool` (from its Root). Cowork sessions are read-only to unpause: the picker and `unpause open` refuse with "Cowork session: open it in Claude Desktop", `rename` refuses, `autoname` skips them. They ran inside the VM; resuming them on the host would write into Claude Desktop's folder.
 - They show in `unpause`, `unpause list`, `--json` and the MCP like any other Session. Subagent transcripts under them are ignored as today.
 - `unpause doctor` lists the cowork roots as one summary line (`cowork  N roots, M transcripts`), not one line per root.
@@ -40,7 +41,17 @@ It loads sessions with the same `loadAll(true)` + default filter as `unpause lis
 exclude = ["~/developer/work/*", "*/secret-repo"]
 ```
 
-Globs (`~` expanded, `path.Match` syntax) matched against a Session's cwd. A pattern also matches every folder below a match. Excluded Sessions are invisible to all three tools (get_session says "not found"). The picker and `unpause list` are unaffected.
+Globs (`path.Match` syntax) matched against every folder a Session worked in. Exact rules:
+
+- Folders: every distinct cwd in the transcript (`Dirs`, first 32, plus the last cwd), and for a Cowork Session the metadata's `userSelectedFolders` and `cwd`. A Session is Excluded when any of them matches.
+- A pattern matches a folder and every folder below it. A pattern that doesn't start with `/` also matches the trailing folders of a path, so `*/secret-repo` and `secret-repo` match `/anything/secret-repo`.
+- Patterns are normalised when the config loads: `~` expanded, cleaned, trailing `/` dropped.
+- On macOS matching is case-insensitive (both sides lowercased), since its file systems are by default.
+- Each folder is matched as written and again with symlinks resolved, when it exists.
+- An invalid pattern is a config error: `unpause mcp` refuses to start and names the pattern. Other commands fail on it too.
+- Fail closed: while any pattern is set, a Session with no folder at all is Excluded.
+
+Excluded Sessions are invisible to all three tools (get_session says "not found"). The picker and `unpause list` are unaffected.
 
 ### Tools
 

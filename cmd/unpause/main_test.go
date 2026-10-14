@@ -328,3 +328,51 @@ func TestMCPStdoutIsOnlyProtocol(t *testing.T) {
 		t.Error("transcript changed")
 	}
 }
+
+// TestAutonameApplyNeverWritesCowork: a stale proposals file naming a Cowork session
+// must not get that name written into Claude Desktop's transcript.
+func TestAutonameApplyNeverWritesCowork(t *testing.T) {
+	bin := buildBinary(t)
+	home, env := coworkHome(t)
+	id := "c1c1c1c1-1111-2222-3333-444444444444"
+	transcript := filepath.Join(home, "Library", "Application Support", "Claude", "local-agent-mode-sessions", "org", "user", "local_bbb", ".claude", "projects", "-sessions-x", id+".jsonl")
+	// Untitled, so only the Cowork rule can stop the write.
+	body := `{"type":"user","message":{"role":"user","content":"translate this letter"},"timestamp":"2026-09-28T10:00:00Z","cwd":"/sessions/x","sessionId":"` + id + `"}` + "\n"
+	if err := os.WriteFile(transcript, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cache := filepath.Join(home, ".cache", "unpause")
+	if err := os.MkdirAll(cache, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	ps, _ := json.Marshal([]map[string]string{{"session_id": id, "path": transcript, "name": "Stale name"}})
+	if err := os.WriteFile(filepath.Join(cache, "autoname-proposals.json"), ps, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(bin, "autoname", "--apply")
+	cmd.Env = env
+	out, _ := cmd.CombinedOutput()
+	if after, _ := os.ReadFile(transcript); string(after) != body {
+		t.Errorf("autoname --apply wrote into a Cowork transcript:\n%s\noutput: %s", after, out)
+	}
+}
+
+func TestMCPRefusesBadExcludePattern(t *testing.T) {
+	bin := buildBinary(t)
+	env := emptyAccountEnv(t)
+	home := strings.TrimPrefix(env[len(env)-3], "HOME=")
+	xdg := filepath.Join(home, "xdg")
+	if err := os.MkdirAll(filepath.Join(xdg, "unpause"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(xdg, "unpause", "config.toml"), []byte("[mcp]\nexclude = [\"/x/[work\"]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(bin, "mcp")
+	cmd.Env = append(env, "XDG_CONFIG_HOME="+xdg)
+	cmd.Stdin = strings.NewReader("") // a started server would wait for a client
+	out, err := cmd.CombinedOutput()
+	if err == nil || !strings.Contains(string(out), "/x/[work") {
+		t.Errorf("mcp must refuse a bad exclude pattern and name it, got %v: %s", err, out)
+	}
+}

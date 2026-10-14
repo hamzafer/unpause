@@ -167,7 +167,7 @@ It never writes to a transcript, and it sees the same sessions as `unpause list`
 exclude = ["~/developer/work/*", "*/secret-repo"]
 ```
 
-Each entry is a glob on the session's folder (`*` matches within one folder name, `~` is expanded). It also covers every folder below a match, and an entry that doesn't start with `/` or `~` can match the last folders of any path, so `*/secret-repo` covers every `secret-repo` folder. Excluded sessions don't exist as far as the MCP server knows. The picker and `unpause list` still show them.
+Each entry is a glob on a folder (`*` matches within one folder name, `~` is expanded). A session is hidden if any folder it ever worked in matches, not only the last one. An entry also covers every folder below a match, and an entry that doesn't start with `/` or `~` can match the last folders of any path, so `*/secret-repo` covers every `secret-repo` folder. On macOS case doesn't matter, and symlinked folders are matched on their real path too. Cowork sessions are matched by the folders you gave them in Claude Desktop. A broken pattern stops `unpause mcp` from starting, and while any entry is set, a session with no folder at all is hidden too. Excluded sessions don't exist as far as the MCP server knows. The picker and `unpause list` still show them.
 
 To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `unpause mcp` as a child process and polls OpenAI over outbound HTTPS, so nothing on your Mac listens for connections:
 

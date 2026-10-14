@@ -13,7 +13,7 @@ import (
 	"github.com/hamzafer/unpause/internal/session"
 )
 
-const cacheVersion = 5
+const cacheVersion = 6
 
 type entry struct {
 	ModTime int64            `json:"mtime"`
@@ -92,13 +92,18 @@ func Build(roots []config.Root, progress Progress) ([]*session.Session, error) {
 		_ = save(fresh)
 	}
 
-	// Attach live state, cwd existence and Claude Desktop titles; never cached.
+	// Attach live state, cwd existence and Claude Desktop metadata (title, selected
+	// folders); never cached. The cache was saved above, before these are set.
 	for _, r := range roots {
 		if r.Cowork {
-			title := claude.CoworkTitle(r.Path)
+			meta := claude.ReadCowork(r.Path)
 			for _, s := range sessions {
 				if s.Root == r.Path {
-					s.DesktopTitle = title
+					s.DesktopTitle = meta.Title
+					claude.AddDir(s, meta.CWD)
+					for _, f := range meta.Folders {
+						claude.AddDir(s, f)
+					}
 				}
 			}
 		}
@@ -158,9 +163,25 @@ func save(c cacheFile) error {
 	if err != nil {
 		return err
 	}
-	tmp := p + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+	// A temp file of its own per writer, so `unpause mcp`, the picker and the hook can
+	// save at the same time; the last rename wins and the file is never half-written.
+	f, err := os.CreateTemp(filepath.Dir(p), filepath.Base(p)+".*.tmp")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, p)
+	tmp := f.Name()
+	_, err = f.Write(b)
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Chmod(tmp, 0o644)
+	}
+	if err == nil {
+		err = os.Rename(tmp, p)
+	}
+	if err != nil {
+		_ = os.Remove(tmp)
+	}
+	return err
 }
