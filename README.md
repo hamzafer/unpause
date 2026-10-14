@@ -69,6 +69,7 @@ Inside the picker:
 | `^f` | open as a fork (new session id, original untouched) |
 | `^r` | rename (writes the same record Claude Code's `/rename` does) |
 | `^s` | Deep search: search inside what was said, see below (`^s` again to go back) |
+| `^t` | hide or show the Recap box for this run (only when Recaps are on) |
 | `↑`/`↓`, `^p`/`^n`, `^k`/`^j` | move the cursor one row |
 | `pgup`/`pgdown` | move a page at a time |
 | `home`/`end` | jump to the first/last row |
@@ -133,6 +134,8 @@ enabled = true
 ```
 
 - `unpause recap --session <id>` writes the Recap for one session and prints it.
+- With the SessionEnd hook installed (see autoname), every session that ends also gets a Recap in the background. Its output goes to `autoname.log`.
+- A Recap made before the session went on is shown dim, with `· earlier` after `goal`, until it's written again.
 - Haiku sees the repo, branch and title, then your prompts and Claude's replies (no tool calls, tool output or thinking), about 8,000 characters at most: the first prompt and as much of the end as fits.
 - The call is the same as autoname's: `claude -p --model haiku` under the session's own account, no transcript kept, no hooks, tools or MCP servers. Each Recap is one small Haiku call against that account's plan.
 - A reply that isn't three lines labelled `goal`, `done` and `next` is thrown away; nothing is stored.

@@ -432,6 +432,8 @@ func main() {
 			if only == "" {
 				return fmt.Errorf("--session <id> is required")
 			}
+			delay, _ := cmd.Flags().GetDuration("delay")
+			time.Sleep(delay)
 			cfg, sessions, err := loadAll(true)
 			if err != nil {
 				return err
@@ -453,6 +455,8 @@ func main() {
 		},
 	}
 	recapCmd.Flags().String("session", "", "write the Recap for this session (id prefix or name)")
+	recapCmd.Flags().Duration("delay", 0, "wait this long before starting")
+	_ = recapCmd.Flags().MarkHidden("delay")
 
 	hook := &cobra.Command{
 		Use:   "hook",
@@ -462,7 +466,8 @@ func main() {
 		Use:   "session-end",
 		Short: "SessionEnd hook: name the session that just ended, in the background",
 		Long: "Reads Claude Code's SessionEnd hook input on stdin and starts a detached " +
-			"`unpause autoname --session <id>`, then returns at once. Output goes to autoname.log next to the index cache.",
+			"`unpause autoname --session <id>` (and `unpause recap --session <id>` when Recaps are on), then returns at once. " +
+			"Output goes to autoname.log next to the index cache.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if os.Getenv(autoname.GuardEnv) != "" {
@@ -476,8 +481,14 @@ func main() {
 			if err != nil {
 				return err
 			}
-			// The short delay lets Claude Code finish its last transcript writes first.
-			return autoname.Spawn(self, []string{"autoname", "--session", in.SessionID, "--delay", "3s"}, autoname.LogPath(config.CachePath()))
+			// A config that can't be read still names the Session; only the Recap waits for a fix.
+			cfg, err := config.Load()
+			for _, job := range sessionEndJobs(in.SessionID, err == nil && cfg.Recap.Enabled) {
+				if err := autoname.Spawn(self, job, autoname.LogPath(config.CachePath())); err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	}
 	hook.AddCommand(sessionEnd)
