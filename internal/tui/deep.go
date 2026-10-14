@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/hamzafer/unpause/internal/provider/claude"
+	"github.com/hamzafer/unpause/internal/session"
 )
 
 // Deep search: ^s turns the filter box into a search over what was said in each
@@ -62,7 +63,7 @@ func (m *model) enterDeep() tea.Cmd {
 	m.deep = true
 	m.query.Prompt = deepPrompt
 	m.query.Placeholder = deepPlaceholder
-	m.results, m.terms, m.searched = nil, nil, false
+	m.results, m.terms, m.searched, m.searchErr = nil, nil, false, false
 	m.cursor, m.offset = 0, 0
 	m.searchID++
 	if strings.TrimSpace(m.query.Value()) == "" {
@@ -79,7 +80,7 @@ func (m *model) leaveDeep() {
 	m.query.Prompt = filterPrompt
 	m.query.Placeholder = filterPlaceholder
 	m.query.SetValue("")
-	m.results, m.terms, m.searched = nil, nil, false
+	m.results, m.terms, m.searched, m.searchErr = nil, nil, false, false
 	m.cursor, m.offset = 0, 0
 	m.refilter()
 }
@@ -95,9 +96,10 @@ func (m *model) stopSearch() {
 // The previous results stay on screen until new ones arrive.
 func (m *model) queryChangedDeep() tea.Cmd {
 	m.stopSearch()
+	m.searchErr = false
 	m.searchID++
 	if strings.TrimSpace(m.query.Value()) == "" {
-		m.results, m.terms, m.searched = nil, nil, false
+		m.results, m.terms, m.searched, m.searchErr = nil, nil, false, false
 		m.cursor, m.offset = 0, 0
 		return nil
 	}
@@ -115,12 +117,24 @@ func (m *model) startSearch(id int) tea.Cmd {
 	run := &searchRun{id: id, ctx: ctx, cancel: cancel}
 	run.total.Store(int64(len(m.all)))
 	m.run = run
+	// The search reads copies, so a rename while it runs touches nothing it reads.
+	copies := make([]*session.Session, len(m.all))
+	orig := make(map[*session.Session]*session.Session, len(m.all))
+	for i, s := range m.all {
+		c := *s
+		copies[i], orig[&c] = &c, s
+	}
 	search := m.opts.Search
 	do := func() tea.Msg {
-		res, err := search(ctx, q, func(done, total int) {
+		res, err := search(ctx, copies, q, func(done, total int) {
 			run.total.Store(int64(total))
 			run.done.Store(int64(done))
 		})
+		for i := range res {
+			if s, ok := orig[res[i].Session]; ok {
+				res[i].Session = s
+			}
+		}
 		return searchDoneMsg{id: id, results: res, err: err}
 	}
 	return tea.Batch(do, progressTick(id))
@@ -137,11 +151,12 @@ func (m *model) searchDone(msg searchDoneMsg) {
 	m.stopSearch()
 	if msg.err != nil {
 		if !errors.Is(msg.err, context.Canceled) {
+			m.searchErr = true
 			m.setStatus("search failed: "+msg.err.Error(), false)
 		}
 		return
 	}
-	m.results, m.searched = msg.results, true
+	m.results, m.searched, m.searchErr = msg.results, true, false
 	// The id still matches, so the query is the one this search ran with.
 	m.terms = claude.NewMatcher(m.query.Value()).Terms()
 	m.cursor, m.offset = 0, 0
@@ -161,7 +176,7 @@ func (m *model) deepEmpty() string {
 	switch {
 	case strings.TrimSpace(m.query.Value()) == "":
 		return `  type to search inside transcripts  ·  "quotes" for a phrase`
-	case m.status != "" && !m.statusOK:
+	case m.searchErr:
 		return "  search failed"
 	case !m.searched:
 		return "  searching…"

@@ -49,11 +49,9 @@ func main() {
 			shown := filter(sessions, all)
 			res, err := tui.Run(tui.Options{
 				Sessions: shown,
-				Search: func(ctx context.Context, query string, progress func(done, total int)) ([]claude.Result, error) {
-					return claude.Search(ctx, shown, query, progress)
-				},
-				Opener: op,
-				Claude: cfg.Claude,
+				Search:   claude.Search,
+				Opener:   op,
+				Claude:   cfg.Claude,
 				Rename: func(s *session.Session, name string) error {
 					if s.Cowork {
 						return session.ErrCoworkRename

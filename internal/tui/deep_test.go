@@ -19,7 +19,7 @@ type fakeSearch struct {
 	err     error
 }
 
-func (f *fakeSearch) search(ctx context.Context, q string, progress func(done, total int)) ([]claude.Result, error) {
+func (f *fakeSearch) search(ctx context.Context, _ []*session.Session, q string, progress func(done, total int)) ([]claude.Result, error) {
 	f.queries = append(f.queries, q)
 	if progress != nil {
 		progress(1, 3)
@@ -301,14 +301,38 @@ func TestDeepSearchFailureSaysSo(t *testing.T) {
 	}
 }
 
-func TestDeepSearchBlocksRenameWhileRunning(t *testing.T) {
-	fs := &fakeSearch{}
+func TestDeepSearchFailureClearsOnNextQuery(t *testing.T) {
+	fs := &fakeSearch{err: errors.New("disk on fire")}
 	m, _ := deepModel(fs)
 	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlS})
-	m, _ = typeText(m, "tunnel")
-	m, _ = m.Update(debounceMsg{id: m.(model).searchID})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyCtrlR})
-	if m.(model).mode == modeRename || !strings.Contains(m.View(), "wait for the search") {
-		t.Error("rename must wait while a search reads Titles")
+	m, _ = typeText(m, "x")
+	m = settle(m, runCmd(func() tea.Msg { return debounceMsg{id: m.(model).searchID} }))
+	if !strings.Contains(m.View(), "  search failed") {
+		t.Fatal("failure not shown")
+	}
+	fs.err = nil
+	m, _ = typeText(m, "y")
+	m = settle(m, runCmd(func() tea.Msg { return debounceMsg{id: m.(model).searchID} }))
+	if v := m.View(); strings.Contains(v, "  search failed") || !strings.Contains(v, "nothing matches") {
+		t.Errorf("stale failure after a good search\n%s", v)
+	}
+}
+
+func TestDeepSearchReadsCopiesAndHandsBackOriginals(t *testing.T) {
+	ss := sessions()
+	var got []*session.Session
+	search := func(_ context.Context, in []*session.Session, q string, _ func(int, int)) ([]claude.Result, error) {
+		got = in
+		return []claude.Result{{Session: in[1], Hits: 1}}, nil
+	}
+	m := drive(newModel(Options{Sessions: ss, Opener: &fakeOpener{}, Claude: "claude", Search: search}), tea.WindowSizeMsg{Width: 140, Height: 40})
+	m = drive(m, tea.KeyMsg{Type: tea.KeyCtrlS})
+	m, _ = typeText(m, "x")
+	m = settle(m, runCmd(func() tea.Msg { return debounceMsg{id: m.(model).searchID} }))
+	if len(got) != len(ss) || got[1] == ss[1] || got[1].ID != ss[1].ID {
+		t.Fatal("search must get copies of the sessions")
+	}
+	if r := m.(model).results; len(r) != 1 || r[0].Session != ss[1] {
+		t.Error("results must point at the picker's own sessions, so a rename shows")
 	}
 }

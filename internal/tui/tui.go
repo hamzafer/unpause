@@ -24,8 +24,9 @@ type Options struct {
 	Opener   opener.Opener
 	Claude   string
 	Rename   func(s *session.Session, name string) error
-	// Search runs a Deep search over the picker's Sessions. Nil disables ^s.
-	Search func(ctx context.Context, query string, progress func(done, total int)) ([]claude.Result, error)
+	// Search runs a Deep search over the given Sessions (copies of the picker's, so a
+	// rename never races it). Nil disables ^s.
+	Search func(ctx context.Context, sessions []*session.Session, query string, progress func(done, total int)) ([]claude.Result, error)
 }
 
 // Result is what the picker hands back when it exits.
@@ -87,12 +88,13 @@ type model struct {
 	accounts []string
 
 	// Deep search state (deep.go).
-	deep     bool
-	results  []claude.Result // ranked, shown instead of visible while deep
-	terms    []string        // the terms results were found with, for highlighting
-	searched bool            // results belong to a finished search
-	searchID int
-	run      *searchRun
+	deep      bool
+	results   []claude.Result // ranked, shown instead of visible while deep
+	terms     []string        // the terms results were found with, for highlighting
+	searched  bool            // results belong to a finished search
+	searchErr bool            // the last search failed
+	searchID  int
+	run       *searchRun
 }
 
 // Run starts the picker and blocks until it exits.
@@ -338,11 +340,6 @@ func (m model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case "ctrl+r":
-		if m.run != nil {
-			// The running search reads Titles from other goroutines.
-			m.setStatus("wait for the search to finish, then rename", false)
-			return m, nil
-		}
 		if s := m.current(); s != nil && s.Cowork {
 			m.setStatus("Cowork session: rename it in Claude Desktop", false)
 			return m, nil
