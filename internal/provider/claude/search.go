@@ -152,9 +152,7 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 				return err
 			}
 		}
-		// isMeta user records are text Claude Code injected (reminders, skill bodies),
-		// not something anyone typed.
-		if !isMessageLine(raw) || bytes.Contains(raw, []byte(`"isMeta":true`)) {
+		if !isMessageLine(raw) || isMeta(raw) {
 			return nil
 		}
 		// The pre-filter only knows each term's canonical JSON escaping. A line with
@@ -268,6 +266,18 @@ func snippet(src string, start, end int) (string, int) {
 		s += "…"
 	}
 	return s, b
+}
+
+// isMeta reports whether a record is marked isMeta at the top level: text Claude Code
+// injected as a user message (reminders, skill bodies), not something anyone typed.
+func isMeta(raw []byte) bool {
+	if !bytes.Contains(raw, []byte(`"isMeta"`)) {
+		return false
+	}
+	var r struct {
+		IsMeta bool `json:"isMeta"`
+	}
+	return json.Unmarshal(raw, &r) == nil && r.IsMeta
 }
 
 // stripControl turns control characters (terminal escapes from pasted output, for

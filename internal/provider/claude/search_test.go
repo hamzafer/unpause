@@ -248,3 +248,17 @@ func TestSearchFileAlternateEscapesAndControlChars(t *testing.T) {
 		t.Errorf("control chars: %+v", r)
 	}
 }
+
+func TestIsMetaReadsTheTopLevelField(t *testing.T) {
+	for raw, want := range map[string]bool{
+		`{"type":"user","isMeta":true,"message":{"content":"x"}}`:                                                 true,
+		`{"type":"user", "isMeta": true, "message":{"content":"x"}}`:                                              true,
+		`{"type":"user","isMeta":false,"message":{"content":"x"}}`:                                                false,
+		`{"type":"user","message":{"content":"the field \"isMeta\":true in JSON"}}`:                               false,
+		`{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Write","input":{"isMeta":true}}]}}`: false,
+	} {
+		if got := isMeta([]byte(raw)); got != want {
+			t.Errorf("%s: got %v", raw, got)
+		}
+	}
+}
