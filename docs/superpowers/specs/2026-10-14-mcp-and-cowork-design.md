@@ -43,7 +43,7 @@ exclude = ["~/developer/work/*", "*/secret-repo"]
 
 Globs (`path.Match` syntax) matched against every folder a Session worked in. Exact rules:
 
-- Folders: every distinct cwd in the transcript (`Dirs`, first 32, plus the last cwd), and for a Cowork Session the metadata's `userSelectedFolders` and `cwd`. A Session is Excluded when any of them matches.
+- Folders: every distinct cwd in the transcript (`Dirs`, no cap), and for a Cowork Session the metadata's `userSelectedFolders` and `cwd`. A Session is Excluded when any of them matches.
 - A pattern matches a folder and every folder below it. A pattern that doesn't start with `/` also matches the trailing folders of a path, so `*/secret-repo` and `secret-repo` match `/anything/secret-repo`.
 - Patterns are normalised when the config loads: `~` expanded, cleaned, trailing `/` dropped.
 - On macOS matching is case-insensitive (both sides lowercased), since its file systems are by default.

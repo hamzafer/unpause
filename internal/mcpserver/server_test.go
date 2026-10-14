@@ -370,6 +370,13 @@ func TestExcludedResolvesSymlinks(t *testing.T) {
 	if !newExcluder([]string{filepath.Join(link, "*")}).hides(&session.Session{CWD: filepath.Join(link, "secret")}) {
 		t.Error("the raw path must match as well")
 	}
+	// A symlink inside the pattern counts too.
+	if !newExcluder([]string{filepath.Join(link, "secret")}).hides(&session.Session{CWD: real}) {
+		t.Error("a pattern written through a symlink must match the real folder")
+	}
+	if !newExcluder([]string{filepath.Join(link, "*")}).hides(&session.Session{CWD: real}) {
+		t.Error("a glob written through a symlink must match the real folder")
+	}
 }
 
 func TestSearchCountsDesktopTitle(t *testing.T) {

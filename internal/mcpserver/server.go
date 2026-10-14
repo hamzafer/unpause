@@ -353,12 +353,37 @@ type excluder struct {
 func newExcluder(patterns []string) *excluder {
 	x := &excluder{resolved: map[string]string{}}
 	for _, p := range patterns {
-		if foldCase {
-			p = strings.ToLower(p)
+		for _, q := range withRealPrefix(p) {
+			if foldCase {
+				q = strings.ToLower(q)
+			}
+			x.patterns = append(x.patterns, q)
 		}
-		x.patterns = append(x.patterns, p)
 	}
 	return x
+}
+
+// withRealPrefix returns p, plus p with symlinks resolved in its literal leading folders
+// (the ones before the first glob character), so a pattern written through a symlink
+// still matches the real folder.
+func withRealPrefix(p string) []string {
+	if !strings.HasPrefix(p, "/") {
+		return []string{p}
+	}
+	parts := strings.Split(p, "/")
+	n := len(parts)
+	for i, part := range parts {
+		if strings.ContainsAny(part, `*?[\`) {
+			n = i
+			break
+		}
+	}
+	prefix := strings.Join(parts[:n], "/")
+	real, err := filepath.EvalSymlinks(prefix)
+	if prefix == "" || err != nil || real == prefix {
+		return []string{p}
+	}
+	return []string{p, real + strings.TrimPrefix(p, prefix)}
 }
 
 // hides reports whether s is Excluded: any folder it worked in (every cwd, plus a

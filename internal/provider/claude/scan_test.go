@@ -139,12 +139,13 @@ func TestScanKeepsEveryCWD(t *testing.T) {
 		t.Errorf("dirs = %q, want every distinct cwd in first-seen order", got)
 	}
 
+	// No cap: a dropped folder would let an Excluded Session through.
 	var b strings.Builder
-	for i := 0; i < MaxDirs+10; i++ {
+	for i := 0; i < 100; i++ {
 		b.WriteString(rec(fmt.Sprintf("/d/%d", i)))
 	}
 	s, _ = Scan(strings.NewReader(b.String()))
-	if len(s.Dirs) != MaxDirs {
-		t.Errorf("dirs kept = %d, want the cap %d", len(s.Dirs), MaxDirs)
+	if len(s.Dirs) != 100 {
+		t.Errorf("dirs kept = %d, want all 100", len(s.Dirs))
 	}
 }
