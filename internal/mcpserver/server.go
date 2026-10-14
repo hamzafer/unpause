@@ -42,6 +42,7 @@ type Summary struct {
 	LastActive string `json:"last_active,omitempty"`
 	Messages   int    `json:"messages" jsonschema:"user prompts plus assistant replies"`
 	Live       string `json:"live,omitempty" jsonschema:"busy or idle when the session is running now"`
+	Cowork     bool   `json:"cowork,omitempty" jsonschema:"a Claude Desktop Cowork session"`
 }
 
 // ListInput is list_sessions' arguments.
@@ -294,7 +295,7 @@ func keep(s *session.Session, account, project string) bool {
 func summarize(s *session.Session) Summary {
 	out := Summary{
 		ID: s.ID, Title: s.Title(), Account: s.Account, CWD: s.CWD, Branch: s.Branch,
-		Created: stamp(s.Created), LastActive: stamp(s.LastActive), Messages: s.Messages,
+		Created: stamp(s.Created), LastActive: stamp(s.LastActive), Messages: s.Messages, Cowork: s.Cowork,
 	}
 	if s.CWD != "" {
 		out.Project = s.Repo()

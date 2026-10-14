@@ -442,3 +442,12 @@ func snapshot(t *testing.T, dir string) map[string][]byte {
 	}
 	return out
 }
+
+func TestSummaryMarksCowork(t *testing.T) {
+	if !summarize(&session.Session{ID: "c0c0c0c0", Cowork: true}).Cowork {
+		t.Error("a Cowork Session's summary must say cowork")
+	}
+	if summarize(&session.Session{ID: "a0a0a0a0"}).Cowork {
+		t.Error("only Cowork Sessions are marked")
+	}
+}
