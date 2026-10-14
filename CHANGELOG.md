@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.8.1, 2026-10-15
 
 - Recaps: the model no longer answers the session's last question instead of recapping it, and a line that runs long is clipped instead of the whole Recap being thrown away. `unpause recap` errors no longer print the usage text.
 
