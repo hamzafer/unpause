@@ -417,7 +417,9 @@ func main() {
 		Long: "Asks `claude -p --model haiku`, under the session's own account, for three short lines about a session: " +
 			"goal, done and next. The picker shows them in a box in the preview. Only the session's talk is sent " +
 			"(prompts and replies, not tool output), about 8,000 characters at most. Recaps are kept in recaps.json " +
-			"next to the index cache, never in the transcript. Off unless [recap] enabled = true is in the config.",
+			"next to the index cache, never in the transcript. Off unless [recap] enabled = true is in the config.\n\n" +
+			"Without --session it catches up: sessions with no Recap or an outdated one, newest first, at most --limit " +
+			"of them. Running, Cowork, empty and subagent sessions are skipped.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load()
@@ -429,18 +431,23 @@ func main() {
 					"  [recap]\n  enabled = true\n\nto %s", config.Path())
 			}
 			only, _ := cmd.Flags().GetString("session")
-			if only == "" {
-				return fmt.Errorf("--session <id> is required")
+			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			limit, _ := cmd.Flags().GetInt("limit")
+			if only != "" && (dryRun || cmd.Flags().Changed("limit")) {
+				return fmt.Errorf("--session can't be combined with --dry-run or --limit")
 			}
 			cfg, sessions, err := loadAll(true)
 			if err != nil {
 				return err
 			}
+			ask := autoname.Ask(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) }, recap.SystemPrompt)
+			if only == "" {
+				return recapBackfill(cmd.Context(), sessions, ask, limit, dryRun)
+			}
 			s := find(sessions, only)
 			if s == nil {
 				return fmt.Errorf("no session matches %q", only)
 			}
-			ask := autoname.Ask(cfg.Claude, func(s *session.Session) string { return config.EnvFor(s.Root) }, recap.SystemPrompt)
 			r, err := recap.Make(cmd.Context(), s, ask)
 			if err != nil {
 				return fmt.Errorf("%s: %w", s.ShortID(), err)
@@ -453,6 +460,8 @@ func main() {
 		},
 	}
 	recapCmd.Flags().String("session", "", "write the Recap for this session (id prefix or name)")
+	recapCmd.Flags().Int("limit", 20, "without --session: recap at most this many sessions, newest first (0 = all)")
+	recapCmd.Flags().Bool("dry-run", false, "without --session: list the sessions that would get a Recap, and stop")
 
 	hook := &cobra.Command{
 		Use:   "hook",
@@ -513,6 +522,7 @@ func main() {
 			if coworkRoots > 0 {
 				fmt.Printf("  %-10s %d roots, %d transcripts\n", config.CoworkLabel, coworkRoots, coworkTranscripts)
 			}
+			fmt.Printf("recaps:  %s\n", recapStatus(cfg))
 			return nil
 		},
 	}

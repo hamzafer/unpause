@@ -53,6 +53,8 @@ unpause autoname --dry-run   # propose Haiku names for untitled sessions, write 
 unpause autoname --apply     # write exactly the names the dry run showed
 unpause autoname             # ask Haiku and write in one go
 unpause recap --session 9e63 # write a Recap (goal, done, next) for one session, see "Recaps"
+unpause recap --dry-run      # list the sessions missing a Recap or with an outdated one
+unpause recap                # write Recaps for the newest 20 of those (--limit 0 for all)
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
 unpause --version            # print the binary version
@@ -133,6 +135,8 @@ enabled = true
 ```
 
 - `unpause recap --session <id>` writes the Recap for one session and prints it.
+- `unpause recap` catches up: sessions with no Recap, or one made before the transcript grew, newest first, 20 at a time (`--limit N`, 0 = all). `--dry-run` lists them and asks Haiku nothing. Running sessions are skipped until they end. If an account's login fails, its other sessions are skipped for that run.
+- `unpause doctor` shows whether Recaps are on and how many sessions have one.
 - Haiku sees the repo, branch and title, then your prompts and Claude's replies (no tool calls, tool output or thinking), about 8,000 characters at most: the first prompt and as much of the end as fits.
 - The call is the same as autoname's: `claude -p --model haiku` under the session's own account, no transcript kept, no hooks, tools or MCP servers. Each Recap is one small Haiku call against that account's plan.
 - A reply that isn't three lines labelled `goal`, `done` and `next` is thrown away; nothing is stored.
