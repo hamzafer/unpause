@@ -26,9 +26,9 @@ const (
 // as fits are kept and the middle is left out.
 func Input(s *session.Session, talk []session.Message) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Repo: %s\n", s.Repo())
+	fmt.Fprintf(&b, "Repo: %s\n", session.Clip(s.Repo(), 200))
 	if s.Branch != "" {
-		fmt.Fprintf(&b, "Branch: %s\n", s.Branch)
+		fmt.Fprintf(&b, "Branch: %s\n", session.Clip(s.Branch, 200))
 	}
 	fmt.Fprintf(&b, "Title: %s\n\n<transcript>\n", session.Clip(s.Title(), 200))
 	header := b.String()
@@ -130,7 +130,9 @@ func line(m session.Message, max int) string {
 	if m.Role == "user" {
 		who = "User"
 	}
-	return who + ": " + clipKeepingNewlines(strings.TrimSpace(m.Text), max) + "\n"
+	// A message quoting the closing tag must not end the transcript early.
+	text := strings.ReplaceAll(strings.TrimSpace(m.Text), "</transcript", "</ transcript")
+	return who + ": " + clipKeepingNewlines(text, max) + "\n"
 }
 
 // clipKeepingNewlines cuts s to at most max characters, ending in "…" when it was cut.
