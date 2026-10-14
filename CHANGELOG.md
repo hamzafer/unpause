@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Deep search skips text Claude Code injects into a session as user messages (reminders, skill instructions), so it only finds what was actually said.
+
 ## v0.7.0, 2026-10-15
 
 - Deep search in the picker: `^s` switches the filter box to searching inside what was said, with the same rules as `unpause search`. It starts 300 ms after you stop typing, shows scan progress in the header, lists matching sessions ranked with a `12×` match count, and previews up to 3 snippets with your words highlighted. Whatever you'd typed in the filter becomes the first query; `^s` or `esc` goes back.

@@ -152,7 +152,9 @@ func (m *Matcher) SearchFile(ctx context.Context, path string) (*SearchResult, e
 				return err
 			}
 		}
-		if !isMessageLine(raw) {
+		// isMeta user records are text Claude Code injected (reminders, skill bodies),
+		// not something anyone typed.
+		if !isMessageLine(raw) || bytes.Contains(raw, []byte(`"isMeta":true`)) {
 			return nil
 		}
 		// The pre-filter only knows each term's canonical JSON escaping. A line with

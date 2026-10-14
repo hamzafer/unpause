@@ -12,7 +12,7 @@ Fixture-based tests live next to the code they test, e.g. `internal/provider/cla
 ## Where things live
 
 - `internal/session`: the provider-agnostic `Session` model and small formatting helpers (`Age`, `Clip`, `Tokens`). Every provider parses into this struct; the TUI and `list`/`open`/`rename` only ever see it.
-- `internal/provider/claude`: the Claude Code parser (`scan.go`), the rename writer (`rename.go`), live-session detection (`live.go`), and transcript discovery (`provider.go`).
+- `internal/provider/claude`: the Claude Code parser (`scan.go`), the rename writer (`rename.go`), live-session detection (`live.go`), transcript discovery (`provider.go`), the full reader behind `get_session` (`read.go`), and Deep search (`search.go`: the matcher and the parallel `Search` the picker, `unpause search` and the MCP server share).
 - `internal/index`: builds the full session list across accounts, with the mtime-and-size cache.
 - `internal/config`: reads `~/.config/unpause/config.toml` and auto-detects `~/.claude*` accounts.
 - `internal/opener`: where a resumed session appears (new tab, tmux window, in place).
@@ -58,7 +58,7 @@ Warp, iTerm2, Kitty and WezTerm don't have tab openers yet and fall back to in-p
 
 ## Changing the transcript parser
 
-Claude Code's transcript format is internal and can change between releases (see [ADR 0004](docs/adr/0004-parse-transcripts-directly-with-mtime-cache.md)). If you touch what `internal/provider/claude/scan.go` reads out of a transcript, a field added, renamed, or reinterpreted:
+Claude Code's transcript format is internal and can change between releases (see [ADR 0004](docs/adr/0004-parse-transcripts-directly-with-mtime-cache.md)). If you touch what `internal/provider/claude/scan.go` (or `read.go` / `search.go`) reads out of a transcript, a field added, renamed, or reinterpreted:
 
 1. Update `internal/provider/claude/testdata/*.jsonl` to cover the new shape, and the tests in `scan_test.go` that assert against it.
 2. Bump `cacheVersion` in `internal/index/index.go`. The cache is keyed by transcript path, mtime and size, not by parser version, so without this bump, old cache entries built by the previous parser get silently reused forever instead of being re-parsed.

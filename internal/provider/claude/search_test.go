@@ -54,6 +54,7 @@ func TestSearchFileTalkOnly(t *testing.T) {
 		t.Errorf("snippets = %q", r.Snippets)
 	}
 	for _, q := range []string{
+		"metaonly",      // isMeta (injected) user record only
 		"secrets",       // thinking only
 		"security",      // tool_use input only
 		"bash",          // tool name only
