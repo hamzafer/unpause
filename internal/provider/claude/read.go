@@ -151,7 +151,8 @@ func Truncate(s string, max int) string {
 	return fmt.Sprintf("%s[… %d more chars]", s[:i], utf8.RuneCountInString(s[i:]))
 }
 
-func cutBlock(b Block, max int) Block {
+// CutBlock cuts a block's text, and a tool_use input as text, to max characters.
+func CutBlock(b Block, max int) Block {
 	b.Text = Truncate(b.Text, max)
 	if raw, ok := b.Input.(json.RawMessage); ok && utf8.RuneCount(raw) > max {
 		b.Input = Truncate(string(raw), max)
@@ -202,7 +203,7 @@ func ReadMessages(path string, offset, limit, maxChars int) ([]FullMessage, int,
 			return nil
 		}
 		for j := range blocks {
-			blocks[j] = cutBlock(blocks[j], maxChars)
+			blocks[j] = CutBlock(blocks[j], maxChars)
 		}
 		out = append(out, FullMessage{Index: i, Role: role, At: at, Blocks: blocks})
 		return nil

@@ -193,7 +193,7 @@ path = "/Volumes/lab/.claude"
 
 - `list_sessions`: sessions newest first, with title, account, project, folder, branch, times, message count and whether it's running. Filters: `account`, `project`, `live`. Pages with `limit` and `offset`.
 - `search_sessions`: the same search as `unpause search`. It looks at what was said (your prompts, Claude's replies, and the session's name or generated title), not tool calls, tool output or thinking. Every word of the query has to appear somewhere in a session, and `"double quotes"` keep a phrase together. Results are ranked by match count, newest first on ties, with up to 3 snippets.
-- `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut.
+- `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut. A page also stops once its text would pass `max_total_chars` (default 30,000, max 200,000) and returns `next_offset` to read on, so one result stays small enough for clients like Claude Desktop.
 
 It never writes to a transcript, and it sees the same sessions as `unpause list`, re-read on every call.
 

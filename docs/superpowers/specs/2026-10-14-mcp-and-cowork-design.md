@@ -67,9 +67,10 @@ Excluded Sessions are invisible to all three tools (get_session says "not found"
 - Must finish in well under 120 s (tunnel deadline) on the reference machine (~2.6 GB, ~1,200 transcripts): scan files in parallel, pre-filter raw lines by lowercase bytes before decoding JSON.
 
 `get_session`
-- in: `id` (id, id prefix, or Name, same lookup as `unpause open`), `offset` (message index, default 0), `limit` (default 50, max 200), `max_chars` (per content block, default 20000)
+- in: `id` (id, id prefix, or Name, same lookup as `unpause open`), `offset` (message index, default 0), `limit` (default 50, max 200), `max_chars` (per content block, default 20000), `max_total_chars` (per page, default 30000, max 200000)
 - out: `{session: Summary, total, offset, next_offset?, messages: [{index, role, at, blocks: [{type, text?, name?, input?, is_error?}]}]}`
 - Messages are every `user` and `assistant` record with content, in file order, raw: tool_use blocks carry name and input, tool_result blocks carry their text, thinking blocks carry their text. Blocks longer than `max_chars` are cut with a `[… N more chars]` marker.
+- A page stops at a size budget, so one result stays under what clients accept from a tool (Claude Desktop rejected a 56,764-char page). Messages are added in order while the characters of their blocks (text, tool_use input, tool_result text, after the `max_chars` cut) stay within `max_total_chars`. At least one message always comes back; when it alone is over the budget, its blocks are cut further to fit. When the budget stops a page early, `next_offset` is the first message not returned, so paging on with `offset = next_offset` reads every message once.
 
 ### ChatGPT
 

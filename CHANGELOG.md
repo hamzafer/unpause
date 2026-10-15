@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `get_session` stops a page at a size budget, `max_total_chars` (default 30,000, max 200,000), and returns `next_offset` to read on. With the defaults, a page could pass 50,000 characters, more than Claude Desktop accepts from a tool. At least one message always comes back, cut to fit when it alone is over the budget.
 - `unpause mcp` keeps an access log: one line per tool call in `~/.cache/unpause/access.jsonl` with the client, tool, inputs, the session ids returned and the timing, never message text or titles. `unpause mcp stats` shows calls per tool and client, the sessions read most, errors and top searches for the last 7 days (`--since`, `--json`).
 - The access log keeps what a client sends as sent (a search query lands in it), cut to 500 bytes per field. Errors are logged as a short class (`not found`, `invalid input`, `canceled`, `failed`), never their text, and calls turned away before they run are logged as `invalid input`. Two `unpause mcp` servers share the log under a file lock, a symlink at the log path is refused, and `unpause mcp stats` strips control characters from what it prints.
 

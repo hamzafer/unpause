@@ -4,6 +4,7 @@ package mcpserver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -28,6 +30,7 @@ const (
 	searchDefault, searchMax = 10, 50
 	getDefault, getMax       = 50, 200
 	maxCharsDefault          = 20000
+	budgetDefault, budgetMax = 30000, 200000
 )
 
 // Summary is how a Session is described in every tool's output.
@@ -92,6 +95,8 @@ type GetInput struct {
 	Offset   int    `json:"offset,omitempty" jsonschema:"index of the first message, default 0"`
 	Limit    int    `json:"limit,omitempty" jsonschema:"messages per page, default 50, max 200"`
 	MaxChars int    `json:"max_chars,omitempty" jsonschema:"longest content block kept whole, default 20000; longer ones are cut"`
+	// MaxTotalChars keeps one result under what clients accept from a tool.
+	MaxTotalChars int `json:"max_total_chars,omitempty" jsonschema:"size budget for the page: messages are added until their text (text, tool_use input and tool_result text) would pass it, default 30000, max 200000; at least one message always comes back. When the page stops early, next_offset is where to continue"`
 }
 
 // GetOutput is get_session's result.
@@ -146,7 +151,9 @@ func New(version string, load Loader, rec Recorder) *mcp.Server {
 	addTool(s, rec, &mcp.Tool{
 		Name: "get_session",
 		Description: "Read one session's transcript in file order, page by page. Each message has blocks: text, thinking, tool_use (name and input) " +
-			"and tool_result (text, is_error). Blocks longer than max_chars are cut with a [… N more chars] marker.",
+			"and tool_result (text, is_error). Blocks longer than max_chars are cut with a [… N more chars] marker. " +
+			"A page also stops once its text would pass max_total_chars (default 30000), so it may hold fewer than limit messages: " +
+			"whenever next_offset is set, call again with offset = next_offset to read on.",
 		Annotations: ro,
 	}, h.get, func(o GetOutput) ([]string, int, int) {
 		return []string{o.Session.ID}, len(o.Messages), o.Total
@@ -262,7 +269,11 @@ func (h *handlers) get(ctx context.Context, _ *mcp.CallToolRequest, in GetInput)
 	if err != nil {
 		return nil, GetOutput{}, err
 	}
-	_, next := pageOf(total, offset, limit)
+	msgs = withinBudget(msgs, clamp(in.MaxTotalChars, budgetDefault, budgetMax))
+	_, next := pageOf(total, offset, len(msgs))
+	if len(msgs) == 0 {
+		_, next = pageOf(total, offset, limit)
+	}
 	return nil, GetOutput{Session: summarize(s), Total: total, Offset: offset, NextOffset: next, Messages: msgs}, nil
 }
 
@@ -299,6 +310,62 @@ func stamp(t time.Time) string {
 		return ""
 	}
 	return t.UTC().Format(time.RFC3339)
+}
+
+// withinBudget keeps messages, in order, while their text fits in budget characters. The
+// first message always stays; when it alone is over budget its blocks are cut to fit.
+func withinBudget(msgs []claude.FullMessage, budget int) []claude.FullMessage {
+	used := 0
+	for i, m := range msgs {
+		n := messageSize(m)
+		if i > 0 && used+n > budget {
+			return msgs[:i]
+		}
+		if i == 0 && n > budget {
+			msgs[0] = cutToFit(m, budget)
+			n = messageSize(msgs[0])
+		}
+		used += n
+	}
+	return msgs
+}
+
+// markerRoom is what a block's [… N more chars] marker may add after the cut.
+const markerRoom = 32
+
+// cutToFit cuts a message's blocks, in order, so their text stays near budget.
+func cutToFit(m claude.FullMessage, budget int) claude.FullMessage {
+	blocks := slices.Clone(m.Blocks)
+	left := budget
+	for j, b := range blocks {
+		if n := blockSize(b); n > left {
+			b = claude.CutBlock(b, max(left-markerRoom, 1))
+		}
+		blocks[j] = b
+		left -= blockSize(b)
+	}
+	m.Blocks = blocks
+	return m
+}
+
+func messageSize(m claude.FullMessage) int {
+	n := 0
+	for _, b := range m.Blocks {
+		n += blockSize(b)
+	}
+	return n
+}
+
+// blockSize counts a block's text, tool_use input and tool_result text in characters.
+func blockSize(b claude.Block) int {
+	n := utf8.RuneCountInString(b.Text)
+	switch in := b.Input.(type) {
+	case string:
+		n += utf8.RuneCountInString(in)
+	case json.RawMessage:
+		n += utf8.RuneCount(in)
+	}
+	return n
 }
 
 func clamp(n, def, hi int) int {
