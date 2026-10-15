@@ -445,3 +445,20 @@ func TestBuildSession(t *testing.T) {
 		t.Error("a prefix is not an id")
 	}
 }
+
+func TestClientSessionsRead(t *testing.T) {
+	es := entries(
+		ent{ago: time.Hour, client: "a", tool: "get_session", ids: []string{"s1"}},
+		ent{ago: time.Hour, client: "a", tool: "get_session", ids: []string{"s1"}},
+		ent{ago: time.Hour, client: "a", tool: "get_session", ids: []string{"s2"}},
+		ent{ago: time.Hour, client: "a", tool: "list_sessions", ids: []string{"s3", "s4"}},
+		ent{ago: time.Hour, client: "b", tool: "get_session", ids: []string{}, err: "not found"},
+	)
+	got := map[string]int{}
+	for _, c := range build(t, es, "24h").Clients {
+		got[c.ID] = c.SessionsRead
+	}
+	if got["a"] != 2 || got["b"] != 0 {
+		t.Errorf("sessions_read per client = %v, want a=2 (distinct, get_session only) b=0", got)
+	}
+}

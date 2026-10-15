@@ -239,6 +239,13 @@ unpause mcp stats --since 30d --json
 unpause mcp stats --web
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-stats-dark.png">
+  <img alt="The stats page with sample data: a headline naming who read your sessions, five figures, calls per day stacked by client, and the most read sessions and top searches." src="docs/images/readme-stats-light.png">
+</picture>
+
+The screenshot uses sample data.
+
 ## How it works
 
 unpause streams each transcript in `<account>/projects/*/*.jsonl` once, keeps a handful of fields (id, cwd, branch, timestamps, titles, the last few messages) and caches them in `~/.cache/unpause/index.json`, keyed by each transcript's path, mtime and size. A transcript is re-parsed only when its mtime or size changes, or after `unpause rename` writes to it. First run over ~400 MB of transcripts takes about a second; after that it's milliseconds. It's safe to delete the cache file at any time; unpause rebuilds it from scratch on the next run. Live status comes from Claude Code's pid files and is checked every run, never cached.

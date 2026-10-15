@@ -8,6 +8,7 @@ const mock = process.env.NEXT_PUBLIC_MOCK === "1";
 
 const nextConfig: NextConfig = {
   output: "export",
+  devIndicators: false,
   generateBuildId: async () => "unpause",
   images: { unoptimized: true },
   trailingSlash: false,

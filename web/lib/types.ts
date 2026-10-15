@@ -16,6 +16,8 @@ export type ClientStat = {
   name: string;
   slot: number;
   calls: number;
+  /** Distinct Sessions this client read with a successful get_session. */
+  sessions_read: number;
   last_seen: string;
 };
 

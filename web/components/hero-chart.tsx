@@ -4,7 +4,10 @@ import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
+  ReferenceArea,
   ReferenceDot,
   XAxis,
   YAxis,
@@ -80,6 +83,10 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
   const lastIdx = rows.findLastIndex((r) => r.covered);
   const last = lastIdx >= 0 ? rows[lastIdx] : null;
   const config = Object.fromEntries(series.map((s) => [s.key, { label: s.name }]));
+  // An area needs a few points to read as a shape; with fewer, stacked bars show the same data honestly.
+  const sparse = rows.filter((r) => r.covered).length < 3;
+  const Chart = sparse ? BarChart : AreaChart;
+  const gap = rows.filter((r) => !r.covered);
 
   return (
     <Panel
@@ -129,10 +136,31 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
             config={config}
             className="aspect-auto h-[240px] w-full sm:h-[280px]"
             role="img"
-            aria-label={`Stacked area chart of calls per ${bucket} by client. Use the Table toggle for the values.`}
+            aria-label={`Stacked ${sparse ? "bar" : "area"} chart of calls per ${bucket} by client. Use the Table toggle for the values.`}
           >
-            <AreaChart data={rows} margin={{ top: 12, right: 14, bottom: 0, left: 0 }}>
+            <Chart data={rows} margin={{ top: 12, right: 14, bottom: 0, left: 0 }}>
+              <defs>
+                <pattern
+                  id="gap-hatch"
+                  width="6"
+                  height="6"
+                  patternUnits="userSpaceOnUse"
+                  patternTransform="rotate(45)"
+                >
+                  <line x1="0" y1="0" x2="0" y2="6" stroke="var(--grid)" strokeWidth="2" />
+                </pattern>
+              </defs>
               <CartesianGrid vertical={false} stroke="var(--grid)" />
+              {gap.length > 0 && (
+                <ReferenceArea
+                  x1={gap[0].t}
+                  x2={rows.find((r) => r.covered)?.t ?? gap[gap.length - 1].t}
+                  fill="url(#gap-hatch)"
+                  fillOpacity={1}
+                  strokeOpacity={0}
+                  ifOverflow="visible"
+                />
+              )}
               <XAxis
                 dataKey="t"
                 tickFormatter={(t: string) => bucketLabel(t, bucket)}
@@ -152,27 +180,42 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
                 className="font-mono"
               />
               <ChartTooltip
-                cursor={{ stroke: "var(--muted-text)", strokeWidth: 1 }}
+                cursor={sparse ? { fill: "var(--grid)", fillOpacity: 0.5 } : { stroke: "var(--muted-text)", strokeWidth: 1 }}
                 isAnimationActive={false}
                 content={<HeroTooltip series={series} bucket={bucket} />}
               />
-              {series.map((s) => (
-                <Area
-                  key={s.key}
-                  dataKey={s.key}
-                  name={s.name}
-                  stackId="calls"
-                  type="monotone"
-                  fill={s.color}
-                  fillOpacity={0.4}
-                  stroke="var(--card)"
-                  strokeWidth={2}
-                  connectNulls={false}
-                  isAnimationActive={false}
-                  activeDot={false}
-                />
-              ))}
-              {last && (
+              {series.map((s, i) =>
+                sparse ? (
+                  <Bar
+                    key={s.key}
+                    dataKey={s.key}
+                    name={s.name}
+                    stackId="calls"
+                    fill={s.color}
+                    stroke="var(--card)"
+                    strokeWidth={2}
+                    maxBarSize={56}
+                    radius={i === series.length - 1 ? [4, 4, 0, 0] : 0}
+                    isAnimationActive={false}
+                  />
+                ) : (
+                  <Area
+                    key={s.key}
+                    dataKey={s.key}
+                    name={s.name}
+                    stackId="calls"
+                    type="monotone"
+                    fill={s.color}
+                    fillOpacity={0.4}
+                    stroke="var(--card)"
+                    strokeWidth={2}
+                    connectNulls={false}
+                    isAnimationActive={false}
+                    activeDot={false}
+                  />
+                ),
+              )}
+              {last && !sparse && (
                 <ReferenceDot
                   x={last.t}
                   y={last.total ?? 0}
@@ -202,7 +245,7 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
                   )}
                 />
               )}
-            </AreaChart>
+            </Chart>
           </ChartContainer>
           {rows.some((r) => !r.covered) && (
             <p className="px-2 pt-1 text-xs text-muted-foreground">

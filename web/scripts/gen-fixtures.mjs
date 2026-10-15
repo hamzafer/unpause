@@ -216,6 +216,11 @@ function stats(range) {
     name: friendly(id),
     slot: slotOf.get(id) < 5 ? slotOf.get(id) : -1,
     calls,
+    sessions_read: new Set(
+      inRange
+        .filter((e) => e.client === id && e.tool === "get_session" && !e.error)
+        .flatMap((e) => e.session_ids),
+    ).size,
     last_seen: inRange.filter((e) => e.client === id).at(-1).at,
   }));
 

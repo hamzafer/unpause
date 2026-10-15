@@ -8,4 +8,4 @@ The server binds `127.0.0.1` only, answers GET only, and refuses any request who
 
 - A change to the page means rebuilding the export and committing it. CI rebuilds it and fails when the committed files differ, so the binary never serves a stale page.
 - The export has to build reproducibly: a fixed build id, a pinned Node and a lockfile.
-- The binary grows by the size of the export (a few hundred KB).
+- The binary grows by the size of the export, about 1.3 MB (React, Recharts and the Geist fonts).

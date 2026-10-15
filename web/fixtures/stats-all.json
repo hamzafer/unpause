@@ -16,6 +16,7 @@
       "name": "Claude Cowork",
       "slot": 0,
       "calls": 205,
+      "sessions_read": 15,
       "last_seen": "2026-10-15T15:37:22.000Z"
     },
     {
@@ -23,6 +24,7 @@
       "name": "ChatGPT",
       "slot": 1,
       "calls": 86,
+      "sessions_read": 13,
       "last_seen": "2026-10-15T14:35:52.000Z"
     },
     {
@@ -30,6 +32,7 @@
       "name": "Codex",
       "slot": 2,
       "calls": 56,
+      "sessions_read": 8,
       "last_seen": "2026-10-15T14:28:24.000Z"
     },
     {
@@ -37,6 +40,7 @@
       "name": "Claude Desktop",
       "slot": 3,
       "calls": 34,
+      "sessions_read": 9,
       "last_seen": "2026-10-15T15:29:10.000Z"
     },
     {
@@ -44,6 +48,7 @@
       "name": "cursor-vscode",
       "slot": -1,
       "calls": 13,
+      "sessions_read": 4,
       "last_seen": "2026-10-15T14:30:41.000Z"
     },
     {
@@ -51,6 +56,7 @@
       "name": "zed",
       "slot": 4,
       "calls": 9,
+      "sessions_read": 3,
       "last_seen": "2026-10-15T13:50:58.000Z"
     }
   ],

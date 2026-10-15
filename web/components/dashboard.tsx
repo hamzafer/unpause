@@ -144,8 +144,8 @@ export function Dashboard() {
                   <span className="text-foreground">Lost the connection to unpause. Retrying every 5 s.</span>
                 ) : (
                   <>
-                    Live, updates every 5 s
-                    {stats.recent[0] && <> · last call {relativeTime(stats.recent[0].at)}</>}
+                    Live.
+                    {stats.recent[0] && <> Last call {relativeTime(stats.recent[0].at)}.</>}
                   </>
                 )}
               </p>

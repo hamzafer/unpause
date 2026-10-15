@@ -1,30 +1,9 @@
 import { plural, RANGE_PHRASE } from "./format";
 import type { Stats } from "./types";
 
-/**
- * Sessions each client read (distinct ids from successful get_session).
- * Uses `clients[].sessions_read` when the server sends it; otherwise works it
- * out from `recent`, which is only possible when `recent` holds every call in
- * the range. Returns null when neither is available.
- */
-export function readsByClient(s: Stats): Map<string, number> | null {
-  const sent = s.clients.every(
-    (c) => typeof (c as { sessions_read?: unknown }).sessions_read === "number",
-  );
-  if (sent && s.clients.length)
-    return new Map(
-      s.clients.map((c) => [c.id, (c as unknown as { sessions_read: number }).sessions_read]),
-    );
-  if (s.recent.length < s.kpis.calls) return null;
-  const sets = new Map<string, Set<string>>();
-  for (const c of s.clients) sets.set(c.id, new Set());
-  for (const r of s.recent) {
-    if (r.tool !== "get_session" || r.error) continue;
-    const set = sets.get(r.client) ?? new Set<string>();
-    for (const id of r.session_ids ?? []) set.add(id);
-    sets.set(r.client, set);
-  }
-  return new Map([...sets].map(([k, v]) => [k, v.size]));
+/** Sessions each client read (distinct ids from successful get_session), as the server counts them. */
+export function readsByClient(s: Stats): Map<string, number> {
+  return new Map(s.clients.map((c) => [c.id, c.sessions_read]));
 }
 
 /** The answer, as one or two sentences. The page's one bold element. */
@@ -37,7 +16,7 @@ export function headline(s: Stats): string {
   const clients = [...s.clients].sort((a, b) => b.calls - a.calls);
   const reads = readsByClient(s);
 
-  if (reads && clients.length <= 3) {
+  if (clients.length <= 3) {
     const readers = clients.filter((c) => (reads.get(c.id) ?? 0) > 0);
     const idle = clients.filter((c) => (reads.get(c.id) ?? 0) === 0);
     const first = readers.length

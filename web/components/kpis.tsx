@@ -39,7 +39,12 @@ export function KpiRow({
   return (
     <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 md:flex md:flex-wrap md:gap-x-10">
       {TILES.map((t) => {
-        const d = showDelta && kpis.prev ? delta(kpis[t.key], kpis.prev[t.key]) : null;
+        // Latency has no "new": with nothing before, there is nothing to compare.
+        const noPrev = kpis.prev?.[t.key] === null || kpis.prev?.[t.key] === 0;
+        const d =
+          showDelta && kpis.prev && !(t.key === "p50_ms" && noPrev)
+            ? delta(kpis[t.key], kpis.prev[t.key])
+            : null;
         const quiet = t.quiet?.(kpis);
         return (
           <div key={t.key} className="flex min-w-0 flex-col gap-1">

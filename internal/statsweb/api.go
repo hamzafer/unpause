@@ -56,9 +56,11 @@ type Client struct {
 	Name string `json:"name"`
 	// Slot is the client's color, 0 to 4, by first appearance in the whole log, so it
 	// doesn't change with the range. -1 means the sixth client or later: draw it as "Other".
-	Slot     int    `json:"slot"`
-	Calls    int    `json:"calls"`
-	LastSeen string `json:"last_seen"`
+	Slot  int `json:"slot"`
+	Calls int `json:"calls"`
+	// SessionsRead counts the distinct Sessions this client read with a successful get_session.
+	SessionsRead int    `json:"sessions_read"`
+	LastSeen     string `json:"last_seen"`
 }
 
 // OtherSlot is the Slot of every client past the fifth.
@@ -290,6 +292,7 @@ func clients(all, in []entry) []Client {
 		}
 	}
 	byID := map[string]*Client{}
+	read := map[string]map[string]bool{}
 	out := []Client{}
 	var order []string
 	for _, e := range in {
@@ -301,6 +304,17 @@ func clients(all, in []entry) []Client {
 		}
 		c.Calls++
 		c.LastSeen = stamp(e.at)
+		if e.Tool == "get_session" && e.Error == "" {
+			for _, id := range e.SessionIDs {
+				if !read[e.client][id] {
+					if read[e.client] == nil {
+						read[e.client] = map[string]bool{}
+					}
+					read[e.client][id] = true
+					c.SessionsRead++
+				}
+			}
+		}
 	}
 	for _, id := range order {
 		out = append(out, *byID[id])
