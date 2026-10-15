@@ -2,3 +2,8 @@
 /dist/
 *.test
 .DS_Store
+
+# web/ (Next.js stats page)
+web/node_modules/
+web/.next/
+web/out/
