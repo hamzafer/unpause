@@ -6,10 +6,23 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/hamzafer/unpause/internal/session"
 )
 
-// Store is every Recap, keyed by Session id.
+// Store is every Recap, keyed by Key: the Transcript's path. Not the Session id, because a
+// Session resumed in another folder or Account keeps its id in a second Transcript.
 type Store map[string]Recap
+
+// Key is where s's Recap lives in a Store.
+func Key(s *session.Session) string { return s.Path }
+
+// Get returns s's Recap.
+func (st Store) Get(s *session.Session) (Recap, bool) {
+	r, ok := st[Key(s)]
+	return r, ok
+}
 
 // Path is where Recaps are kept: recaps.json next to the index cache file.
 func Path(cacheFile string) string {
@@ -40,7 +53,50 @@ func Load(path string) (Store, error) {
 // replaced in one rename, so a reader never sees half of it. The read-modify-write runs
 // under a lock on recaps.json.lock, so two writers (two hook children, or a hook child and
 // a backfill) can't lose each other's Recap.
-func Put(path, id string, r Recap) error {
+func Put(path, key string, r Recap) error {
+	return update(path, func(st Store) bool { st[key] = r; return true })
+}
+
+// Migrate moves Recaps that v0.8 stored under a Session id to their Transcript's path.
+// Only Sessions that can have a Recap count: a subagent transcript carries its parent's
+// id. An id more than one of them shares can't be placed, so its Recap is dropped and
+// made again by the next backfill. An id no Session has is left alone, since its
+// Transcript may just not be readable right now. It writes only when something changed.
+func Migrate(path string, sessions []*session.Session) error {
+	if _, err := os.Stat(path); err != nil {
+		return nil // no store yet, nothing to move
+	}
+	byID := map[string][]*session.Session{}
+	for _, s := range sessions {
+		if !s.Sidechain && !s.Empty() {
+			byID[s.ID] = append(byID[s.ID], s)
+		}
+	}
+	return update(path, func(st Store) bool {
+		changed := false
+		for k, r := range st {
+			if strings.ContainsAny(k, `/\`) {
+				continue // already a path
+			}
+			ss := byID[k]
+			if len(ss) == 0 {
+				continue
+			}
+			if len(ss) == 1 {
+				if _, taken := st[Key(ss[0])]; !taken {
+					st[Key(ss[0])] = r
+				}
+			}
+			delete(st, k)
+			changed = true
+		}
+		return changed
+	})
+}
+
+// update runs change on the store under the lock and writes the result when change
+// reports it changed something.
+func update(path string, change func(Store) bool) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
@@ -61,7 +117,9 @@ func Put(path, id string, r Recap) error {
 		}
 		st = Store{}
 	}
-	st[id] = r
+	if !change(st) {
+		return nil
+	}
 	b, err := json.MarshalIndent(st, "", "  ")
 	if err != nil {
 		return err

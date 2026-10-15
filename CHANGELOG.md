@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: Recaps are kept per transcript instead of per session id. A session resumed in another folder or account keeps its id in a second transcript, so the two overwrote each other's Recap and backfill redid them every run. Existing Recaps move over on their own; the few whose id was shared get made again by the next `unpause recap`.
+
 ## v0.8.1, 2026-10-15
 
 - Recaps: the model no longer answers the session's last question instead of recapping it, and a line that runs long is clipped instead of the whole Recap being thrown away. `unpause recap` errors no longer print the usage text.

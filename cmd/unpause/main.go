@@ -51,9 +51,10 @@ func main() {
 			var recapOf func(*session.Session) (recap.Recap, bool, bool)
 			if cfg.Recap.Enabled {
 				// A store that can't be read just means no boxes; the picker still opens.
+				_ = recap.Migrate(recap.Path(config.CachePath()), sessions)
 				recaps, _ := recap.Load(recap.Path(config.CachePath()))
 				recapOf = func(s *session.Session) (recap.Recap, bool, bool) {
-					r, ok := recaps[s.ID]
+					r, ok := recaps.Get(s)
 					return r, ok && recap.Outdated(r, s), ok
 				}
 			}
@@ -447,7 +448,8 @@ func main() {
 			if only == "" {
 				return recapBackfill(cmd.Context(), sessions, ask, limit, dryRun)
 			}
-			s := find(sessions, only)
+			transcript, _ := cmd.Flags().GetString("transcript")
+			s := recapTarget(sessions, only, transcript)
 			if s == nil {
 				return fmt.Errorf("no session matches %q", only)
 			}
@@ -461,7 +463,7 @@ func main() {
 			if err != nil {
 				return fmt.Errorf("%s: %w", s.ShortID(), err)
 			}
-			if err := recap.Put(recap.Path(config.CachePath()), s.ID, r); err != nil {
+			if err := recap.Put(recap.Path(config.CachePath()), recap.Key(s), r); err != nil {
 				return err
 			}
 			fmt.Printf("%s %-9s %s\n  goal  %s\n  done  %s\n  next  %s\n", s.ShortID(), s.Account, session.Clip(s.Title(), 60), r.Goal, r.Done, r.Next)
@@ -473,6 +475,8 @@ func main() {
 	recapCmd.Flags().Bool("dry-run", false, "without --session: list the sessions that would get a Recap, and stop")
 	recapCmd.Flags().Duration("delay", 0, "wait this long before starting")
 	_ = recapCmd.Flags().MarkHidden("delay")
+	recapCmd.Flags().String("transcript", "", "with --session: the transcript that ended (the SessionEnd hook passes it)")
+	_ = recapCmd.Flags().MarkHidden("transcript")
 
 	hook := &cobra.Command{
 		Use:   "hook",
@@ -499,7 +503,7 @@ func main() {
 			}
 			// A config that can't be read still names the Session; only the Recap waits for a fix.
 			cfg, err := config.Load()
-			for _, job := range sessionEndJobs(in.SessionID, err == nil && cfg.Recap.Enabled) {
+			for _, job := range sessionEndJobs(in.SessionID, in.TranscriptPath, err == nil && cfg.Recap.Enabled) {
 				if err := autoname.Spawn(self, job, autoname.LogPath(config.CachePath())); err != nil {
 					return err
 				}

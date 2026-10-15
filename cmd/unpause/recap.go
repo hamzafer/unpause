@@ -14,6 +14,9 @@ import (
 // no Recap or an outdated one, newest first, one line per Session.
 func recapBackfill(ctx context.Context, sessions []*session.Session, model recap.Model, limit int, dryRun bool) error {
 	path := recap.Path(config.CachePath())
+	if err := recap.Migrate(path, sessions); err != nil {
+		return err
+	}
 	st, err := recap.Load(path)
 	if err != nil {
 		return err
@@ -30,7 +33,7 @@ func recapBackfill(ctx context.Context, sessions []*session.Session, model recap
 		fmt.Printf("dry run: %d sessions would get a Recap, nothing is sent to Haiku\n", len(todo))
 		for _, s := range todo {
 			why := "none yet"
-			if _, ok := st[s.ID]; ok {
+			if _, ok := st.Get(s); ok {
 				why = "outdated"
 			}
 			line(s, fmt.Sprintf("%-8s %s", why, session.Clip(s.Title(), 50)))
@@ -38,7 +41,7 @@ func recapBackfill(ctx context.Context, sessions []*session.Session, model recap
 		return nil
 	}
 	done, failed := 0, 0
-	recap.Backfill(ctx, todo, model, func(id string, r recap.Recap) error { return recap.Put(path, id, r) }, func(r recap.Result) {
+	recap.Backfill(ctx, todo, model, func(key string, r recap.Recap) error { return recap.Put(path, key, r) }, func(r recap.Result) {
 		if r.Err != nil {
 			failed++
 			line(r.Session, "✗ "+r.Err.Error())
