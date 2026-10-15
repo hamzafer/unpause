@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -226,5 +229,93 @@ func TestMCPStats(t *testing.T) {
 	cmd.Env = env
 	if out, err := cmd.CombinedOutput(); err == nil {
 		t.Errorf("a bad --since should fail: %s", out)
+	}
+}
+
+// TestMCPStatsWeb starts `mcp stats --web` on a free port without a browser, reads the
+// URL from stderr, fetches the API and the page, and stops it with Ctrl+C (SIGINT).
+func TestMCPStatsWeb(t *testing.T) {
+	bin := buildBinary(t)
+	now := time.Now().UTC()
+	env := statsHome(t,
+		fmt.Sprintf(`{"at":%q,"client":"local-agent-mode-x","tool":"get_session","input":{"id":"1111"},"session_ids":["11111111-2222-3333-4444-555555555555"],"count":5,"total":5,"duration_ms":2}`, now.Add(-time.Hour).Format(time.RFC3339)),
+	)
+	cmd := exec.Command(bin, "mcp", "stats", "--web", "--no-open", "--port", "0")
+	cmd.Env = env
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer cmd.Process.Kill()
+
+	line, err := bufio.NewReader(stderr).ReadString('\n')
+	if err != nil {
+		t.Fatalf("no URL line: %v %q", err, line)
+	}
+	i := strings.Index(line, "http://127.0.0.1:")
+	if i < 0 {
+		t.Fatalf("stderr line %q has no URL", line)
+	}
+	base := strings.TrimRight(strings.Fields(line[i:])[0], "/")
+	go io.Copy(io.Discard, stderr)
+
+	res, err := http.Get(base + "/api/stats?range=24h")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var st struct {
+		KPIs struct {
+			Calls int `json:"calls"`
+		} `json:"kpis"`
+		MostRead []struct {
+			Title   string `json:"title"`
+			Account string `json:"account"`
+		} `json:"most_read"`
+		Clients []struct {
+			Name string `json:"name"`
+		} `json:"clients"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&st)
+	res.Body.Close()
+	if err != nil || res.StatusCode != 200 || st.KPIs.Calls != 1 || len(st.MostRead) != 1 || st.MostRead[0].Title != "login-work" || st.Clients[0].Name != "Claude Cowork" {
+		t.Errorf("api/stats: %d %v %+v", res.StatusCode, err, st)
+	}
+	res, err = http.Get(base + "/")
+	if err != nil || res.StatusCode != 200 || res.Header.Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Errorf("page: %v %v", err, res)
+	}
+	if res != nil {
+		res.Body.Close()
+	}
+
+	if err := cmd.Process.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+	waited := make(chan error, 1)
+	go func() { waited <- cmd.Wait() }()
+	select {
+	case err := <-waited:
+		if err != nil {
+			t.Errorf("exit after Ctrl+C: %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("server didn't stop on SIGINT")
+	}
+	if stdout.Len() != 0 {
+		t.Errorf("stdout should stay empty: %q", stdout.String())
+	}
+}
+
+func TestMCPStatsWebFlagsConflict(t *testing.T) {
+	bin := buildBinary(t)
+	cmd := exec.Command(bin, "mcp", "stats", "--web", "--json")
+	cmd.Env = statsHome(t)
+	if out, err := cmd.CombinedOutput(); err == nil {
+		t.Errorf("--web with --json should fail: %s", out)
 	}
 }

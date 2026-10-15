@@ -58,6 +58,7 @@ unpause recap                # write Recaps for the newest 20 of those (--limit 
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
 unpause mcp stats            # what MCP clients read in the last 7 days (--since 30d, --json)
+unpause mcp stats --web      # the same as a live page in the browser
 unpause --version            # print the binary version
 ```
 
@@ -230,6 +231,12 @@ Every tool call is logged as one JSON line in `~/.cache/unpause/access.jsonl` (u
 ```sh
 unpause mcp stats              # last 7 days: calls per tool and client, sessions read most, top searches
 unpause mcp stats --since 30d --json
+```
+
+**See it as a page.** `unpause mcp stats --web` serves the same log as a live page and opens it in your browser: who read your sessions and what they read, calls over time per client, the sessions read most (click one to see every call that returned it), top searches and the latest calls. It listens on `127.0.0.1:4777` only (a free port if that one is taken; `--port` picks another, `--no-open` just prints the URL) and stops on Ctrl+C. The page is built into the binary and makes no request off your machine. Hours and days on the chart follow this machine's time zone.
+
+```sh
+unpause mcp stats --web
 ```
 
 ## How it works
