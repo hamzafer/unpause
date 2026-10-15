@@ -69,3 +69,7 @@ _Avoid_: plugin, connector, API
 **Excluded**:
 A Session that worked in a folder matching an `[mcp] exclude` glob: any cwd it ever had, or, for a Cowork Session, a folder the user gave it in Claude Desktop. While any glob is set, a Session with no folder at all is Excluded too. Invisible to the MCP server, still shown in the picker.
 _Avoid_: hidden, blocked, denylisted
+
+**Access log**:
+The MCP server's record of every tool call: when, which client, which tool, which inputs, which Sessions came back. Never holds message text.
+_Avoid_: audit trail, history, analytics
