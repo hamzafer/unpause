@@ -1,4 +1,8 @@
-const README = "https://github.com/hamzafer/unpause#use-from-chatgpt";
+const README = "https://github.com/hamzafer/unpause";
+const DESKTOP_CODEX = `${README}#use-from-claude-desktop-or-codex`;
+const CHATGPT = `${README}#use-from-chatgpt`;
+
+const linkClass = "text-ui-accent underline-offset-4 hover:underline";
 
 /** Shown under the headline when the access log does not exist yet. */
 export function EmptyState() {
@@ -13,7 +17,9 @@ export function EmptyState() {
           <span className="font-medium">Claude Desktop</span>
           <span className="text-muted-foreground">: add </span>
           <code className="font-mono text-xs">unpause mcp</code>
-          <span className="text-muted-foreground"> as a local MCP server in its settings.</span>
+          <span className="text-muted-foreground"> to </span>
+          <code className="font-mono text-xs">claude_desktop_config.json</code>
+          <span className="text-muted-foreground"> and restart it. It works in Cowork too.</span>
         </li>
         <li>
           <span className="font-medium">Codex</span>
@@ -22,17 +28,16 @@ export function EmptyState() {
         </li>
         <li>
           <span className="font-medium">ChatGPT</span>
-          <span className="text-muted-foreground">: run it through OpenAI&apos;s Secure MCP Tunnel.</span>
+          <span className="text-muted-foreground">: run it through OpenAI&apos;s Secure MCP Tunnel (</span>
+          <a href={CHATGPT} target="_blank" rel="noreferrer" className={linkClass}>
+            steps
+          </a>
+          <span className="text-muted-foreground">).</span>
         </li>
       </ul>
       <p>
-        <a
-          href={README}
-          target="_blank"
-          rel="noreferrer"
-          className="text-ui-accent underline-offset-4 hover:underline"
-        >
-          Setup steps in the README
+        <a href={DESKTOP_CODEX} target="_blank" rel="noreferrer" className={linkClass}>
+          Claude Desktop and Codex setup in the README
         </a>
       </p>
     </div>

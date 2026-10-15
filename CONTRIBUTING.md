@@ -65,3 +65,33 @@ Claude Code's transcript format is internal and can change between releases (see
 1. Update `internal/provider/claude/testdata/*.jsonl` to cover the new shape, and the tests in `scan_test.go` that assert against it.
 2. Bump `cacheVersion` in `internal/index/index.go`. The cache is keyed by transcript path, mtime and size, not by parser version, so without this bump, old cache entries built by the previous parser get silently reused forever instead of being re-parsed.
 3. Run `go test ./...` and, if you have real transcripts handy, `go run ./cmd/unpause doctor` and `go run ./cmd/unpause list` to eyeball the result.
+
+## The stats page (`web/`)
+
+`unpause mcp stats --web` serves a Next.js static export that lives in the binary ([ADR 0014](docs/adr/0014-stats-page-is-an-embedded-static-export.md)). The source is in `web/`:
+
+- `app/`: the one page, its layout and `globals.css` (the color and type tokens).
+- `components/`: the dashboard and its parts; `components/ui/` holds the shadcn/ui pieces.
+- `lib/`: the API client (`api.ts`, which also handles the run's token), the JSON types, the headline sentence, formatting and the chart series. Tests sit next to them as `*.test.ts`.
+- `fixtures/`: sample API answers for the dev mock, written by `pnpm --dir web fixtures` (made-up names, deterministic).
+- `scripts/copy-export.mjs`: copies the export into `internal/webui/dist`.
+
+Node is pinned in `web/.node-version` and pnpm in `package.json`. To work on the page without the Go server:
+
+```sh
+pnpm --dir web install
+pnpm --dir web dev:mock      # fixtures instead of the API; a made-up call arrives every few polls
+```
+
+Open it at `http://localhost:3000` (the port `next dev` prints), not `http://127.0.0.1:3000`: Next's dev server blocks its dev resources for a host it doesn't expect, so the page doesn't load properly. `?mock=empty` shows the empty state.
+
+Before you commit:
+
+```sh
+pnpm --dir web lint
+pnpm --dir web typecheck
+pnpm --dir web test
+pnpm --dir web build         # regenerates internal/webui/dist
+```
+
+`internal/webui/dist` is generated: never edit it by hand, and commit it with the change that produced it. CI runs the same four commands and fails when a fresh build differs from what is committed, so the binary never serves a stale page. `next dev` writes `web/AGENTS.md`; it is ignored, don't commit it.

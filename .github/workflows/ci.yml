@@ -34,11 +34,19 @@ jobs:
       - if: steps.web.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version-file: web/.node-version
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
       - if: steps.web.outputs.present == 'true'
-        run: pnpm --dir web install --frozen-lockfile && pnpm --dir web build
+        run: pnpm --dir web install --frozen-lockfile
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web lint
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web typecheck
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web test
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web build
       - if: steps.web.outputs.present == 'true'
         run: |
           git add -N internal/webui/dist

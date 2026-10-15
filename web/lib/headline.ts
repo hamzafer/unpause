@@ -16,34 +16,34 @@ export function headline(s: Stats): string {
   const clients = [...s.clients].sort((a, b) => b.calls - a.calls);
   const reads = readsByClient(s);
 
+  // Up to three clients: each one's own count. Clients can read the same
+  // Session, so these are never added up into a total.
   if (clients.length <= 3) {
     const readers = clients.filter((c) => (reads.get(c.id) ?? 0) > 0);
     const idle = clients.filter((c) => (reads.get(c.id) ?? 0) === 0);
     const first = readers.length
-      ? readers
-          .map((c, i) => {
+      ? list(
+          readers.map((c, i) => {
             const n = plural(reads.get(c.id) ?? 0, "session");
             return i === 0 ? `${c.name} read ${n} ${when}` : `${c.name} read ${n}`;
-          })
-          .join(", ")
-          .replace(/, ([^,]*)$/, " and $1") + "."
+          }),
+        ) + "."
       : "";
     const rest = idle.length
-      ? `${idle.map((c) => c.name).join(" and ")} ${readers.length ? "" : `made ${plural(calls, "call")} ${when} but `}read nothing.`
+      ? `${list(idle.map((c) => c.name))} ${readers.length ? "" : `made ${plural(calls, "call")} ${when} but `}read nothing.`
       : "";
     return [first, rest].filter(Boolean).join(" ");
   }
 
-  if (clients.length === 1) {
-    const c = clients[0];
-    return sessions_read
-      ? `${c.name} read ${plural(sessions_read, "session")} ${when}.`
-      : `${c.name} made ${plural(calls, "call")} ${when} but read nothing.`;
-  }
-
+  // Four or more: the distinct total from the server.
   const lead = clients[0];
   const who = `${clients.length} clients`;
   return sessions_read
     ? `${who} read ${plural(sessions_read, "session")} ${when}. ${lead.name} made the most calls.`
     : `${who} made ${plural(calls, "call")} ${when} but read nothing.`;
+}
+
+/** "a", "a and b", "a, b and c". */
+function list(xs: string[]) {
+  return xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
 }

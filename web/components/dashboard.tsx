@@ -7,10 +7,10 @@ import { Header } from "@/components/header";
 import { HeroChart } from "@/components/hero-chart";
 import { KpiRow } from "@/components/kpis";
 import { RankedList } from "@/components/ranked-list";
-import { RecentCalls } from "@/components/recent-calls";
+import { freshKey, RecentCalls } from "@/components/recent-calls";
 import { SessionSheet } from "@/components/session-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchStats } from "@/lib/api";
+import { fetchStats, ForbiddenError } from "@/lib/api";
 import { seriesVar } from "@/lib/colors";
 import { relativeTime, shortId } from "@/lib/format";
 import { headline } from "@/lib/headline";
@@ -18,7 +18,6 @@ import type { MostRead, Range, Stats } from "@/lib/types";
 
 const POLL_MS = 5000;
 const RANGE_KEY = "unpause-range";
-const rowId = (c: { at: string; client: string; tool: string }) => c.at + c.client + c.tool;
 const RANGE_VALUES: Range[] = ["24h", "7d", "30d", "all"];
 
 // The remembered range is a per-viewer convenience kept in localStorage.
@@ -48,31 +47,44 @@ export function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [forbidden, setForbidden] = useState(false);
   const [pulse, setPulse] = useState(0);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<MostRead | null>(null);
   const newest = useRef<{ range: Range; at: string } | null>(null);
+  // Every request gets the next number; only the newest one's answer lands, so
+  // responses never apply out of order. pending is the number still out, if any.
+  const seq = useRef(0);
+  const pending = useRef(0);
 
-  const load = useCallback(async (r: Range, signal?: AbortSignal) => {
+  /** Fetch r. A poll (force false) is skipped while a request is out. */
+  const load = useCallback(async (r: Range, signal: AbortSignal, force = false) => {
+    if (pending.current && !force) return;
+    const my = ++seq.current;
+    pending.current = my;
+    const current = () => !signal.aborted && my === seq.current;
     try {
       const s = await fetchStats(r, signal);
-      if (signal?.aborted) return;
+      if (!current()) return;
       const prev = newest.current;
       const top = s.recent[0]?.at ?? "";
       if (prev && prev.range === r && top > prev.at) {
         // Polling brought new calls: one pulse, tint the new rows.
         setPulse((p) => p + 1);
-        setFresh(new Set(s.recent.filter((c) => c.at > prev.at).map(rowId)));
+        setFresh(new Set(s.recent.filter((c) => c.at > prev.at).map(freshKey)));
       } else if (!prev || prev.range !== r) {
         setFresh(new Set());
       }
       newest.current = { range: r, at: top || prev?.at || "" };
       setStats(s);
       setFailed(false);
-    } catch {
-      if (!signal?.aborted) setFailed(true);
+    } catch (e) {
+      if (!current()) return;
+      if (e instanceof ForbiddenError) setForbidden(true);
+      else setFailed(true);
     } finally {
-      if (!signal?.aborted) setLoading(false);
+      if (pending.current === my) pending.current = 0;
+      if (current()) setLoading(false);
     }
   }, []);
 
@@ -80,7 +92,7 @@ export function Dashboard() {
   useEffect(() => {
     const ctl = new AbortController();
     // First fetch on the next tick, so the effect itself never sets state.
-    const kick = setTimeout(() => load(range, ctl.signal), 0);
+    const kick = setTimeout(() => load(range, ctl.signal, true), 0);
     let timer: ReturnType<typeof setInterval> | undefined;
     const start = () => {
       clearInterval(timer);
@@ -88,7 +100,7 @@ export function Dashboard() {
     };
     const onVis = () => {
       if (document.visibilityState === "visible") {
-        load(range, ctl.signal);
+        load(range, ctl.signal, true);
         start();
       } else clearInterval(timer);
     };
@@ -104,7 +116,7 @@ export function Dashboard() {
 
   const pickRange = (r: Range) => {
     if (r === range) return;
-    setLoading(true); // hold the frame at reduced opacity until the new range lands
+    setLoading(true); // dim the frame until the new range lands
     writeRange(r);
   };
 
@@ -117,7 +129,9 @@ export function Dashboard() {
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-5 sm:px-6 sm:py-6">
       <Header range={range} onRange={pickRange} />
 
-      {!stats ? (
+      {forbidden ? (
+        <Forbidden />
+      ) : !stats ? (
         failed ? (
           <Problem />
         ) : (
@@ -125,10 +139,7 @@ export function Dashboard() {
         )
       ) : (
         <main
-          className={cn(
-            "flex flex-col gap-8 transition-opacity",
-            loading && "opacity-60",
-          )}
+          className={cn("flex flex-col gap-8", loading && "opacity-60")}
           aria-busy={loading}
         >
           <section className="flex flex-col gap-6" aria-labelledby="headline">
@@ -238,6 +249,20 @@ function LoadingFrame() {
       <Skeleton className="h-9 w-3/4 bg-step" />
       <Skeleton className="h-12 w-full bg-step" />
       <Skeleton className="h-72 w-full bg-step" />
+    </div>
+  );
+}
+
+function Forbidden() {
+  return (
+    <div className="flex flex-col gap-2" role="alert">
+      <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.03em] sm:text-[32px]">
+        This page needs the link unpause printed.
+      </h1>
+      <p className="text-sm text-muted-foreground">
+        Run <code className="font-mono text-foreground">unpause mcp stats --web</code> again and use the link it
+        opens.
+      </p>
     </div>
   );
 }

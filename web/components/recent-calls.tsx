@@ -22,6 +22,10 @@ const FIRST = 15;
 export const callKey = (c: RecentCall, i: number) =>
   `${c.at}|${c.client}|${c.tool}|${i}`;
 
+/** Identifies a call across polls (no index): calls in the same second differ in duration or count. */
+export const freshKey = (c: RecentCall) =>
+  `${c.at}|${c.client}|${c.tool}|${c.duration_ms}|${c.count}`;
+
 export function RecentCalls({
   calls,
   slots,
@@ -68,7 +72,7 @@ export function RecentCalls({
                 const input = compactInput(c.input);
                 const slot = slots.get(c.client);
                 return (
-                  <TableRow key={key} className={cn("hover:bg-step/60", fresh.has(c.at + c.client + c.tool) && "row-new")}>
+                  <TableRow key={key} className={cn("hover:bg-step/60", fresh.has(freshKey(c)) && "row-new")}>
                     <TableCell className="pl-4 font-mono text-xs text-muted-foreground tabular-nums">
                       <time dateTime={c.at} title={new Date(c.at).toString()}>
                         {callTime(c.at, now)}

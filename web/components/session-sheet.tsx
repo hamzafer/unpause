@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchSession, NotFoundError } from "@/lib/api";
+import { fetchSession, ForbiddenError, NotFoundError } from "@/lib/api";
 import { callTime, num, shortId } from "@/lib/format";
 import type { MostRead, SessionDetail } from "@/lib/types";
 
@@ -54,8 +54,10 @@ function SessionBody({ session }: { session: MostRead }) {
           kind: "error",
           message:
             e instanceof NotFoundError
-              ? "This session is no longer in the index."
-              : "Could not load this session. Is unpause still running?",
+              ? "No logged call returned this session."
+              : e instanceof ForbiddenError
+                ? "This page needs the link unpause printed. Run unpause mcp stats --web again."
+                : "Could not load this session. Is unpause still running?",
         });
       });
     return () => ctl.abort();

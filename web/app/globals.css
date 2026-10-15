@@ -158,4 +158,13 @@
   .row-new > td {
     animation: none;
   }
+  /* Everything else that moves (the sheet, tooltips) answers the user; cut it
+     to nothing here too. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

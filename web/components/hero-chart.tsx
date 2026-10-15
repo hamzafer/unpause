@@ -23,58 +23,9 @@ import {
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Panel } from "@/components/panel";
-import { isOther, seriesVar } from "@/lib/colors";
 import { bucketLabel, num } from "@/lib/format";
+import { buildSeries, isSparse, type Row, type Series } from "@/lib/series";
 import type { Stats } from "@/lib/types";
-
-type Series = { key: string; name: string; color: string; calls: number };
-type Row = Record<string, number | string | boolean | null> & {
-  t: string;
-  covered: boolean;
-  total: number | null;
-};
-
-/** Client series in slot order; slot -1 (6th client on) folds into "Other". */
-function buildSeries(stats: Stats) {
-  const keyOf = new Map<string, string>();
-  const series: Series[] = [];
-  const bySlot = [...stats.clients].sort((a, b) => a.slot - b.slot);
-  for (const c of bySlot) {
-    const key = isOther(c.slot) ? "other" : `s${c.slot}`;
-    keyOf.set(c.id, key);
-    const found = series.find((s) => s.key === key);
-    if (found) found.calls += c.calls;
-    else
-      series.push({
-        key,
-        name: key === "other" ? "Other" : c.name,
-        color: seriesVar(c.slot),
-        calls: c.calls,
-      });
-  }
-  // Ids that show up in the series but not in clients (should not happen).
-  for (const p of stats.series.points)
-    for (const id of Object.keys(p.by_client))
-      if (!keyOf.has(id)) {
-        keyOf.set(id, "other");
-        if (!series.some((s) => s.key === "other"))
-          series.push({ key: "other", name: "Other", color: seriesVar(-1), calls: 0 });
-      }
-  series.sort((a, b) => (a.key === "other" ? 1 : b.key === "other" ? -1 : a.key.localeCompare(b.key)));
-
-  const rows: Row[] = stats.series.points.map((p) => {
-    const row: Row = { t: p.t, covered: p.covered, total: p.covered ? 0 : null };
-    for (const s of series) row[s.key] = p.covered ? 0 : null; // null draws a gap
-    if (p.covered)
-      for (const [id, n] of Object.entries(p.by_client)) {
-        const k = keyOf.get(id)!;
-        row[k] = (row[k] as number) + n;
-        row.total = (row.total ?? 0) + n;
-      }
-    return row;
-  });
-  return { series, rows };
-}
 
 export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
   const [view, setView] = useState<"chart" | "table">("chart");
@@ -83,8 +34,7 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
   const lastIdx = rows.findLastIndex((r) => r.covered);
   const last = lastIdx >= 0 ? rows[lastIdx] : null;
   const config = Object.fromEntries(series.map((s) => [s.key, { label: s.name }]));
-  // An area needs a few points to read as a shape; with fewer, stacked bars show the same data honestly.
-  const sparse = rows.filter((r) => r.covered).length < 3;
+  const sparse = isSparse(rows);
   const Chart = sparse ? BarChart : AreaChart;
   const gap = rows.filter((r) => !r.covered);
 
@@ -215,10 +165,12 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
                   />
                 ),
               )}
-              {last && !sparse && (
+              {last && (
+                // The live edge: the last point, or the top of the last bar in the sparse view.
                 <ReferenceDot
                   x={last.t}
                   y={last.total ?? 0}
+                  ifOverflow="visible"
                   shape={(p: { cx?: number; cy?: number }) => (
                     <g>
                       {pulse > 0 && (
@@ -233,14 +185,16 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
                           strokeWidth={2}
                         />
                       )}
-                      <circle
-                        cx={p.cx}
-                        cy={p.cy}
-                        r={4}
-                        fill="var(--text)"
-                        stroke="var(--card)"
-                        strokeWidth={2}
-                      />
+                      {!sparse && (
+                        <circle
+                          cx={p.cx}
+                          cy={p.cy}
+                          r={4}
+                          fill="var(--text)"
+                          stroke="var(--card)"
+                          strokeWidth={2}
+                        />
+                      )}
                     </g>
                   )}
                 />
