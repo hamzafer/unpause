@@ -555,6 +555,7 @@ func main() {
 		Long: "Runs a read-only MCP server on stdin/stdout with three tools: list_sessions, search_sessions and get_session. " +
 			"It never writes to a transcript. Sessions that worked in a folder matching an [mcp] exclude glob in the config are invisible to it, " +
 			"and so are sessions with no folder at all while any exclude is set. A broken exclude pattern stops it from starting. " +
+			"Every tool call is logged, without chat content, to access.jsonl next to the index cache; `unpause mcp stats` summarizes it. " +
 			"Meant to be started by an MCP client, such as OpenAI's tunnel-client for ChatGPT.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -564,6 +565,7 @@ func main() {
 			}
 			// Tool calls may run concurrently; one index build at a time keeps the cache file sane.
 			var mu sync.Mutex
+			accessLog := mcpserver.NewAccessLog(mcpserver.LogPath(config.CachePath()))
 			return mcpserver.Run(cmd.Context(), version, func(context.Context) ([]*session.Session, []string, error) {
 				mu.Lock()
 				defer mu.Unlock()
@@ -572,9 +574,10 @@ func main() {
 					return nil, nil, err
 				}
 				return filter(sessions, false), cfg.MCP.Exclude, nil
-			})
+			}, accessLog.Record)
 		},
 	}
+	mcpCmd.AddCommand(mcpStatsCmd())
 
 	root.AddCommand(list, search, open, rename, autonameCmd, recapCmd, hook, doctor, mcpCmd)
 	if err := root.Execute(); err != nil {

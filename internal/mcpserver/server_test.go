@@ -9,8 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -67,6 +69,25 @@ type env struct {
 	exclude []string
 	cs      *mcp.ClientSession
 	load    Loader
+	log     *recorded
+}
+
+// recorded collects the access log Entries a server writes.
+type recorded struct {
+	mu      sync.Mutex
+	entries []Entry
+}
+
+func (r *recorded) record(e Entry) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.entries = append(r.entries, e)
+}
+
+func (r *recorded) all() []Entry {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return slices.Clone(r.entries)
 }
 
 // setup writes the fixture root and connects an in-memory client to a server over it.
@@ -116,15 +137,16 @@ func setup(t *testing.T, exclude ...string) *env {
 		return out, exclude, nil
 	}
 
-	return &env{dir: dir, exclude: exclude, cs: connect(t, load), load: load}
+	rec := &recorded{}
+	return &env{dir: dir, exclude: exclude, cs: connect(t, load, rec.record), load: load, log: rec}
 }
 
 // connect starts a server over load and returns an in-memory client session to it.
-func connect(t *testing.T, load Loader) *mcp.ClientSession {
+func connect(t *testing.T, load Loader, rec Recorder) *mcp.ClientSession {
 	t.Helper()
 	ctx := context.Background()
 	ct, st := mcp.NewInMemoryTransports()
-	srv := New("test-version", load)
+	srv := New("test-version", load, rec)
 	if _, err := srv.Connect(ctx, st, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -389,7 +411,7 @@ func TestSearchCountsDesktopTitle(t *testing.T) {
 		}
 		s.Account, s.Cowork, s.DesktopTitle = "cowork", true, "Quarterly dashboard"
 		return []*session.Session{s}, nil, nil
-	})
+	}, nil)
 	e := &env{dir: dir, cs: cs}
 	var out SearchOutput
 	e.call(t, "search_sessions", map[string]any{"query": "quarterly"}, &out)
@@ -599,5 +621,100 @@ func TestSummaryMarksCowork(t *testing.T) {
 	}
 	if summarize(&session.Session{ID: "a0a0a0a0"}).Cowork {
 		t.Error("only Cowork Sessions are marked")
+	}
+}
+
+// budgetEnv serves one session of n messages, each exactly size characters of text.
+func budgetEnv(t *testing.T, n, size int) *env {
+	t.Helper()
+	dir := t.TempDir()
+	prompts := make([]string, n)
+	for i := range prompts {
+		p := fmt.Sprintf("m%03d ", i)
+		prompts[i] = p + strings.Repeat("x", size-len(p))
+	}
+	path := writeTranscript(t, dir, fixture{id: "eeee0001-0000-0000-0000-000000000000", account: "personal", cwd: "/x/dev/big", at: time.Date(2026, 9, 10, 12, 0, 0, 0, time.UTC), prompts: prompts})
+	load := func(context.Context) ([]*session.Session, []string, error) {
+		s, err := claude.ScanFile(path)
+		if err != nil {
+			return nil, nil, err
+		}
+		s.Account = "personal"
+		return []*session.Session{s}, nil, nil
+	}
+	rec := &recorded{}
+	return &env{dir: dir, cs: connect(t, load, rec.record), load: load, log: rec}
+}
+
+// textSize is the characters a message's blocks count against max_total_chars.
+func textSize(m claude.FullMessage) int {
+	n := 0
+	for _, b := range m.Blocks {
+		n += len([]rune(b.Text))
+		switch in := b.Input.(type) {
+		case string:
+			n += len([]rune(in))
+		case nil:
+		default:
+			raw, _ := json.Marshal(in)
+			n += len([]rune(string(raw)))
+		}
+	}
+	return n
+}
+
+func TestGetSessionBudget(t *testing.T) {
+	e := budgetEnv(t, 40, 1000)
+	var g GetOutput
+
+	e.call(t, "get_session", map[string]any{"id": "eeee"}, &g)
+	if len(g.Messages) != 30 || g.NextOffset == nil || *g.NextOffset != 30 || g.Total != 40 {
+		t.Errorf("default budget: %d messages, next %v, total %d; want 30, 30, 40", len(g.Messages), g.NextOffset, g.Total)
+	}
+
+	e.call(t, "get_session", map[string]any{"id": "eeee", "offset": 5, "max_total_chars": 2500}, &g)
+	if len(g.Messages) != 2 || g.Messages[0].Index != 5 || g.NextOffset == nil || *g.NextOffset != 7 {
+		t.Errorf("override: %d messages from %d, next %v; want 2 from 5, next 7", len(g.Messages), g.Messages[0].Index, g.NextOffset)
+	}
+
+	e.call(t, "get_session", map[string]any{"id": "eeee", "max_total_chars": 500}, &g)
+	if len(g.Messages) != 1 || g.NextOffset == nil || *g.NextOffset != 1 {
+		t.Fatalf("at least one: %d messages, next %v", len(g.Messages), g.NextOffset)
+	}
+	if n := textSize(g.Messages[0]); n > 500 || !strings.Contains(g.Messages[0].Blocks[0].Text, "more chars]") || !strings.HasPrefix(g.Messages[0].Blocks[0].Text, "m000 ") {
+		t.Errorf("a lone message over budget is cut to fit: %d chars", n)
+	}
+
+	e.call(t, "get_session", map[string]any{"id": "eeee", "offset": 38}, &g)
+	if len(g.Messages) != 2 || g.NextOffset != nil {
+		t.Errorf("last page: %d messages, next %v", len(g.Messages), g.NextOffset)
+	}
+}
+
+func TestGetSessionBudgetPagesThroughEverything(t *testing.T) {
+	e := budgetEnv(t, 40, 1000)
+	seen := map[int]int{}
+	offset, calls := 0, 0
+	for {
+		var g GetOutput
+		e.call(t, "get_session", map[string]any{"id": "eeee", "offset": offset, "max_total_chars": 3500}, &g)
+		for _, m := range g.Messages {
+			seen[m.Index]++
+			if !strings.HasPrefix(m.Blocks[0].Text, fmt.Sprintf("m%03d ", m.Index)) || strings.Contains(m.Blocks[0].Text, "more chars]") {
+				t.Errorf("message %d is not whole", m.Index)
+			}
+		}
+		if calls++; g.NextOffset == nil || calls > 50 {
+			break
+		}
+		offset = *g.NextOffset
+	}
+	if len(seen) != 40 || calls != 14 {
+		t.Errorf("saw %d distinct messages in %d calls; want 40 in 14", len(seen), calls)
+	}
+	for i, n := range seen {
+		if n != 1 {
+			t.Errorf("message %d seen %d times", i, n)
+		}
 	}
 }

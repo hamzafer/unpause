@@ -57,6 +57,7 @@ unpause recap --dry-run      # list the sessions missing a Recap or with an outd
 unpause recap                # write Recaps for the newest 20 of those (--limit 0 for all)
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
+unpause mcp stats            # what MCP clients read in the last 7 days (--since 30d, --json)
 unpause --version            # print the binary version
 ```
 
@@ -192,7 +193,7 @@ path = "/Volumes/lab/.claude"
 
 - `list_sessions`: sessions newest first, with title, account, project, folder, branch, times, message count and whether it's running. Filters: `account`, `project`, `live`. Pages with `limit` and `offset`.
 - `search_sessions`: the same search as `unpause search`. It looks at what was said (your prompts, Claude's replies, and the session's name or generated title), not tool calls, tool output or thinking. Every word of the query has to appear somewhere in a session, and `"double quotes"` keep a phrase together. Results are ranked by match count, newest first on ties, with up to 3 snippets.
-- `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut.
+- `get_session`: one session's transcript, page by page, by id, id prefix or name (same lookup as `unpause open`). Blocks longer than `max_chars` (default 20,000) are cut. A page also stops once its text would pass `max_total_chars` (default 30,000, max 200,000) and returns `next_offset` to read on, so one result stays small enough for clients like Claude Desktop.
 
 It never writes to a transcript, and it sees the same sessions as `unpause list`, re-read on every call.
 
@@ -221,6 +222,15 @@ To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `
 3. In ChatGPT, open Plugins, add a custom MCP server and pick Connection: Tunnel.
 
 While `tunnel-client run` is going, whatever ChatGPT asks for, full transcripts and tool output included, is sent to OpenAI. Stop it when you're done; unpause doesn't start it for you.
+
+### See what was read
+
+Every tool call is logged as one JSON line in `~/.cache/unpause/access.jsonl` (under `$XDG_CACHE_HOME/unpause` when that is set): the time, the client's name and version, the tool, what the client asked for (search query, id, filters, paging), the ids of the sessions that came back, the count and how long it took. It never holds message text, titles or snippets. What a client sends is logged as sent, so a search query lands in the log, cut to 500 bytes per field. A failed call is logged with a short error class (`not found`, `invalid input`, `canceled` or `failed`), never the error text, and calls the server turns away before they run, such as an unknown tool, are logged as `invalid input`. The file is readable only by you, rotates to `access.jsonl.1` at 10 MB and is never written through a symlink. To sum it up:
+
+```sh
+unpause mcp stats              # last 7 days: calls per tool and client, sessions read most, top searches
+unpause mcp stats --since 30d --json
+```
 
 ## How it works
 

@@ -401,6 +401,33 @@ func TestMCPStdoutIsOnlyProtocol(t *testing.T) {
 	if string(after) != string(src) {
 		t.Error("transcript changed")
 	}
+	// Each tool call left one line in the access log under XDG_CACHE_HOME, not on stdout.
+	logPath := filepath.Join(home, "cache", "unpause", "access.jsonl")
+	b, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("access log: %v", err)
+	}
+	logLines := strings.Split(strings.TrimSpace(string(b)), "\n")
+	if len(logLines) != 2 {
+		t.Fatalf("want 2 access lines, got %d:\n%s", len(logLines), b)
+	}
+	tools := map[string]bool{}
+	for _, l := range logLines {
+		var e struct{ Client, Tool string }
+		if err := json.Unmarshal([]byte(l), &e); err != nil || e.Client != "t" {
+			t.Errorf("access line %q: %v", l, err)
+		}
+		tools[e.Tool] = true
+	}
+	if !tools["list_sessions"] || !tools["get_session"] {
+		t.Errorf("tools logged: %v", tools)
+	}
+	if strings.Contains(string(b), "login") {
+		t.Errorf("access log holds a title or message text:\n%s", b)
+	}
+	if fi, err := os.Stat(logPath); err != nil || fi.Mode().Perm() != 0o600 {
+		t.Errorf("access log mode: %v %v", fi.Mode().Perm(), err)
+	}
 }
 
 // TestAutonameApplyNeverWritesCowork: a stale proposals file naming a Cowork session
