@@ -427,21 +427,21 @@ func TestBuildSession(t *testing.T) {
 		}
 		return Info{}, false
 	}
-	s, ok := BuildSession(es, "s1-aaaa-bbbb", lookup)
+	s, ok := BuildSession(es, "s1-aaaa-bbbb", now, lookup)
 	if !ok || s.ID != "s1-aaaa-bbbb" || s.Title != "T" || s.Account != "work" || s.Project != "p" || len(s.Calls) != 2 {
 		t.Fatalf("%v %+v", ok, s)
 	}
 	if s.Calls[0].Tool != "get_session" || s.Calls[0].ClientName != "Codex" || s.Calls[1].ClientName != "Claude Desktop" || s.Calls[1].Count != 2 {
 		t.Errorf("calls newest first: %+v", s.Calls)
 	}
-	s, ok = BuildSession(es, "s2", lookup)
+	s, ok = BuildSession(es, "s2", now, lookup)
 	if !ok || s.Title != "s2" {
 		t.Errorf("unindexed: %+v", s)
 	}
-	if _, ok := BuildSession(es, "nope", lookup); ok {
+	if _, ok := BuildSession(es, "nope", now, lookup); ok {
 		t.Error("an id no call returned is unknown")
 	}
-	if _, ok := BuildSession(es, "s1", lookup); ok {
+	if _, ok := BuildSession(es, "s1", now, lookup); ok {
 		t.Error("a prefix is not an id")
 	}
 }
@@ -460,5 +460,72 @@ func TestClientSessionsRead(t *testing.T) {
 	}
 	if got["a"] != 2 || got["b"] != 0 {
 		t.Errorf("sessions_read per client = %v, want a=2 (distinct, get_session only) b=0", got)
+	}
+}
+
+func seriesSum(s Series) int {
+	n := 0
+	for _, p := range s.Points {
+		for _, c := range p.ByClient {
+			n += c
+		}
+	}
+	return n
+}
+
+// Entries with impossible times (a zero time, a 1970 clock, a far future) count
+// nowhere, so the KPIs and the series agree and "all" never builds a huge series.
+func TestBadDatesCountNowhere(t *testing.T) {
+	es := entries(
+		ent{ago: 2 * 24 * time.Hour, client: "a", tool: "get_session", ids: []string{"s1"}},
+		ent{ago: time.Hour, client: "b", tool: "list_sessions"},
+	)
+	es = append(es,
+		mcpserver.Entry{At: "0001-01-01T00:00:00Z", Client: "zero", Tool: "x"},
+		mcpserver.Entry{At: "1970-01-01T00:00:00Z", Client: "epoch", Tool: "x"},
+		mcpserver.Entry{At: now.Add(48 * time.Hour).UTC().Format(time.RFC3339), Client: "future", Tool: "x"},
+	)
+	for _, rng := range []string{"24h", "7d", "30d", "all"} {
+		st := build(t, es, rng)
+		if got := seriesSum(st.Series); got != st.KPIs.Calls {
+			t.Errorf("%s: series sums to %d, calls %d", rng, got, st.KPIs.Calls)
+		}
+		for _, c := range st.Clients {
+			if c.ID == "zero" || c.ID == "epoch" || c.ID == "future" {
+				t.Errorf("%s: client %q from a bad date", rng, c.ID)
+			}
+		}
+	}
+	all := build(t, es, "all")
+	if all.KPIs.Calls != 2 || len(all.Series.Points) != 3 || !all.Series.Points[0].Covered {
+		t.Errorf("all: calls %d, %d points, first %+v", all.KPIs.Calls, len(all.Series.Points), all.Series.Points[0])
+	}
+	// Slots come from sane entries only: a is first.
+	for _, c := range all.Clients {
+		if c.ID == "a" && c.Slot != 0 {
+			t.Errorf("slot of a = %d", c.Slot)
+		}
+	}
+}
+
+// "all" starts at most 400 days back, and the KPIs cover the same days as the series.
+func TestAllRangeCapped(t *testing.T) {
+	d := 24 * time.Hour
+	es := entries(
+		ent{ago: 1000 * d, client: "old", tool: "x"},
+		ent{ago: time.Hour, client: "a", tool: "x"},
+	)
+	st := build(t, es, "all")
+	if n := len(st.Series.Points); n < 400 || n > 402 {
+		t.Errorf("all: %d points, want about 401", n)
+	}
+	if got := seriesSum(st.Series); got != st.KPIs.Calls || got != 1 {
+		t.Errorf("series %d, calls %d, want 1 and 1", got, st.KPIs.Calls)
+	}
+	for _, p := range st.Series.Points {
+		if !p.Covered {
+			t.Errorf("the log began before the window, so every day is covered: %+v", p)
+			break
+		}
 	}
 }

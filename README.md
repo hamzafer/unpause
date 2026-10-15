@@ -208,6 +208,26 @@ exclude = ["~/developer/work/*", "*/secret-repo"]
 
 Each entry is a glob on a folder (`*` matches within one folder name, `~` is expanded). A session is hidden if any folder it ever worked in matches, not only the last one. An entry also covers every folder below a match, and an entry that doesn't start with `/` or `~` can match the last folders of any path, so `*/secret-repo` covers every `secret-repo` folder. On macOS case doesn't matter, and symlinked folders are matched on their real path too. Cowork sessions are matched by the folders you gave them in Claude Desktop. A broken pattern stops `unpause mcp` from starting, and while any entry is set, a session with no folder at all is hidden too. Excluded sessions don't exist as far as the MCP server knows. The picker and `unpause list` still show them.
 
+### Use from Claude Desktop or Codex
+
+Claude Desktop starts local MCP servers from `~/Library/Application Support/Claude/claude_desktop_config.json`. Add unpause under `mcpServers` with its full path (`which unpause` prints it; Desktop doesn't see your shell's `PATH`), then quit and restart Desktop:
+
+```json
+{
+  "mcpServers": {
+    "unpause": { "command": "/opt/homebrew/bin/unpause", "args": ["mcp"] }
+  }
+}
+```
+
+It also works in Cowork. For Codex:
+
+```sh
+codex mcp add unpause -- unpause mcp
+```
+
+### Use from ChatGPT through a tunnel
+
 To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `unpause mcp` as a child process and polls OpenAI over outbound HTTPS, so nothing on your Mac listens for connections:
 
 1. Create a tunnel at https://platform.openai.com/settings/organization/tunnels and note its `tunnel_...` id.
@@ -233,7 +253,7 @@ unpause mcp stats              # last 7 days: calls per tool and client, session
 unpause mcp stats --since 30d --json
 ```
 
-**See it as a page.** `unpause mcp stats --web` serves the same log as a live page and opens it in your browser: who read your sessions and what they read, calls over time per client, the sessions read most (click one to see every call that returned it), top searches and the latest calls. It listens on `127.0.0.1:4777` only (a free port if that one is taken; `--port` picks another, `--no-open` just prints the URL) and stops on Ctrl+C. The page is built into the binary and makes no request off your machine. Hours and days on the chart follow this machine's time zone.
+**See it as a page.** `unpause mcp stats --web` serves the same log as a live page and opens it in your browser: who read your sessions and what they read, calls over time per client, the sessions read most (click one to see every call that returned it), top searches and the latest calls. It listens on `127.0.0.1:4777` only (a free port if that one is taken; `--port` picks another, `--no-open` just prints the URL) and stops on Ctrl+C. The URL it opens carries a token made for that run, and the page's data is only served with it, so other users or programs on your machine can't read your session titles off the port; open the printed link, not the bare address. The page is built into the binary and makes no request off your machine. Hours and days on the chart follow this machine's time zone.
 
 ```sh
 unpause mcp stats --web

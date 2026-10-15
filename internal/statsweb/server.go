@@ -3,6 +3,9 @@ package statsweb
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io/fs"
@@ -19,15 +22,72 @@ import (
 	"github.com/hamzafer/unpause/internal/mcpserver"
 )
 
-// Config is what the server reads. Every API request calls ReadLog again, and Lookup only
-// when a response names Sessions, so the page is as fresh as `unpause mcp stats`.
+// Config is what the server reads. Every API request calls ReadLog again, so the counts
+// are as fresh as `unpause mcp stats`. Lookup loads the index for titles only when a
+// response names Sessions, and its result is kept for titleTTL.
 type Config struct {
 	ReadLog func() ([]mcpserver.Entry, error)
-	Lookup  func() Lookup // loads the index; called at most once per request
+	Lookup  func() Lookup // loads the index; at most once per titleTTL
 	Now     func() time.Time
 	Loc     *time.Location // bucket boundaries; time.Local in the command
 	Static  fs.FS          // the export: index.html, _next/...
+	// Token is this run's secret. Every /api/ request has to carry it as ?t=; without
+	// one, every API request is refused. The page gets it from the URL the command prints.
+	Token string
 }
+
+// NewToken is a random 128-bit token in hex, one per run of the server.
+func NewToken() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+// titleTTL is how long a loaded index serves titles before the next request reloads it.
+const titleTTL = 30 * time.Second
+
+// titles keeps the loaded index for titleTTL. One load at a time: a request that needs
+// titles while another loads them waits for that load.
+type titles struct {
+	mu     sync.Mutex
+	load   func() Lookup
+	now    func() time.Time
+	at     time.Time
+	loaded bool
+	l      Lookup
+}
+
+func (t *titles) get() Lookup {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if n := t.now(); !t.loaded || n.Sub(t.at) >= titleTTL || n.Before(t.at) {
+		t.l, t.at, t.loaded = t.load(), n, true
+	}
+	return t.l
+}
+
+// lookup loads the titles on its first call only, so a response that names no Session
+// never touches the index.
+func (t *titles) lookup() Lookup {
+	var once sync.Once
+	var l Lookup
+	return func(id string) (Info, bool) {
+		once.Do(func() { l = t.get() })
+		if l == nil {
+			return Info{}, false
+		}
+		return l(id)
+	}
+}
+
+// ErrSlowShutdown is what Serve returns when connections were still open after the
+// grace period and had to be closed.
+var ErrSlowShutdown = errors.New("connections still open on stop; closed them")
+
+// shutdownGrace is how long Serve waits for open requests when ctx is done.
+var shutdownGrace = 5 * time.Second
 
 // Listen binds 127.0.0.1:port, or a free port the OS picks when that one is taken.
 // Port 0 always lets the OS pick.
@@ -52,9 +112,14 @@ func Serve(ctx context.Context, ln net.Listener, cfg Config) error {
 		return err
 	case <-ctx.Done():
 	}
-	sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	sctx, cancel := context.WithTimeout(context.Background(), shutdownGrace)
 	defer cancel()
 	if err := srv.Shutdown(sctx); err != nil {
+		srv.Close()
+		<-errc
+		if errors.Is(err, context.DeadlineExceeded) {
+			return ErrSlowShutdown
+		}
 		return err
 	}
 	if err := <-errc; !errors.Is(err, http.ErrServerClosed) {
@@ -65,14 +130,23 @@ func Serve(ctx context.Context, ln net.Listener, cfg Config) error {
 
 // NewHandler serves the page and the API for a server bound to 127.0.0.1:port. It answers
 // only requests addressed to that host and port, so a page on another site can't read the
-// log through DNS rebinding, sends no CORS headers, and answers GET and HEAD only.
+// log through DNS rebinding, sends no CORS headers, and answers GET and HEAD only. The API
+// also wants the run's token, so another local user or process can't read titles without
+// the URL the command printed.
 func NewHandler(cfg Config, port int) http.Handler {
 	p := strconv.Itoa(port)
+	s := &server{Config: cfg, titles: &titles{load: cfg.Lookup, now: cfg.Now}}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "no-referrer")
+		// An absolute-form target (GET http://host/path) makes r.Host the URL's host, not
+		// the Host header's, so the host check below can't be trusted with one.
+		if !strings.HasPrefix(r.RequestURI, "/") {
+			http.Error(w, "bad request target", http.StatusBadRequest)
+			return
+		}
 		if r.Host != "127.0.0.1:"+p && !strings.EqualFold(r.Host, "localhost:"+p) {
 			http.Error(w, "forbidden host", http.StatusForbidden)
 			return
@@ -82,17 +156,34 @@ func NewHandler(cfg Config, port int) http.Handler {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		switch p := r.URL.Path; {
+		p := r.URL.Path
+		if strings.HasPrefix(p, "/api/") && !s.authorized(r) {
+			writeJSON(w, http.StatusForbidden, apiError{"forbidden"})
+			return
+		}
+		switch {
 		case p == "/api/stats":
-			cfg.stats(w, r)
+			s.stats(w, r)
 		case p == "/api/session":
-			cfg.session(w, r)
+			s.session(w, r)
 		case strings.HasPrefix(p, "/api/"):
 			writeJSON(w, http.StatusNotFound, apiError{"not found"})
 		default:
-			cfg.static(w, r)
+			s.static(w, r)
 		}
 	})
+}
+
+// server is a Config plus the state one handler keeps across requests.
+type server struct {
+	Config
+	titles *titles
+}
+
+// authorized reports whether r carries the run's token as ?t=, compared in constant time.
+func (s *server) authorized(r *http.Request) bool {
+	got := r.URL.Query().Get("t")
+	return s.Token != "" && subtle.ConstantTimeCompare([]byte(got), []byte(s.Token)) == 1
 }
 
 type apiError struct {
@@ -112,19 +203,6 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Write(b)
 }
 
-// lazyLookup loads the index on the first lookup only.
-func (c Config) lazyLookup() Lookup {
-	var once sync.Once
-	var l Lookup
-	return func(id string) (Info, bool) {
-		once.Do(func() { l = c.Lookup() })
-		if l == nil {
-			return Info{}, false
-		}
-		return l(id)
-	}
-}
-
 func (c Config) read(w http.ResponseWriter) ([]mcpserver.Entry, bool) {
 	es, err := c.ReadLog()
 	if err != nil {
@@ -135,7 +213,7 @@ func (c Config) read(w http.ResponseWriter) ([]mcpserver.Entry, bool) {
 	return es, true
 }
 
-func (c Config) stats(w http.ResponseWriter, r *http.Request) {
+func (c *server) stats(w http.ResponseWriter, r *http.Request) {
 	rng := r.URL.Query().Get("range")
 	if rng == "" {
 		rng = "7d"
@@ -148,7 +226,7 @@ func (c Config) stats(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	st, err := BuildStats(es, rng, c.Now(), c.Loc, c.lazyLookup())
+	st, err := BuildStats(es, rng, c.Now(), c.Loc, c.titles.lookup())
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, apiError{err.Error()})
 		return
@@ -156,13 +234,13 @@ func (c Config) stats(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, st)
 }
 
-func (c Config) session(w http.ResponseWriter, r *http.Request) {
+func (c *server) session(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	es, ok := c.read(w)
 	if !ok {
 		return
 	}
-	s, found := BuildSession(es, id, c.lazyLookup())
+	s, found := BuildSession(es, id, c.Now(), c.titles.lookup())
 	if id == "" || !found {
 		writeJSON(w, http.StatusNotFound, apiError{"no logged call returned this session"})
 		return

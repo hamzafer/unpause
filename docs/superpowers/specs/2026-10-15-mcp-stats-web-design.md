@@ -8,10 +8,11 @@ Answer one question at a glance: **who read my Sessions, and what did they read?
 
 ## Command and server (Go)
 
-- `unpause mcp stats --web [--port 4777] [--no-open]`. Binds `127.0.0.1` only; if the port is busy, takes a free one. Prints the URL to stderr, opens the browser (`open` / `xdg-open`) unless `--no-open`, Ctrl+C stops.
-- Rejects any request whose `Host` is not `127.0.0.1:<port>` or `localhost:<port>` (DNS rebinding). No CORS headers. GET only.
+- `unpause mcp stats --web [--port 4777] [--no-open]`. Binds `127.0.0.1` only; if the port is busy, takes a free one. Prints the URL to stderr, opens the browser (`open` / `xdg-open`) unless `--no-open`. `--port` and `--no-open` without `--web` are an error. Ctrl+C stops; a second Ctrl+C kills at once. Requests still open after 5 s are closed and the command still exits 0.
+- **Per-run token.** Each run makes a random 128-bit token (`crypto/rand`, hex) and prints `http://127.0.0.1:<port>/?t=<token>`. Every `/api/*` request must carry it as `?t=` (constant-time compare), else 403 `{"error":"forbidden"}`. Static files need no token. Other local users or processes can reach the port but can't read titles without the URL.
+- Rejects any request whose `Host` is not `127.0.0.1:<port>` or `localhost:<port>` (DNS rebinding), and any absolute-form target (`GET http://host/path`, 400), since that sets the host from the URL instead of the header. No CORS headers. GET only.
 - Static files: the Next.js export, committed under `internal/webui/dist`, served with `go:embed`. goreleaser needs no Node. CI rebuilds the export and fails if `internal/webui/dist` differs.
-- Data is read fresh on every API call from `ReadLog` + the index (titles), like the CLI.
+- The log is read fresh on every API call with `ReadLog`, like the CLI. The index (titles) is loaded only when a response names Sessions and kept for 30 s; one load at a time.
 
 ### `GET /api/stats?range=24h|7d|30d|all`
 
@@ -39,7 +40,8 @@ Answer one question at a glance: **who read my Sessions, and what did they read?
 ```
 
 - `prev` is the same window just before (null for `all`). `p50_ms` over successful calls; null when none.
-- Buckets: `24h` hourly (24), `7d` and `30d` daily, `all` daily from the first entry. `covered: false` for buckets before the first logged call (drawn as a gap, never zero). Zero calls inside coverage is a real zero.
+- Buckets: `24h` hourly (24), `7d` and `30d` daily, `all` daily from the first entry but at most 400 days back (the KPIs cover the same days, so the series always sums to `calls`). `covered: false` for buckets before the first logged call (drawn as a gap, never zero). Zero calls inside coverage is a real zero.
+- Entries dated before 2020-01-01 or more than 24 h after now (a broken clock, a zero time) count nowhere: not in the KPIs, the series, the clients or their slots.
 - `slot`: a client's color slot, by first appearance in the whole log, so a client keeps its color across ranges. Slots 0 to 4; a 6th+ client folds into "Other" in the chart.
 - `name`: friendly name: `local-agent-mode-*` Claude Cowork, `claude-ai` Claude Desktop, `openai-mcp` or names containing `chatgpt` ChatGPT, names starting `codex` Codex, else the raw id.
 - `most_read`: top 10 by successful `get_session`. Titles from the local index; a Session no longer indexed shows its short id.
@@ -48,6 +50,8 @@ Answer one question at a glance: **who read my Sessions, and what did they read?
 ### `GET /api/session?id=<id>`
 
 `{ "id", "title", "account", "project", "calls": [ { "at", "client_name", "tool", "count" } ] }`, every logged call that returned this Session, newest first. 404 when unknown.
+
+The page reads `t` from its URL once, keeps it in `sessionStorage` (so a reload works), removes it from the address bar with `history.replaceState`, and sends it on every API call. On a 403 it says: "This page needs the link unpause printed. Run `unpause mcp stats --web` again."
 
 ## Page (web)
 
@@ -90,11 +94,12 @@ Under 768 px everything is one column; the KPI row wraps 2 by 3; the calls table
 ### Principles
 
 - **The headline is the answer.** A generated sentence names who read what in the range ("Claude Cowork read 2 sessions in the last 24 hours. ChatGPT read nothing."). It is the one bold element: 32 px Geist, tight tracking. Everything else is quiet.
-- **One motion.** When polling brings a new call, the hero's live edge pulses once and the new row in Recent calls fades in from a brief accent tint. Nothing else animates; `prefers-reduced-motion` turns both off.
+- **One motion.** When polling brings a new call, the hero's live edge (the last point, or the top of the last bar in the sparse view) pulses once and the new row in Recent calls fades in from a brief accent tint. Nothing else animates on its own: no skeleton shimmer, no fades on range change. The sheet and tooltips move only in answer to the user. `prefers-reduced-motion` turns the pulse and tint off and cuts every other animation and transition to nothing.
+- Polling never overlaps: a tick is skipped while a request is out, and a response older than the newest one shown is dropped.
 - Charts: thin marks, 2 px surface gaps in stacks, recessive grid, crosshair + tooltip, legend for 2+ clients, a "Table" toggle on the hero card. Ranked lists put a proportional bar behind each row (Vercel style), text in text colors.
 - Delta chips: neutral gray chips with a sign and percent; no green/red (more calls is not good or bad). "new" when prev is 0.
 - Drill-in: clicking a most-read row opens a shadcn `Sheet`: title, account, project, every call that returned it, and a copy button for `unpause open <short id>`. No chat content.
-- Empty state (no log yet): the headline says "No MCP client has read your sessions yet." plus three lines on connecting Claude Desktop, Codex or ChatGPT (link to the README section). Sparse ranges render honestly.
+- Empty state (no log yet): the headline says "No MCP client has read your sessions yet." plus three lines on connecting Claude Desktop, Codex or ChatGPT (links to the README sections "Use from Claude Desktop or Codex" and "Use from ChatGPT"). Sparse ranges render honestly.
 - Errors: a call row with an error shows its class next to an icon; the KPI says "Errors 0" in muted text.
 - Theme: dark by default, follows the system when the user hasn't picked; toggle in the header; choice kept in `localStorage`.
 - Quality floor: visible focus rings, keyboard reachable sheet and toggles, 390 px without sideways scroll, `prefers-reduced-motion`.

@@ -145,12 +145,22 @@ type entry struct {
 	*mcpserver.Entry
 }
 
-// parse keeps the Entries whose time parses, oldest first (log order on ties).
-func parse(es []mcpserver.Entry) []entry {
+// earliest is the oldest time an Entry can sensibly have: the access log is from 2026, so
+// anything before 2020 is a broken clock (or a zero time), not a call.
+var earliest = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+
+// maxAllSpan is how far back "all" reaches at most, so a long log can't build a huge series.
+const maxAllSpan = 400 * 24 * time.Hour
+
+// parse keeps the Entries whose time parses and is sane at now (from 2020 to a day ahead
+// of now), oldest first (log order on ties). The rest count nowhere: not in a window, the
+// series, the clients or their slots.
+func parse(es []mcpserver.Entry, now time.Time) []entry {
 	out := make([]entry, 0, len(es))
+	latest := now.Add(24 * time.Hour)
 	for i := range es {
 		at, err := time.Parse(time.RFC3339, es[i].At)
-		if err != nil {
+		if err != nil || at.Before(earliest) || at.After(latest) {
 			continue
 		}
 		c := es[i].Client
@@ -196,10 +206,21 @@ func BuildStats(raw []mcpserver.Entry, rng string, now time.Time, loc *time.Loca
 	if !ok {
 		return Stats{}, ErrRange
 	}
-	all := parse(raw)
-	var start time.Time // zero for "all"
-	if span > 0 {
-		start = now.Add(-span)
+	all := parse(raw, now)
+	var first time.Time
+	if len(all) > 0 {
+		first = all[0].at
+	}
+	// "all" starts at the first call, but at most maxAllSpan back; with no calls, now.
+	start := now.Add(-span)
+	if span == 0 {
+		start = now
+		if !first.IsZero() {
+			start = first
+			if floor := now.Add(-maxAllSpan); start.Before(floor) {
+				start = floor
+			}
+		}
 	}
 	var in, prev []entry
 	for _, e := range all {
@@ -227,15 +248,7 @@ func BuildStats(raw []mcpserver.Entry, rng string, now time.Time, loc *time.Loca
 		p := window(prev)
 		st.KPIs.Prev = &p
 	}
-	var first time.Time
-	if len(all) > 0 {
-		first = all[0].at
-	}
-	seriesStart := start
-	if span == 0 {
-		seriesStart = cmp.Or(first, now)
-	}
-	st.Series = series(in, span == 24*time.Hour, seriesStart, now, first, loc)
+	st.Series = series(in, span == 24*time.Hour, start, now, first, loc)
 
 	// Tools and queries count the same way as `unpause mcp stats`.
 	ins := make([]mcpserver.Entry, len(in))
@@ -448,10 +461,10 @@ type Session struct {
 }
 
 // BuildSession answers GET /api/session: every logged call that returned id (an exact
-// id), newest first. ok is false when no call did, so the API never describes a Session
+// id), newest first, with the same sane times as BuildStats at now. ok is false when no call did, so the API never describes a Session
 // the log doesn't name.
-func BuildSession(raw []mcpserver.Entry, id string, lookup Lookup) (Session, bool) {
-	all := parse(raw)
+func BuildSession(raw []mcpserver.Entry, id string, now time.Time, lookup Lookup) (Session, bool) {
+	all := parse(raw, now)
 	s := Session{ID: id, Title: shortID(id), Calls: []SessionCall{}}
 	for i := len(all) - 1; i >= 0; i-- {
 		e := all[i]

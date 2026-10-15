@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -33,10 +34,20 @@ func mcpStatsCmd() *cobra.Command {
 		Short: "Summarize what MCP clients read",
 		Long: "Reads the access log the MCP server keeps next to the index cache (access.jsonl, plus access.jsonl.1 after a rotation) " +
 			"and shows calls per tool and per client, the sessions read most through get_session, errors and the top search queries. " +
-			"The log never holds message text or titles; titles shown here are looked up on this machine.",
+			"The log never holds message text or titles; titles shown here are looked up on this machine.\n\n" +
+			"With --web it serves the same log as a live page on 127.0.0.1 and opens it in the browser " +
+			"(--port picks the port, --no-open only prints the URL). Ctrl+C stops it.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if web, _ := cmd.Flags().GetBool("web"); web {
+			web, _ := cmd.Flags().GetBool("web")
+			if !web {
+				for _, f := range []string{"port", "no-open"} {
+					if cmd.Flags().Changed(f) {
+						return fmt.Errorf("--%s only works with --web", f)
+					}
+				}
+			}
+			if web {
 				port, _ := cmd.Flags().GetInt("port")
 				noOpen, _ := cmd.Flags().GetBool("no-open")
 				return runStatsWeb(cmd.Context(), cmd.ErrOrStderr(), port, !noOpen)
@@ -102,11 +113,17 @@ func runStatsWeb(ctx context.Context, stderr io.Writer, port int, open bool) err
 	if port < 0 || port > 65535 {
 		return fmt.Errorf("--port %d: want 0 to 65535", port)
 	}
+	token, err := statsweb.NewToken()
+	if err != nil {
+		return err
+	}
 	ln, err := statsweb.Listen(port)
 	if err != nil {
 		return err
 	}
-	url := "http://" + ln.Addr().String() + "/"
+	// The token is in the URL only: the page reads it from there, and API calls without
+	// it are refused, so another local user can't read titles off the port.
+	url := "http://" + ln.Addr().String() + "/?t=" + token
 	fmt.Fprintf(stderr, "unpause mcp stats: %s (Ctrl+C to stop)\n", url)
 	if open {
 		if err := openBrowser(url); err != nil {
@@ -118,13 +135,25 @@ func runStatsWeb(ctx context.Context, stderr io.Writer, port int, open bool) err
 	}
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return statsweb.Serve(ctx, ln, statsweb.Config{
+	// After the first Ctrl+C, stop catching signals: a second one kills at once.
+	go func() {
+		<-ctx.Done()
+		stop()
+	}()
+	err = statsweb.Serve(ctx, ln, statsweb.Config{
 		ReadLog: func() ([]mcpserver.Entry, error) { return mcpserver.ReadLog(mcpserver.LogPath(config.CachePath())) },
 		Lookup:  indexLookup,
 		Now:     time.Now,
 		Loc:     time.Local,
 		Static:  webui.FS(),
+		Token:   token,
 	})
+	if errors.Is(err, statsweb.ErrSlowShutdown) {
+		// Stopping is what was asked for; a slow browser tab is not a failure.
+		fmt.Fprintf(stderr, "unpause: %v\n", err)
+		return nil
+	}
+	return err
 }
 
 // indexLookup loads this machine's index for titles; the log never holds them.

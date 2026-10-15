@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -261,10 +262,24 @@ func TestMCPStatsWeb(t *testing.T) {
 	if i < 0 {
 		t.Fatalf("stderr line %q has no URL", line)
 	}
-	base := strings.TrimRight(strings.Fields(line[i:])[0], "/")
+	page, err := url.Parse(strings.Fields(line[i:])[0])
+	if err != nil || page.Path != "/" || len(page.Query().Get("t")) != 32 {
+		t.Fatalf("URL %q: want http://127.0.0.1:<port>/?t=<32 hex digits> (%v)", page, err)
+	}
+	token := page.Query().Get("t")
+	base := "http://" + page.Host
 	go io.Copy(io.Discard, stderr)
 
 	res, err := http.Get(base + "/api/stats?range=24h")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != 403 {
+		t.Errorf("api without the token: %d, want 403", res.StatusCode)
+	}
+
+	res, err = http.Get(base + "/api/stats?range=24h&t=" + token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,7 +300,7 @@ func TestMCPStatsWeb(t *testing.T) {
 	if err != nil || res.StatusCode != 200 || st.KPIs.Calls != 1 || len(st.MostRead) != 1 || st.MostRead[0].Title != "login-work" || st.Clients[0].Name != "Claude Cowork" {
 		t.Errorf("api/stats: %d %v %+v", res.StatusCode, err, st)
 	}
-	res, err = http.Get(base + "/")
+	res, err = http.Get(page.String())
 	if err != nil || res.StatusCode != 200 || res.Header.Get("Content-Type") != "text/html; charset=utf-8" {
 		t.Errorf("page: %v %v", err, res)
 	}
@@ -313,9 +328,22 @@ func TestMCPStatsWeb(t *testing.T) {
 
 func TestMCPStatsWebFlagsConflict(t *testing.T) {
 	bin := buildBinary(t)
-	cmd := exec.Command(bin, "mcp", "stats", "--web", "--json")
-	cmd.Env = statsHome(t)
-	if out, err := cmd.CombinedOutput(); err == nil {
-		t.Errorf("--web with --json should fail: %s", out)
+	for _, args := range [][]string{
+		{"--web", "--json"},
+		{"--port", "5000"},
+		{"--no-open"},
+		{"--port", "0", "--json"},
+	} {
+		cmd := exec.Command(bin, append([]string{"mcp", "stats"}, args...)...)
+		cmd.Env = statsHome(t)
+		if out, err := cmd.CombinedOutput(); err == nil {
+			t.Errorf("mcp stats %v should fail: %s", args, out)
+		}
+	}
+}
+
+func TestMCPStatsHelpMentionsWeb(t *testing.T) {
+	if long := mcpStatsCmd().Long; !strings.Contains(long, "--web") {
+		t.Errorf("mcp stats help should mention --web: %q", long)
 	}
 }

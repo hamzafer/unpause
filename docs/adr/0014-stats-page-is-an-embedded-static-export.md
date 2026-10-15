@@ -2,7 +2,7 @@
 
 `unpause mcp stats` answers "who read what" in a terminal; a page answers it at a glance and can update live. unpause ships as one Go binary through Homebrew, and the release pipeline has no Node. So the page is a Next.js static export committed under `internal/webui/dist` and served with `go:embed` by `unpause mcp stats --web`, which also serves a small JSON API built on the same `ReadLog` and `Summarize` as the CLI. A Go-templated page was rejected because the look (shadcn, charts, theming) is the point; a separately installed web app was rejected because it would be a second thing to install and keep in step.
 
-The server binds `127.0.0.1` only, answers GET only, and refuses any request whose `Host` is not the local address it bound, so another site in the browser can't read the log through DNS rebinding. Fonts are bundled; the page makes no request off the machine.
+The server binds `127.0.0.1` only, answers GET only, and refuses any request whose `Host` is not the local address it bound (and any absolute-form request target, which would set the host from the URL), so another site in the browser can't read the log through DNS rebinding. Binding to loopback still lets every local user and process reach the port, so each run makes a random 128-bit token and the API answers only requests that carry it; the token is in the URL the command prints and opens. Other local users or processes can't read titles without that URL. The static files need no token, since they hold no data. Fonts are bundled; the page makes no request off the machine.
 
 ## Consequences
 
