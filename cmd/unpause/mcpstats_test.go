@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	"github.com/hamzafer/unpause/internal/mcpserver"
 )
@@ -23,7 +24,10 @@ func TestParseSince(t *testing.T) {
 			t.Errorf("parseSince(%q) = %v, %v; want %v", in, got, err, want)
 		}
 	}
-	for _, bad := range []string{"", "x", "7", "d", "-1d", "-2h", "1.5d"} {
+	if got, err := parseSince("106751d"); err != nil || got <= 0 {
+		t.Errorf("parseSince(106751d) = %v, %v; want the largest whole-day window", got, err)
+	}
+	for _, bad := range []string{"", "x", "7", "d", "-1d", "-2h", "1.5d", "106752d", "106751d24h", "9999999999d"} {
 		if _, err := parseSince(bad); err == nil {
 			t.Errorf("parseSince(%q) should fail", bad)
 		}
@@ -61,6 +65,35 @@ func TestWriteStats(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
+	}
+}
+
+// TestWriteStatsStripsControlChars: a query or client name from the log can't drive the
+// terminal; control characters (ESC, BEL, C1) never reach the output.
+func TestWriteStatsStripsControlChars(t *testing.T) {
+	evil := "a\x1b]0;pwned\x07b\x1b[31mred\u009b2Jz\rq"
+	st := mcpserver.Stats{
+		Calls: 1, First: time.Now(), Last: time.Now(),
+		Tools:      []mcpserver.Tally{{Name: evil, Count: 1}},
+		Clients:    []mcpserver.Tally{{Name: evil, Count: 1}},
+		MostRead:   []mcpserver.Tally{{Name: "\x1b[2J" + evil, Count: 1}, {Name: "11111111-x", Count: 1}},
+		TopQueries: []mcpserver.Tally{{Name: evil, Count: 1}},
+	}
+	lookup := func(id string) (string, string, bool) {
+		if strings.HasPrefix(id, "1111") {
+			return "acct\x1b[1m", "title\x1b[0m\x07", true
+		}
+		return "", "", false
+	}
+	var b bytes.Buffer
+	writeStats(&b, statsView(st, lookup), "7d")
+	for _, r := range b.String() {
+		if r != '\n' && unicode.IsControl(r) {
+			t.Fatalf("control char %U in output:\n%q", r, b.String())
+		}
+	}
+	if !strings.Contains(b.String(), "red") {
+		t.Errorf("the printable text should stay:\n%s", b.String())
 	}
 }
 

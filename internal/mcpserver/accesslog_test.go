@@ -12,8 +12,11 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/hamzafer/unpause/internal/session"
 )
 
 // inputOf decodes an Entry's input into a map for comparison.
@@ -111,7 +114,7 @@ func TestAccessLogErrors(t *testing.T) {
 			t.Errorf("unknown or Excluded get: %+v", en)
 		}
 	}
-	if got[2].Error != "query is empty" {
+	if got[2].Error != "invalid input" {
 		t.Errorf("search error = %q", got[2].Error)
 	}
 	b, _ := json.Marshal(got[0])
@@ -322,5 +325,212 @@ func TestSummarizeKeepsTopTen(t *testing.T) {
 	st := Summarize(entries, time.Time{})
 	if len(st.MostRead) != 10 || st.MostRead[0] != (Tally{"s14", 15}) {
 		t.Errorf("most read = %v", st.MostRead)
+	}
+}
+
+// TestAccessLogClipsLongInputs: every string the client sends is cut to 500 bytes on a
+// UTF-8 boundary, so one call can't write an unbounded line.
+func TestAccessLogClipsLongInputs(t *testing.T) {
+	e := setup(t)
+	long := "a" + strings.Repeat("é", 2000) // odd start: the 500-byte cut lands mid-rune
+	res, err := e.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "search_sessions", Arguments: map[string]any{"query": long, "account": long, "project": long}})
+	if err != nil || res.IsError {
+		t.Fatalf("search: %v %v", err, res)
+	}
+	res, err = e.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_session", Arguments: map[string]any{"id": long}})
+	if err != nil || !res.IsError {
+		t.Fatalf("get should fail: %v", err)
+	}
+	got := e.log.all()
+	if len(got) != 2 {
+		t.Fatalf("want 2 entries, got %d", len(got))
+	}
+	check := func(field string, v any) {
+		s, _ := v.(string)
+		if len(s) > 500 || !utf8.ValidString(s) || !strings.HasSuffix(s, "…") || !strings.HasPrefix(long, strings.TrimSuffix(s, "…")) {
+			t.Errorf("%s not clipped: %d bytes, valid=%v, %q", field, len(s), utf8.ValidString(s), s[max(0, len(s)-10):])
+		}
+	}
+	in := inputOf(t, got[0])
+	for _, f := range []string{"query", "account", "project"} {
+		check(f, in[f])
+	}
+	check("id", inputOf(t, got[1])["id"])
+	if short := clipString("short"); short != "short" {
+		t.Errorf("short strings stay: %q", short)
+	}
+}
+
+// TestAccessLogErrorClasses: the error field is one of a few fixed words, never the
+// error text, which can carry paths.
+func TestAccessLogErrorClasses(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want string
+	}{
+		{"failed", fmt.Errorf("open /Users/someone/.claude/projects/secret: permission denied"), "failed"},
+		{"canceled", fmt.Errorf("scan: %w", context.Canceled), "canceled"},
+		{"deadline", context.DeadlineExceeded, "canceled"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := &recorded{}
+			cs := connect(t, func(context.Context) ([]*session.Session, []string, error) { return nil, nil, tc.err }, rec.record)
+			if res, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "list_sessions"}); err != nil || !res.IsError {
+				t.Fatalf("list should fail: %v", err)
+			}
+			got := rec.all()
+			if len(got) != 1 || got[0].Error != tc.want {
+				t.Errorf("entries = %+v, want error %q", got, tc.want)
+			}
+		})
+	}
+	e := setup(t)
+	if res, err := e.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_session", Arguments: map[string]any{"id": " "}}); err != nil || !res.IsError {
+		t.Fatalf("empty id should fail: %v", err)
+	}
+	if got := e.log.all(); len(got) != 1 || got[0].Error != "invalid input" {
+		t.Errorf("empty id: %+v", got)
+	}
+}
+
+// TestAccessLogRejectedCalls: calls the SDK turns away before the handler (bad argument
+// types, unknown tools) are logged too, once each, as invalid input.
+func TestAccessLogRejectedCalls(t *testing.T) {
+	e := setup(t)
+	res, err := e.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_session", Arguments: map[string]any{"id": 5}})
+	if err != nil || !res.IsError {
+		t.Fatalf("a bad argument type should fail: %v %v", err, res)
+	}
+	if _, err := e.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "no_such_tool"}); err == nil {
+		t.Fatal("an unknown tool should fail")
+	}
+	var l ListOutput
+	e.call(t, "list_sessions", nil, &l)
+	got := e.log.all()
+	if len(got) != 3 {
+		t.Fatalf("want 3 entries (no double logging), got %+v", got)
+	}
+	for i, tool := range []string{"get_session", "no_such_tool"} {
+		en := got[i]
+		if en.Tool != tool || en.Error != "invalid input" || en.Client != "test-client" || en.SessionIDs == nil {
+			t.Errorf("rejected %s: %+v", tool, en)
+		}
+	}
+	if got[2].Tool != "list_sessions" || got[2].Error != "" {
+		t.Errorf("handled call: %+v", got[2])
+	}
+}
+
+func TestReadLogSkipsLongLines(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "access.jsonl")
+	huge := `{"at":"2026-10-01T00:00:00Z","tool":"search_sessions","input":{"query":"` + strings.Repeat("x", 3<<20) + `"}}`
+	body := `{"at":"2026-10-01T00:00:00Z","tool":"list_sessions"}` + "\n" + huge + "\n" + `{"at":"2026-10-02T00:00:00Z","tool":"get_session"}` + "\n"
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := ReadLog(path)
+	if err != nil || len(entries) != 2 || entries[0].Tool != "list_sessions" || entries[1].Tool != "get_session" {
+		t.Errorf("entries = %d %v", len(entries), err)
+	}
+}
+
+// TestAccessLogRefusesSymlink: a symlink at the log path is never followed; the write
+// fails on stderr and the target is untouched.
+func TestAccessLogRefusesSymlink(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "elsewhere")
+	if err := os.WriteFile(target, []byte("keep\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "access.jsonl")
+	if err := os.Symlink(target, path); err != nil {
+		t.Fatal(err)
+	}
+	log := NewAccessLog(path)
+	var stderr bytes.Buffer
+	log.Stderr = &stderr
+	log.Record(Entry{Tool: "list_sessions"})
+	if b, _ := os.ReadFile(target); string(b) != "keep\n" {
+		t.Errorf("target written through the symlink: %q", b)
+	}
+	if fi, _ := os.Stat(target); fi.Mode().Perm() != 0o644 {
+		t.Errorf("target mode changed: %v", fi.Mode().Perm())
+	}
+	if !strings.Contains(stderr.String(), "access log") {
+		t.Errorf("stderr = %q", stderr.String())
+	}
+}
+
+// twoWriters runs n Records split across two AccessLogs on the same path, as two server
+// processes would.
+func twoWriters(t *testing.T, path string, maxSize int64, n int) {
+	t.Helper()
+	a, b := NewAccessLog(path), NewAccessLog(path)
+	a.MaxSize, b.MaxSize = maxSize, maxSize
+	var stderr syncBuffer
+	a.Stderr, b.Stderr = &stderr, &stderr
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			l := a
+			if i%2 == 1 {
+				l = b
+			}
+			l.Record(Entry{At: "2026-10-15T10:00:00Z", Tool: "get_session", Input: json.RawMessage(fmt.Sprintf(`{"id":"%04d"}`, i))})
+		}()
+	}
+	wg.Wait()
+	if stderr.String() != "" {
+		t.Fatalf("write failures: %s", stderr.String())
+	}
+}
+
+type syncBuffer struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (s *syncBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *syncBuffer) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.String()
+}
+
+func TestAccessLogTwoProcessesKeepEveryLine(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "access.jsonl")
+	twoWriters(t, path, 10<<20, 400)
+	entries, err := ReadLog(path)
+	if err != nil || len(entries) != 400 {
+		t.Fatalf("want 400 lines, got %d (%v)", len(entries), err)
+	}
+}
+
+// TestAccessLogTwoProcessesRotateOnce: two writers that both see a full log must not both
+// rotate, or the second rename replaces a full access.jsonl.1 with a nearly empty one.
+func TestAccessLogTwoProcessesRotateOnce(t *testing.T) {
+	const maxSize = 4 << 10
+	for round := 0; round < 5; round++ {
+		path := filepath.Join(t.TempDir(), "access.jsonl")
+		twoWriters(t, path, maxSize, 600)
+		fi, err := os.Stat(path + ".1")
+		if err != nil {
+			t.Fatalf("never rotated: %v", err)
+		}
+		if fi.Size() < maxSize {
+			t.Fatalf("round %d: access.jsonl.1 is %d bytes, under MaxSize %d: a generation was lost", round, fi.Size(), maxSize)
+		}
+		cur, _ := os.ReadFile(path)
+		if int64(len(cur)) >= maxSize+200 {
+			t.Errorf("current file overgrew: %d bytes", len(cur))
+		}
 	}
 }

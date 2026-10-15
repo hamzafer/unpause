@@ -225,7 +225,7 @@ While `tunnel-client run` is going, whatever ChatGPT asks for, full transcripts 
 
 ### See what was read
 
-Every tool call is logged as one JSON line in `~/.cache/unpause/access.jsonl` (under `$XDG_CACHE_HOME/unpause` when that is set): the time, the client's name and version, the tool, what the client asked for (search query, id, filters, paging), the ids of the sessions that came back, the count and how long it took. It never holds message text, titles or snippets. The file is readable only by you and rotates to `access.jsonl.1` at 10 MB. To sum it up:
+Every tool call is logged as one JSON line in `~/.cache/unpause/access.jsonl` (under `$XDG_CACHE_HOME/unpause` when that is set): the time, the client's name and version, the tool, what the client asked for (search query, id, filters, paging), the ids of the sessions that came back, the count and how long it took. It never holds message text, titles or snippets. What a client sends is logged as sent, so a search query lands in the log, cut to 500 bytes per field. A failed call is logged with a short error class (`not found`, `invalid input`, `canceled` or `failed`), never the error text, and calls the server turns away before they run, such as an unknown tool, are logged as `invalid input`. The file is readable only by you, rotates to `access.jsonl.1` at 10 MB and is never written through a symlink. To sum it up:
 
 ```sh
 unpause mcp stats              # last 7 days: calls per tool and client, sessions read most, top searches

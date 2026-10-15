@@ -4,7 +4,6 @@ package mcpserver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -116,6 +115,9 @@ func New(version string, load Loader, rec Recorder) *mcp.Server {
 		Instructions: "Read-only access to the user's local Claude Code sessions. " +
 			"Use list_sessions to browse, search_sessions to find text, get_session to read a transcript page by page.",
 	})
+	if rec != nil {
+		s.AddReceivingMiddleware(logRejected(rec))
+	}
 	ro := &mcp.ToolAnnotations{ReadOnlyHint: true}
 	h := &handlers{load: load}
 
@@ -210,7 +212,7 @@ func (h *handlers) list(ctx context.Context, _ *mcp.CallToolRequest, in ListInpu
 
 func (h *handlers) search(ctx context.Context, _ *mcp.CallToolRequest, in SearchInput) (*mcp.CallToolResult, SearchOutput, error) {
 	if strings.TrimSpace(in.Query) == "" {
-		return nil, SearchOutput{}, errors.New("query is empty")
+		return nil, SearchOutput{}, inputError("query is empty")
 	}
 	ss, err := h.visible(ctx)
 	if err != nil {
@@ -240,7 +242,7 @@ func (h *handlers) search(ctx context.Context, _ *mcp.CallToolRequest, in Search
 
 func (h *handlers) get(ctx context.Context, _ *mcp.CallToolRequest, in GetInput) (*mcp.CallToolResult, GetOutput, error) {
 	if strings.TrimSpace(in.ID) == "" {
-		return nil, GetOutput{}, errors.New("id is empty")
+		return nil, GetOutput{}, inputError("id is empty")
 	}
 	ss, err := h.visible(ctx)
 	if err != nil {

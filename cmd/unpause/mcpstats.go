@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/spf13/cobra"
 
@@ -79,12 +81,16 @@ func mcpStatsCmd() *cobra.Command {
 
 // parseSince reads a Go duration, with "d" for days allowed in front ("7d", "1d12h").
 func parseSince(s string) (time.Duration, error) {
+	in := s
 	bad := fmt.Errorf("--since %q: want a duration like 7d, 36h or 1d12h", s)
 	var days time.Duration
 	if i := strings.Index(s, "d"); i >= 0 {
 		n, err := strconv.Atoi(s[:i])
 		if err != nil || n < 0 {
 			return 0, bad
+		}
+		if n > maxSinceDays {
+			return 0, fmt.Errorf("--since %q: too long, at most %dd", s, maxSinceDays)
 		}
 		days = time.Duration(n) * 24 * time.Hour
 		s = s[i+1:]
@@ -96,7 +102,27 @@ func parseSince(s string) (time.Duration, error) {
 	if err != nil || d < 0 {
 		return 0, bad
 	}
+	if d > math.MaxInt64-days {
+		return 0, fmt.Errorf("--since %q: too long, at most %dd", in, maxSinceDays)
+	}
 	return days + d, nil
+}
+
+// maxSinceDays is the most whole days a time.Duration holds (about 292 years).
+const maxSinceDays = int(math.MaxInt64 / int64(24*time.Hour))
+
+// safe replaces control characters (ESC, BEL, C1 and the like) in text read from the log
+// or the index, so printing it can't drive the terminal. Whitespace becomes a space.
+func safe(s string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case unicode.IsSpace(r) && unicode.IsControl(r):
+			return ' '
+		case unicode.IsControl(r):
+			return '?'
+		}
+		return r
+	}, s)
 }
 
 // readCount is one Session in "most read", with its account and title when it still exists.
@@ -147,7 +173,7 @@ func writeStats(w io.Writer, st statsOut, window string) {
 		}
 		fmt.Fprintf(w, "\n%s\n", title)
 		for _, t := range ts {
-			fmt.Fprintf(w, "  %-18s%4d\n", session.Clip(t.Name, 18), t.Count)
+			fmt.Fprintf(w, "  %-18s%4d\n", session.Clip(safe(t.Name), 18), t.Count)
 		}
 	}
 	section("tools", st.Tools)
@@ -155,21 +181,21 @@ func writeStats(w io.Writer, st statsOut, window string) {
 	if len(st.MostRead) > 0 {
 		fmt.Fprintf(w, "\nmost read (get_session)\n")
 		for _, r := range st.MostRead {
-			id := r.ID
+			id := []rune(safe(r.ID))
 			if len(id) > 8 {
 				id = id[:8]
 			}
 			if r.Title == "" && r.Account == "" {
-				fmt.Fprintf(w, "  %4d  %s\n", r.Count, id)
+				fmt.Fprintf(w, "  %4d  %s\n", r.Count, string(id))
 				continue
 			}
-			fmt.Fprintf(w, "  %4d  %-8s %-9s %s\n", r.Count, id, r.Account, session.Clip(r.Title, 60))
+			fmt.Fprintf(w, "  %4d  %-8s %-9s %s\n", r.Count, string(id), safe(r.Account), session.Clip(safe(r.Title), 60))
 		}
 	}
 	if len(st.TopQueries) > 0 {
 		fmt.Fprintf(w, "\ntop queries\n")
 		for _, q := range st.TopQueries {
-			fmt.Fprintf(w, "  %4d  %s\n", q.Count, session.Clip(q.Name, 60))
+			fmt.Fprintf(w, "  %4d  %s\n", q.Count, session.Clip(safe(q.Name), 60))
 		}
 	}
 }

@@ -8,4 +8,8 @@ A line records the time, the client name and version from the MCP handshake, the
 
 - The log grows with use. It rotates to `access.jsonl.1` at 10 MB; one old file is kept.
 - A failed log write never fails a tool call; it is reported on stderr.
+- Every string the client sends is cut to 500 bytes, so a line stays small. `unpause mcp stats` reads past a line that is too long or broken instead of failing.
+- Errors are logged as one of four classes (`not found`, `invalid input`, `canceled`, `failed`), never their text, which can name paths. Calls the SDK rejects before a handler runs are logged as `invalid input`.
+- Writes take an advisory lock (`access.jsonl.lock`) around rotation and append, so two servers can't both rotate and lose a generation. Where flock is missing, only the in-process lock holds.
+- The log is never written through a symlink or to anything but a regular file; a refusal is a failed write, reported on stderr.
 - When OAuth arrives, the caller's identity belongs in the same line.
