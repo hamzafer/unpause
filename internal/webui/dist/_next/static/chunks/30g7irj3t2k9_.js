@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,17296,o=>{"use strict";async function c(o){throw Error(`mock is off: ${o}`)}o.s(["mockFetch",0,c])}]);

@@ -1,0 +1,6350 @@
+{
+  "41936071-dfd7-4ad9-a12f-ee8284fd2d70": {
+    "id": "41936071-dfd7-4ad9-a12f-ee8284fd2d70",
+    "title": "Refactor the billing webhook retries",
+    "account": "work",
+    "project": "billing-api",
+    "calls": [
+      {
+        "at": "2026-10-15T15:37:15.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 102
+      },
+      {
+        "at": "2026-10-15T15:03:18.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 172
+      },
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:28:24.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:14:05.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 62
+      },
+      {
+        "at": "2026-10-15T14:12:36.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 92
+      },
+      {
+        "at": "2026-10-15T14:06:07.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T14:05:59.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:41:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:40:51.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 53
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:15:39.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 149
+      },
+      {
+        "at": "2026-10-15T11:14:56.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 161
+      },
+      {
+        "at": "2026-10-15T11:07:04.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 175
+      },
+      {
+        "at": "2026-10-15T10:24:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 136
+      },
+      {
+        "at": "2026-10-15T10:20:51.000Z",
+        "client_name": "zed",
+        "tool": "get_session",
+        "count": 51
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T09:23:58.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 157
+      },
+      {
+        "at": "2026-10-15T08:57:22.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 99
+      },
+      {
+        "at": "2026-10-15T08:51:30.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-15T08:34:13.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 141
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T21:48:24.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T20:59:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 107
+      },
+      {
+        "at": "2026-10-14T20:51:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 46
+      },
+      {
+        "at": "2026-10-14T20:32:24.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 85
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:57:04.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 76
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:46:19.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T18:44:48.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": -33
+      },
+      {
+        "at": "2026-10-14T18:39:39.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 73
+      },
+      {
+        "at": "2026-10-14T18:39:02.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 199
+      },
+      {
+        "at": "2026-10-14T18:24:26.000Z",
+        "client_name": "zed",
+        "tool": "get_session",
+        "count": 146
+      },
+      {
+        "at": "2026-10-14T18:06:10.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 126
+      },
+      {
+        "at": "2026-10-14T18:06:09.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 115
+      },
+      {
+        "at": "2026-10-14T18:04:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T17:54:59.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 167
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:32:53.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 125
+      },
+      {
+        "at": "2026-10-14T17:17:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 146
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:08:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 187
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:37:58.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 139
+      },
+      {
+        "at": "2026-10-14T16:16:53.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T16:12:24.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 168
+      },
+      {
+        "at": "2026-10-14T16:09:04.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T16:08:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:43:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 132
+      },
+      {
+        "at": "2026-10-14T13:42:23.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 112
+      },
+      {
+        "at": "2026-10-14T13:37:46.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 90
+      },
+      {
+        "at": "2026-10-14T12:13:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:15:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 49
+      },
+      {
+        "at": "2026-10-14T11:15:32.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 113
+      },
+      {
+        "at": "2026-10-14T11:15:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 113
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:20.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 199
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:58:45.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T00:40:51.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 110
+      },
+      {
+        "at": "2026-10-13T22:27:16.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 96
+      },
+      {
+        "at": "2026-10-13T20:57:24.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 86
+      },
+      {
+        "at": "2026-10-13T20:56:47.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 96
+      },
+      {
+        "at": "2026-10-13T20:27:25.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 78
+      },
+      {
+        "at": "2026-10-13T19:20:24.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 36
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:52:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 193
+      },
+      {
+        "at": "2026-10-13T17:22:23.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 71
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:21:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 108
+      },
+      {
+        "at": "2026-10-13T16:21:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 84
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:13:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 42
+      },
+      {
+        "at": "2026-10-13T16:02:12.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 131
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:01:35.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 190
+      },
+      {
+        "at": "2026-10-13T11:04:49.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-13T10:43:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 33
+      },
+      {
+        "at": "2026-10-13T09:56:04.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 193
+      },
+      {
+        "at": "2026-10-13T05:49:34.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 160
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:31.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T20:32:00.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 57
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:45:07.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": -7
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:25:13.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T19:24:24.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T18:23:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 152
+      },
+      {
+        "at": "2026-10-12T18:08:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 113
+      },
+      {
+        "at": "2026-10-12T18:07:21.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 131
+      },
+      {
+        "at": "2026-10-12T17:52:04.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 86
+      },
+      {
+        "at": "2026-10-12T15:43:03.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 140
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:08:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 130
+      },
+      {
+        "at": "2026-10-12T13:35:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T23:15:10.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 118
+      },
+      {
+        "at": "2026-10-11T19:04:06.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-11T18:42:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T15:41:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 194
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T13:22:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 103
+      },
+      {
+        "at": "2026-10-11T13:02:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 92
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:29:21.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      }
+    ]
+  },
+  "08dda69b-bbf7-4137-a2c9-c634045ef3d9": {
+    "id": "08dda69b-bbf7-4137-a2c9-c634045ef3d9",
+    "title": "Why does the CSV import drop the last row",
+    "account": "work",
+    "project": "importer",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:30:41.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "get_session",
+        "count": 187
+      },
+      {
+        "at": "2026-10-15T14:30:25.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "get_session",
+        "count": 67
+      },
+      {
+        "at": "2026-10-15T14:05:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:38:56.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:52:03.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 170
+      },
+      {
+        "at": "2026-10-15T10:24:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 117
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T04:22:33.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 172
+      },
+      {
+        "at": "2026-10-14T21:26:01.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "get_session",
+        "count": 189
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:13:20.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": -33
+      },
+      {
+        "at": "2026-10-14T18:44:12.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T18:39:25.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:49:56.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T16:17:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:37:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 62
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T13:15:58.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 65
+      },
+      {
+        "at": "2026-10-14T12:13:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:41:34.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 114
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T20:27:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 182
+      },
+      {
+        "at": "2026-10-13T19:20:06.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:17:04.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 136
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:58.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:01:49.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:46:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 88
+      },
+      {
+        "at": "2026-10-13T02:48:45.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 154
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:22:34.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 52
+      },
+      {
+        "at": "2026-10-12T15:06:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 149
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T17:14:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 141
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T14:47:28.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 74
+      },
+      {
+        "at": "2026-10-11T13:23:15.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 51
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T09:07:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "552f1ec6-b418-4139-ab73-3bedbd6228af": {
+    "id": "552f1ec6-b418-4139-ab73-3bedbd6228af",
+    "title": "Plan the onboarding email sequence",
+    "account": "personal",
+    "project": "newsletter",
+    "calls": [
+      {
+        "at": "2026-10-15T14:49:05.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:46:24.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 113
+      },
+      {
+        "at": "2026-10-15T14:13:42.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 47
+      },
+      {
+        "at": "2026-10-15T14:06:07.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T14:05:30.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 128
+      },
+      {
+        "at": "2026-10-15T13:42:02.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "get_session",
+        "count": 69
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:16:03.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 162
+      },
+      {
+        "at": "2026-10-15T11:08:15.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T11:07:35.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T21:24:33.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:41:01.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:32:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 60
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:13:52.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 79
+      },
+      {
+        "at": "2026-10-14T18:06:08.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 43
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:42.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 183
+      },
+      {
+        "at": "2026-10-14T17:10:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 144
+      },
+      {
+        "at": "2026-10-14T17:07:59.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 129
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:31.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T16:49:56.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:09:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 187
+      },
+      {
+        "at": "2026-10-14T13:42:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:58:45.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T00:40:01.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 123
+      },
+      {
+        "at": "2026-10-13T18:08:30.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 81
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:40:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 99
+      },
+      {
+        "at": "2026-10-13T15:01:18.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T10:43:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T10:14:48.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 56
+      },
+      {
+        "at": "2026-10-13T09:55:43.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 67
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:22:23.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 149
+      },
+      {
+        "at": "2026-10-12T17:51:29.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 187
+      },
+      {
+        "at": "2026-10-12T17:04:10.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-12T16:50:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T16:18:00.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:19.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T14:24:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-12T11:36:51.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 156
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T19:05:49.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 62
+      },
+      {
+        "at": "2026-10-11T18:33:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 82
+      },
+      {
+        "at": "2026-10-11T18:31:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 181
+      },
+      {
+        "at": "2026-10-11T17:14:09.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 32
+      },
+      {
+        "at": "2026-10-11T17:13:53.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 105
+      },
+      {
+        "at": "2026-10-11T16:19:18.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 172
+      },
+      {
+        "at": "2026-10-11T15:41:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T14:47:02.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T13:02:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:49.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 187
+      },
+      {
+        "at": "2026-10-11T08:48:32.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      }
+    ]
+  },
+  "6b601dfc-2647-4de3-a584-60a5749b8936": {
+    "id": "6b601dfc-2647-4de3-a584-60a5749b8936",
+    "title": "Fix flaky auth test on CI",
+    "account": "work",
+    "project": "billing-api",
+    "calls": [
+      {
+        "at": "2026-10-15T14:05:59.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:41:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T07:27:44.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 138
+      },
+      {
+        "at": "2026-10-14T20:52:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 188
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:40:46.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T19:43:40.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 53
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:13:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 73
+      },
+      {
+        "at": "2026-10-14T18:39:25.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:32:00.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 181
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 169
+      },
+      {
+        "at": "2026-10-14T17:25:06.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 62
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:09:04.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:58:21.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 49
+      },
+      {
+        "at": "2026-10-13T22:27:51.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T20:28:08.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 93
+      },
+      {
+        "at": "2026-10-13T19:54:57.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 157
+      },
+      {
+        "at": "2026-10-13T17:51:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-13T17:49:10.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 102
+      },
+      {
+        "at": "2026-10-13T15:21:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T15:02:59.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:21:28.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 80
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T18:51:03.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:07:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 61
+      },
+      {
+        "at": "2026-10-12T14:31:21.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T00:59:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T18:42:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 41
+      },
+      {
+        "at": "2026-10-11T18:35:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 129
+      },
+      {
+        "at": "2026-10-11T15:31:45.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 62
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T13:22:18.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 138
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:48:32.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "6e3ef9e0-488f-4fbd-a49a-057cf094aa74": {
+    "id": "6e3ef9e0-488f-4fbd-a49a-057cf094aa74",
+    "title": "Sketch a tide-clock watch face",
+    "account": "personal",
+    "project": "watchfaces",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:06:19.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T13:42:34.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "get_session",
+        "count": 108
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T09:23:38.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T08:34:51.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T04:22:17.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 116
+      },
+      {
+        "at": "2026-10-14T21:15:25.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 136
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:40:46.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:07.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T19:15:23.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:49.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 122
+      },
+      {
+        "at": "2026-10-14T17:23:40.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:31.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T16:49:56.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T16:49:29.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:12:29.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 69
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:49:10.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T17:35:11.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 131
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:02:59.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:45:51.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 194
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T18:42:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-11T18:42:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T15:31:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 135
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "b80dbeb8-ff9c-4089-a3b0-f75990691214": {
+    "id": "b80dbeb8-ff9c-4089-a3b0-f75990691214",
+    "title": "Migrate the blog to Astro",
+    "account": "personal",
+    "project": "blog",
+    "calls": [
+      {
+        "at": "2026-10-15T15:36:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 54
+      },
+      {
+        "at": "2026-10-15T14:06:07.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T14:05:59.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:50:58.000Z",
+        "client_name": "zed",
+        "tool": "get_session",
+        "count": 65
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:22.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T09:23:38.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:40:46.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:46:41.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 73
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:49:10.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T17:21:44.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 193
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:02:59.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T11:05:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 189
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:58:35.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:24:16.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 54
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:25:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 181
+      },
+      {
+        "at": "2026-10-12T14:24:19.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T00:59:12.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T23:15:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 98
+      },
+      {
+        "at": "2026-10-11T18:33:28.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T13:02:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:30:18.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-11T08:29:21.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      }
+    ]
+  },
+  "486fa95b-4ee8-4ab9-a423-157cad4b65b8": {
+    "id": "486fa95b-4ee8-4ab9-a423-157cad4b65b8",
+    "title": "Tune the Postgres connection pool",
+    "account": "work",
+    "project": "platform",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:30:41.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:22.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:07:35.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:46:19.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:14:11.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 152
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:00.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T06:19:44.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T22:27:51.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T12:49:45.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T10:33:18.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 48
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:23:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 154
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T02:50:23.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 15
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:24:24.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T18:50:49.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 83
+      },
+      {
+        "at": "2026-10-12T16:56:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T16:50:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:19.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T00:59:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T20:29:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 184
+      },
+      {
+        "at": "2026-10-11T18:42:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T18:33:28.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T15:41:21.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 42
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T14:47:19.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 57
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 136
+      },
+      {
+        "at": "2026-10-11T08:49:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T08:30:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 151
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "ca4cfce2-98b0-460d-a36f-a9179e22dfc1": {
+    "id": "ca4cfce2-98b0-460d-a36f-a9179e22dfc1",
+    "title": "Draft the Q4 roadmap one-pager",
+    "account": "cowork",
+    "project": "planning",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:30:41.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:13:06.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T14:06:07.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:38:01.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 106
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:08:15.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:34:51.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T21:04:35.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "get_session",
+        "count": 181
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:41:29.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:44:12.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:23:40.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:16:37.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:16:38.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 135
+      },
+      {
+        "at": "2026-10-14T12:11:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 127
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:34:26.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T00:58:45.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T00:39:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T10:15:07.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T08:57:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 82
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T16:49:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-12T16:18:00.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T00:59:12.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T18:34:23.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 100
+      },
+      {
+        "at": "2026-10-11T15:41:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T15:32:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "3cddd1ae-99ec-4c7c-a379-3262ca331df6": {
+    "id": "3cddd1ae-99ec-4c7c-a379-3262ca331df6",
+    "title": "Compare three static site hosts",
+    "account": "cowork",
+    "project": "research",
+    "calls": [
+      {
+        "at": "2026-10-15T15:37:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:28:24.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:18:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:07.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T18:39:25.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T18:05:30.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 93
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:24:02.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 85
+      },
+      {
+        "at": "2026-10-14T17:16:37.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T14:21:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 173
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:34:26.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T06:19:44.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T19:20:06.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:52:26.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:21:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T08:56:35.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 80
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T21:09:06.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 82
+      },
+      {
+        "at": "2026-10-12T21:08:33.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 143
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:31.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:59.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 144
+      },
+      {
+        "at": "2026-10-12T18:07:37.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 194
+      },
+      {
+        "at": "2026-10-12T16:56:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T18:33:28.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T14:47:23.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 46
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:39:01.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "611d4795-b43f-4c0d-a245-ec70c6e0b1b4": {
+    "id": "611d4795-b43f-4c0d-a245-ec70c6e0b1b4",
+    "title": "Rust port of the markdown linter",
+    "account": "personal",
+    "project": "mdlint",
+    "calls": [
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:07:35.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:56:52.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T08:33:30.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 148
+      },
+      {
+        "at": "2026-10-15T08:18:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T07:50:09.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 75
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:41:01.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:24:10.000Z",
+        "client_name": "zed",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T18:04:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:16:53.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:15:37.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": -22
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:39:33.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T10:43:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:48:49.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:21:46.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 119
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T16:56:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T16:18:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:07:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 93
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:05:11.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 139
+      },
+      {
+        "at": "2026-10-11T18:42:36.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-11T15:41:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:49:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "4db0d23b-26fc-478b-a308-af36e94efaaf": {
+    "id": "4db0d23b-26fc-478b-a308-af36e94efaaf",
+    "title": "Grocery list optimizer side project",
+    "account": "personal",
+    "project": "pantry",
+    "calls": [
+      {
+        "at": "2026-10-15T14:49:05.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:26:05.000Z",
+        "client_name": "zed",
+        "tool": "get_session",
+        "count": 47
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:08:15.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:50:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T20:41:01.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:46:19.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:31.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T06:19:44.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:58.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:02:18.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T12:49:45.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T10:15:07.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T09:56:04.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:32:31.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:24:24.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T16:18:00.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:31:21.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T23:15:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 170
+      },
+      {
+        "at": "2026-10-11T19:03:52.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 49
+      },
+      {
+        "at": "2026-10-11T18:42:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T14:47:02.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T09:07:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "53c811bd-ac7c-4226-a843-00c577d68d49": {
+    "id": "53c811bd-ac7c-4226-a843-00c577d68d49",
+    "title": "Upgrade the design tokens to v2",
+    "account": "work",
+    "project": "design-system",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:06:19.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T14:05:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:26:38.000Z",
+        "client_name": "zed",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:56:52.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:18:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T22:13:00.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 181
+      },
+      {
+        "at": "2026-10-14T21:00:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 94
+      },
+      {
+        "at": "2026-10-14T20:41:01.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:15:23.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:23:40.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:49:56.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:42:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:37.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 92
+      },
+      {
+        "at": "2026-10-14T10:49:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:52:26.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T17:49:10.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:14.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 153
+      },
+      {
+        "at": "2026-10-13T15:40:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T15:21:14.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 85
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:25:13.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "28374f6c-f8d4-46e9-a384-f52bcf8a2c65": {
+    "id": "28374f6c-f8d4-46e9-a384-f52bcf8a2c65",
+    "title": "Debug the iOS share sheet crash",
+    "account": "work",
+    "project": "mobile",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:30:41.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:28:24.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:05:59.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:41:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:07:35.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T09:24:01.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 163
+      },
+      {
+        "at": "2026-10-15T09:23:38.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T08:18:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T21:15:38.000Z",
+        "client_name": "ChatGPT",
+        "tool": "get_session",
+        "count": 106
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:56:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:39:25.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T18:24:10.000Z",
+        "client_name": "zed",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:47:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:16:37.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:11:57.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T12:13:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T10:34:26.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T06:19:44.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:52:26.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:01:49.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:01:18.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T09:56:04.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:14.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 61
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:58:35.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T20:32:43.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:25:13.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T18:51:03.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-12T16:50:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:31:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 62
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "eda49220-b3c7-4ab1-a08b-d56f4c3e454d": {
+    "id": "eda49220-b3c7-4ab1-a08b-d56f4c3e454d",
+    "title": "Write release notes for 2.3",
+    "account": "work",
+    "project": "platform",
+    "calls": [
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T14:13:06.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T14:05:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:31:59.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-15T11:27:00.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 94
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:06.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T21:24:33.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T18:04:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:08:59.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 55
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:08:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T13:36:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T20:56:32.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:58.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:40:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-13T15:02:59.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T15:02:18.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T09:56:04.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:58:35.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T16:18:00.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T13:35:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T20:29:02.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-11T15:41:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T14:47:02.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-11T11:39:42.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:00.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 57
+      },
+      {
+        "at": "2026-10-11T09:07:53.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 158
+      },
+      {
+        "at": "2026-10-11T09:07:06.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T08:29:29.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  },
+  "c4a510e8-7e6d-4267-a3e4-f5911c2eba63": {
+    "id": "c4a510e8-7e6d-4267-a3e4-f5911c2eba63",
+    "title": "c4a510e8",
+    "account": "",
+    "project": "",
+    "calls": [
+      {
+        "at": "2026-10-15T15:29:10.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 44
+      },
+      {
+        "at": "2026-10-15T14:49:05.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T14:48:20.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 101
+      },
+      {
+        "at": "2026-10-15T14:45:45.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:41:15.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 124
+      },
+      {
+        "at": "2026-10-15T13:40:40.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T13:23:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T12:56:54.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:38:56.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-15T11:26:22.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T11:25:57.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T10:20:47.000Z",
+        "client_name": "zed",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T09:23:38.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-15T08:33:58.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-15T08:17:41.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T21:24:33.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T20:51:25.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:40:46.000Z",
+        "client_name": "cursor-vscode",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T20:31:43.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T20:10:22.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:44:12.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:43:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T19:31:48.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:54:40.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "get_session",
+        "count": 121
+      },
+      {
+        "at": "2026-10-14T17:48:08.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:47:11.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T17:46:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 61
+      },
+      {
+        "at": "2026-10-14T17:31:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T17:23:40.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T17:16:31.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:56:57.000Z",
+        "client_name": "Claude Desktop",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:49:29.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-14T16:48:29.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T16:09:04.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-14T16:08:20.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-14T13:59:36.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T11:54:42.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T10:48:27.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-14T00:59:00.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T19:19:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T17:35:58.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-13T17:35:49.000Z",
+        "client_name": "Codex",
+        "tool": "get_session",
+        "count": 97
+      },
+      {
+        "at": "2026-10-13T17:01:48.000Z",
+        "client_name": "Codex",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T16:14:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T15:41:39.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T10:15:07.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-13T09:56:04.000Z",
+        "client_name": "Codex",
+        "tool": "search_sessions",
+        "count": 4
+      },
+      {
+        "at": "2026-10-13T09:30:54.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T06:24:21.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T05:49:13.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-13T03:47:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T22:25:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 128
+      },
+      {
+        "at": "2026-10-12T20:59:16.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:52.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:27.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T20:01:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:46:17.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:37:27.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T19:21:51.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": -29
+      },
+      {
+        "at": "2026-10-12T15:43:47.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T15:43:02.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-12T15:42:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T14:24:05.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 2
+      },
+      {
+        "at": "2026-10-12T14:07:38.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "get_session",
+        "count": 155
+      },
+      {
+        "at": "2026-10-12T13:35:50.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T11:36:34.000Z",
+        "client_name": "ChatGPT",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-12T00:59:33.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "search_sessions",
+        "count": 3
+      },
+      {
+        "at": "2026-10-11T19:04:31.000Z",
+        "client_name": "ChatGPT",
+        "tool": "search_sessions",
+        "count": 1
+      },
+      {
+        "at": "2026-10-11T14:53:44.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      },
+      {
+        "at": "2026-10-11T11:21:55.000Z",
+        "client_name": "Claude Cowork",
+        "tool": "list_sessions",
+        "count": 20
+      }
+    ]
+  }
+}
