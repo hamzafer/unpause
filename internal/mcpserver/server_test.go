@@ -9,8 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -67,6 +69,25 @@ type env struct {
 	exclude []string
 	cs      *mcp.ClientSession
 	load    Loader
+	log     *recorded
+}
+
+// recorded collects the access log Entries a server writes.
+type recorded struct {
+	mu      sync.Mutex
+	entries []Entry
+}
+
+func (r *recorded) record(e Entry) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.entries = append(r.entries, e)
+}
+
+func (r *recorded) all() []Entry {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return slices.Clone(r.entries)
 }
 
 // setup writes the fixture root and connects an in-memory client to a server over it.
@@ -116,15 +137,16 @@ func setup(t *testing.T, exclude ...string) *env {
 		return out, exclude, nil
 	}
 
-	return &env{dir: dir, exclude: exclude, cs: connect(t, load), load: load}
+	rec := &recorded{}
+	return &env{dir: dir, exclude: exclude, cs: connect(t, load, rec.record), load: load, log: rec}
 }
 
 // connect starts a server over load and returns an in-memory client session to it.
-func connect(t *testing.T, load Loader) *mcp.ClientSession {
+func connect(t *testing.T, load Loader, rec Recorder) *mcp.ClientSession {
 	t.Helper()
 	ctx := context.Background()
 	ct, st := mcp.NewInMemoryTransports()
-	srv := New("test-version", load)
+	srv := New("test-version", load, rec)
 	if _, err := srv.Connect(ctx, st, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -389,7 +411,7 @@ func TestSearchCountsDesktopTitle(t *testing.T) {
 		}
 		s.Account, s.Cowork, s.DesktopTitle = "cowork", true, "Quarterly dashboard"
 		return []*session.Session{s}, nil, nil
-	})
+	}, nil)
 	e := &env{dir: dir, cs: cs}
 	var out SearchOutput
 	e.call(t, "search_sessions", map[string]any{"query": "quarterly"}, &out)

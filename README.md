@@ -57,6 +57,7 @@ unpause recap --dry-run      # list the sessions missing a Recap or with an outd
 unpause recap                # write Recaps for the newest 20 of those (--limit 0 for all)
 unpause doctor                 # what it detected: accounts, opener, claude binary
 unpause mcp                  # read-only MCP server on stdio, see "Use from ChatGPT"
+unpause mcp stats            # what MCP clients read in the last 7 days (--since 30d, --json)
 unpause --version            # print the binary version
 ```
 
@@ -221,6 +222,15 @@ To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `
 3. In ChatGPT, open Plugins, add a custom MCP server and pick Connection: Tunnel.
 
 While `tunnel-client run` is going, whatever ChatGPT asks for, full transcripts and tool output included, is sent to OpenAI. Stop it when you're done; unpause doesn't start it for you.
+
+### See what was read
+
+Every tool call is logged as one JSON line in `~/.cache/unpause/access.jsonl` (under `$XDG_CACHE_HOME/unpause` when that is set): the time, the client's name and version, the tool, what the client asked for (search query, id, filters, paging), the ids of the sessions that came back, the count and how long it took. It never holds message text, titles or snippets. The file is readable only by you and rotates to `access.jsonl.1` at 10 MB. To sum it up:
+
+```sh
+unpause mcp stats              # last 7 days: calls per tool and client, sessions read most, top searches
+unpause mcp stats --since 30d --json
+```
 
 ## How it works
 

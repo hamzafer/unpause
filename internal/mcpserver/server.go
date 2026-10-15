@@ -104,13 +104,14 @@ type GetOutput struct {
 	Messages   []claude.FullMessage `json:"messages"`
 }
 
-// Run serves over stdin and stdout until the client disconnects or ctx ends.
-func Run(ctx context.Context, version string, load Loader) error {
-	return New(version, load).Run(ctx, &mcp.StdioTransport{})
+// Run serves over stdin and stdout until the client disconnects or ctx ends. rec gets
+// one Access log Entry per tool call.
+func Run(ctx context.Context, version string, load Loader, rec Recorder) error {
+	return New(version, load, rec).Run(ctx, &mcp.StdioTransport{})
 }
 
-// New builds the server with its three read-only tools.
-func New(version string, load Loader) *mcp.Server {
+// New builds the server with its three read-only tools, each call recorded by rec.
+func New(version string, load Loader, rec Recorder) *mcp.Server {
 	s := mcp.NewServer(&mcp.Implementation{Name: "unpause", Version: version}, &mcp.ServerOptions{
 		Instructions: "Read-only access to the user's local Claude Code sessions. " +
 			"Use list_sessions to browse, search_sessions to find text, get_session to read a transcript page by page.",
@@ -118,12 +119,14 @@ func New(version string, load Loader) *mcp.Server {
 	ro := &mcp.ToolAnnotations{ReadOnlyHint: true}
 	h := &handlers{load: load}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addTool(s, rec, &mcp.Tool{
 		Name:        "list_sessions",
 		Description: "List Claude Code sessions on this machine, newest first, with title, account, project, working directory, branch, times, message count and live state.",
 		Annotations: ro,
-	}, h.list)
-	mcp.AddTool(s, &mcp.Tool{
+	}, h.list, func(o ListOutput) ([]string, int, int) {
+		return summaryIDs(o.Sessions), len(o.Sessions), o.Total
+	})
+	addTool(s, rec, &mcp.Tool{
 		Name: "search_sessions",
 		Description: "Find sessions by what was said in them. Searches the talk only: the text of user prompts and assistant replies, plus the title " +
 			"when it is a name, Claude Desktop title or AI title. Tool calls, tool results and thinking are not searched. " +
@@ -131,14 +134,30 @@ func New(version string, load Loader) *mcp.Server {
 			"and a session matches only when every term appears somewhere in it, not necessarily in the same message. " +
 			"Results are ranked by total matches, ties newest first, with a match count and up to 3 snippets.",
 		Annotations: ro,
-	}, h.search)
-	mcp.AddTool(s, &mcp.Tool{
+	}, h.search, func(o SearchOutput) ([]string, int, int) {
+		ids := make([]string, 0, len(o.Results))
+		for _, r := range o.Results {
+			ids = append(ids, r.ID)
+		}
+		return ids, len(o.Results), o.Total
+	})
+	addTool(s, rec, &mcp.Tool{
 		Name: "get_session",
 		Description: "Read one session's transcript in file order, page by page. Each message has blocks: text, thinking, tool_use (name and input) " +
 			"and tool_result (text, is_error). Blocks longer than max_chars are cut with a [… N more chars] marker.",
 		Annotations: ro,
-	}, h.get)
+	}, h.get, func(o GetOutput) ([]string, int, int) {
+		return []string{o.Session.ID}, len(o.Messages), o.Total
+	})
 	return s
+}
+
+func summaryIDs(ss []Summary) []string {
+	ids := make([]string, 0, len(ss))
+	for _, s := range ss {
+		ids = append(ids, s.ID)
+	}
+	return ids
 }
 
 type handlers struct {
@@ -229,7 +248,7 @@ func (h *handlers) get(ctx context.Context, _ *mcp.CallToolRequest, in GetInput)
 	}
 	s := session.Find(ss, in.ID)
 	if s == nil {
-		return nil, GetOutput{}, fmt.Errorf("session %q not found", in.ID)
+		return nil, GetOutput{}, fmt.Errorf("session %q %w", in.ID, errNotFound)
 	}
 	limit := clamp(in.Limit, getDefault, getMax)
 	offset := max(in.Offset, 0)

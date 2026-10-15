@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `unpause mcp` keeps an access log: one line per tool call in `~/.cache/unpause/access.jsonl` with the client, tool, inputs, the session ids returned and the timing, never message text or titles. `unpause mcp stats` shows calls per tool and client, the sessions read most, errors and top searches for the last 7 days (`--since`, `--json`).
+
 ## v0.8.2, 2026-10-15
 
 - Fix: Recaps are kept per transcript instead of per session id. A session resumed in another folder or account keeps its id in a second transcript, so the two overwrote each other's Recap and backfill redid them every run. Existing Recaps move over on their own; the few whose id was shared get made again by the next `unpause recap`.
