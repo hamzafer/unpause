@@ -138,9 +138,9 @@ func TestMigrateMovesIDKeysToPaths(t *testing.T) {
 	if err := os.WriteFile(path, []byte(old), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	uniq := &session.Session{ID: "uniq", Path: "/x/uniq.jsonl"}
-	d1 := &session.Session{ID: "dup", Path: "/x/d1.jsonl"}
-	d2 := &session.Session{ID: "dup", Path: "/y/d2.jsonl"}
+	uniq := &session.Session{ID: "uniq", Path: "/x/uniq.jsonl", Messages: 1}
+	d1 := &session.Session{ID: "dup", Path: "/x/d1.jsonl", Messages: 1}
+	d2 := &session.Session{ID: "dup", Path: "/y/d2.jsonl", Messages: 1}
 	if err := Migrate(path, []*session.Session{uniq, d1, d2}); err != nil {
 		t.Fatal(err)
 	}
@@ -163,5 +163,28 @@ func TestMigrateMovesIDKeysToPaths(t *testing.T) {
 	}
 	if after, _ := os.Stat(path); !after.ModTime().Equal(before.ModTime()) {
 		t.Error("nothing to move must not rewrite the store")
+	}
+}
+
+func TestMigrateIgnoresSubagentsAndKeepsUnmatchedIDs(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recaps.json")
+	old := `{"parent": {"goal": "the parent"}, "elsewhere": {"goal": "not indexed right now"}}`
+	if err := os.WriteFile(path, []byte(old), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	parent := &session.Session{ID: "parent", Path: "/x/parent.jsonl", Messages: 4}
+	sub := &session.Session{ID: "parent", Path: "/x/parent/subagents/a.jsonl", Messages: 2, Sidechain: true}
+	if err := Migrate(path, []*session.Session{parent, sub}); err != nil {
+		t.Fatal(err)
+	}
+	st, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r, ok := st.Get(parent); !ok || r.Goal != "the parent" {
+		t.Errorf("a subagent sharing the id must not make it ambiguous: %v", st)
+	}
+	if r, ok := st["elsewhere"]; !ok || r.Goal != "not indexed right now" {
+		t.Errorf("an id no Session has must be kept: %v", st)
 	}
 }

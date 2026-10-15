@@ -58,15 +58,19 @@ func Put(path, key string, r Recap) error {
 }
 
 // Migrate moves Recaps that v0.8 stored under a Session id to their Transcript's path.
-// An id more than one Transcript shares can't be placed, so its Recap is dropped and made
-// again by the next backfill. It writes only when there was something to move.
+// Only Sessions that can have a Recap count: a subagent transcript carries its parent's
+// id. An id more than one of them shares can't be placed, so its Recap is dropped and
+// made again by the next backfill. An id no Session has is left alone, since its
+// Transcript may just not be readable right now. It writes only when something changed.
 func Migrate(path string, sessions []*session.Session) error {
 	if _, err := os.Stat(path); err != nil {
 		return nil // no store yet, nothing to move
 	}
 	byID := map[string][]*session.Session{}
 	for _, s := range sessions {
-		byID[s.ID] = append(byID[s.ID], s)
+		if !s.Sidechain && !s.Empty() {
+			byID[s.ID] = append(byID[s.ID], s)
+		}
 	}
 	return update(path, func(st Store) bool {
 		changed := false
@@ -74,7 +78,11 @@ func Migrate(path string, sessions []*session.Session) error {
 			if strings.ContainsAny(k, `/\`) {
 				continue // already a path
 			}
-			if ss := byID[k]; len(ss) == 1 {
+			ss := byID[k]
+			if len(ss) == 0 {
+				continue
+			}
+			if len(ss) == 1 {
 				if _, taken := st[Key(ss[0])]; !taken {
 					st[Key(ss[0])] = r
 				}

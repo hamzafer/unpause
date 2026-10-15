@@ -448,7 +448,8 @@ func main() {
 			if only == "" {
 				return recapBackfill(cmd.Context(), sessions, ask, limit, dryRun)
 			}
-			s := find(sessions, only)
+			transcript, _ := cmd.Flags().GetString("transcript")
+			s := recapTarget(sessions, only, transcript)
 			if s == nil {
 				return fmt.Errorf("no session matches %q", only)
 			}
@@ -474,6 +475,8 @@ func main() {
 	recapCmd.Flags().Bool("dry-run", false, "without --session: list the sessions that would get a Recap, and stop")
 	recapCmd.Flags().Duration("delay", 0, "wait this long before starting")
 	_ = recapCmd.Flags().MarkHidden("delay")
+	recapCmd.Flags().String("transcript", "", "with --session: the transcript that ended (the SessionEnd hook passes it)")
+	_ = recapCmd.Flags().MarkHidden("transcript")
 
 	hook := &cobra.Command{
 		Use:   "hook",
@@ -500,7 +503,7 @@ func main() {
 			}
 			// A config that can't be read still names the Session; only the Recap waits for a fix.
 			cfg, err := config.Load()
-			for _, job := range sessionEndJobs(in.SessionID, err == nil && cfg.Recap.Enabled) {
+			for _, job := range sessionEndJobs(in.SessionID, in.TranscriptPath, err == nil && cfg.Recap.Enabled) {
 				if err := autoname.Spawn(self, job, autoname.LogPath(config.CachePath())); err != nil {
 					return err
 				}
