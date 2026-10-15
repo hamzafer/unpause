@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `unpause mcp stats` shows long client names in full. The name column fits the longest tool or client name (up to 40 characters) instead of cutting at 18, so `local-agent-mode-unpause` no longer shows as `local-agent-mode-…`.
+
 ## v0.9.0, 2026-10-15
 
 - `get_session` stops a page at a size budget, `max_total_chars` (default 30,000, max 200,000), and returns `next_offset` to read on. With the defaults, a page could pass 50,000 characters, more than Claude Desktop accepts from a tool. At least one message always comes back, cut to fit when it alone is over the budget.

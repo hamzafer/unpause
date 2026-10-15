@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 
@@ -172,8 +173,15 @@ func writeStats(w io.Writer, st statsOut, window string) {
 			return
 		}
 		fmt.Fprintf(w, "\n%s\n", title)
-		for _, t := range ts {
-			fmt.Fprintf(w, "  %-18s%4d\n", session.Clip(safe(t.Name), 18), t.Count)
+		// The name column fits the longest name in this section: at least 18, at most 40.
+		names := make([]string, len(ts))
+		width := 18
+		for i, t := range ts {
+			names[i] = session.Clip(safe(t.Name), 40)
+			width = max(width, utf8.RuneCountInString(names[i]))
+		}
+		for i, t := range ts {
+			fmt.Fprintf(w, "  %-*s%4d\n", width, names[i], t.Count)
 		}
 	}
 	section("tools", st.Tools)

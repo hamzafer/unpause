@@ -68,6 +68,31 @@ func TestWriteStats(t *testing.T) {
 	}
 }
 
+// TestWriteStatsLongNames: the name column grows to the longest name in its section (floor
+// 18, cap 40), so a real client name like local-agent-mode-unpause shows in full and the
+// counts stay in one column. Each section sizes on its own.
+func TestWriteStatsLongNames(t *testing.T) {
+	long := strings.Repeat("x", 50)
+	st := mcpserver.Stats{
+		Calls: 7, First: time.Now(), Last: time.Now(),
+		Tools:   []mcpserver.Tally{{Name: "get_session", Count: 3}, {Name: long, Count: 1}},
+		Clients: []mcpserver.Tally{{Name: "local-agent-mode-unpause", Count: 5}, {Name: "chatgpt", Count: 12}},
+	}
+	var b bytes.Buffer
+	writeStats(&b, statsView(st, func(string) (string, string, bool) { return "", "", false }), "7d")
+	got := b.String()
+	for _, want := range []string{
+		"  local-agent-mode-unpause   5\n",
+		"  chatgpt" + strings.Repeat(" ", 24-7) + "  12\n",
+		"  get_session" + strings.Repeat(" ", 40-11) + "   3\n",
+		"  " + strings.Repeat("x", 39) + "…   1\n",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
 // TestWriteStatsStripsControlChars: a query or client name from the log can't drive the
 // terminal; control characters (ESC, BEL, C1) never reach the output.
 func TestWriteStatsStripsControlChars(t *testing.T) {
