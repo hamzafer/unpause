@@ -100,8 +100,9 @@ type model struct {
 	accounts []string
 	// recapHidden is set by ^t: the Recap box is hidden for the rest of this run.
 	recapHidden bool
-	// recaps caches opts.Recap by Session id. A map, so View (value receiver) can fill it.
-	recaps map[string]shownRecap
+	// recaps caches opts.Recap per Session (two Transcripts can share an id). A map, so
+	// View (value receiver) can fill it.
+	recaps map[*session.Session]shownRecap
 
 	// Deep search state (deep.go).
 	deep      bool
@@ -150,7 +151,7 @@ func newModel(o Options) model {
 		stAccount[a] = lipgloss.NewStyle().Foreground(accountPalette[i%len(accountPalette)])
 	}
 
-	m := model{opts: o, all: o.Sessions, query: q, rename: r, accounts: accounts, recaps: map[string]shownRecap{}}
+	m := model{opts: o, all: o.Sessions, query: q, rename: r, accounts: accounts, recaps: map[*session.Session]shownRecap{}}
 	m.refilter()
 	return m
 }
@@ -640,10 +641,10 @@ func (m model) renderRecap(s *session.Session, w int) string {
 	if m.opts.Recap == nil || m.recapHidden {
 		return ""
 	}
-	r, cached := m.recaps[s.ID]
+	r, cached := m.recaps[s]
 	if !cached {
 		r.Recap, r.outdated, r.ok = m.opts.Recap(s)
-		m.recaps[s.ID] = r
+		m.recaps[s] = r
 	}
 	if !r.ok {
 		return ""

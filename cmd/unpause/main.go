@@ -51,9 +51,10 @@ func main() {
 			var recapOf func(*session.Session) (recap.Recap, bool, bool)
 			if cfg.Recap.Enabled {
 				// A store that can't be read just means no boxes; the picker still opens.
+				_ = recap.Migrate(recap.Path(config.CachePath()), sessions)
 				recaps, _ := recap.Load(recap.Path(config.CachePath()))
 				recapOf = func(s *session.Session) (recap.Recap, bool, bool) {
-					r, ok := recaps[s.ID]
+					r, ok := recaps.Get(s)
 					return r, ok && recap.Outdated(r, s), ok
 				}
 			}
@@ -461,7 +462,7 @@ func main() {
 			if err != nil {
 				return fmt.Errorf("%s: %w", s.ShortID(), err)
 			}
-			if err := recap.Put(recap.Path(config.CachePath()), s.ID, r); err != nil {
+			if err := recap.Put(recap.Path(config.CachePath()), recap.Key(s), r); err != nil {
 				return err
 			}
 			fmt.Printf("%s %-9s %s\n  goal  %s\n  done  %s\n  next  %s\n", s.ShortID(), s.Account, session.Clip(s.Title(), 60), r.Goal, r.Done, r.Next)

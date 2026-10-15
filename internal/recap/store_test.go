@@ -2,6 +2,7 @@ package recap
 
 import (
 	"fmt"
+	"github.com/hamzafer/unpause/internal/session"
 	"os"
 	"path/filepath"
 	"sync"
@@ -106,5 +107,61 @@ func TestPutOverANullStore(t *testing.T) {
 	}
 	if got, _ := Load(path); got["aaa"] != r {
 		t.Errorf("store = %+v", got)
+	}
+}
+
+func TestTwoTranscriptsSharingAnIDKeepTheirOwnRecaps(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recaps.json")
+	a := &session.Session{ID: "same", Path: "/w/a.jsonl"}
+	b := &session.Session{ID: "same", Path: "/p/b.jsonl"}
+	if err := Put(path, Key(a), Recap{Goal: "from a"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := Put(path, Key(b), Recap{Goal: "from b"}); err != nil {
+		t.Fatal(err)
+	}
+	st, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ra, _ := st.Get(a); ra.Goal != "from a" {
+		t.Errorf("a = %+v", ra)
+	}
+	if rb, _ := st.Get(b); rb.Goal != "from b" {
+		t.Errorf("b = %+v", rb)
+	}
+}
+
+func TestMigrateMovesIDKeysToPaths(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recaps.json")
+	old := `{"uniq": {"goal": "unique one"}, "dup": {"goal": "ambiguous"}, "/x/kept.jsonl": {"goal": "already a path"}}`
+	if err := os.WriteFile(path, []byte(old), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	uniq := &session.Session{ID: "uniq", Path: "/x/uniq.jsonl"}
+	d1 := &session.Session{ID: "dup", Path: "/x/d1.jsonl"}
+	d2 := &session.Session{ID: "dup", Path: "/y/d2.jsonl"}
+	if err := Migrate(path, []*session.Session{uniq, d1, d2}); err != nil {
+		t.Fatal(err)
+	}
+	st, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r, ok := st.Get(uniq); !ok || r.Goal != "unique one" {
+		t.Errorf("unique id must move to its path: %v", st)
+	}
+	if _, ok := st.Get(d1); ok {
+		t.Errorf("a shared id can't be placed and must be dropped: %v", st)
+	}
+	if len(st) != 2 || st["/x/kept.jsonl"].Goal != "already a path" {
+		t.Errorf("store = %v", st)
+	}
+	before, _ := os.Stat(path)
+	if err := Migrate(path, nil); err != nil {
+		t.Fatal(err)
+	}
+	if after, _ := os.Stat(path); !after.ModTime().Equal(before.ModTime()) {
+		t.Error("nothing to move must not rewrite the store")
 	}
 }

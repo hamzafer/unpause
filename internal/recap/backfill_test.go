@@ -57,7 +57,7 @@ func TestTodoPicksMissingAndOutdatedNewestFirst(t *testing.T) {
 	empty.Messages = 0
 	side := onDisk(t, "side", 10, 14)
 	side.Sidechain = true
-	st := Store{"outdated": {Size: 30}, "current": {Size: 40}}
+	st := Store{Key(outdated): {Size: 30}, Key(current): {Size: 40}}
 
 	all := []*session.Session{missing, outdated, current, newest, live, cowork, empty, side}
 	got := ids(Todo(all, st, 0))
@@ -82,7 +82,7 @@ func TestCountHaveAndOutdated(t *testing.T) {
 	a := onDisk(t, "a", 50, 1)
 	b := onDisk(t, "b", 50, 2)
 	c := onDisk(t, "c", 50, 3)
-	have, outdated := Count([]*session.Session{a, b, c}, Store{"a": {Size: 50}, "b": {Size: 20}, "gone": {Size: 1}})
+	have, outdated := Count([]*session.Session{a, b, c}, Store{Key(a): {Size: 50}, Key(b): {Size: 20}, "/gone.jsonl": {Size: 1}})
 	if have != 2 || outdated != 1 {
 		t.Errorf("have %d, outdated %d; want 2, 1", have, outdated)
 	}
@@ -109,7 +109,7 @@ func TestBackfillStoresEachAndReportsErrors(t *testing.T) {
 	if reported[0].Recap.Goal != "set up the tunnel" {
 		t.Errorf("first recap = %+v", reported[0].Recap)
 	}
-	if _, ok := stored[good.ID]; !ok || len(stored) != 1 {
+	if _, ok := stored[Key(good)]; !ok || len(stored) != 1 {
 		t.Errorf("stored = %v", stored)
 	}
 }

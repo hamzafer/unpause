@@ -95,7 +95,7 @@ func TestRecapOneSessionStoresItAndLeavesTheTranscript(t *testing.T) {
 	if err := json.Unmarshal(b, &st); err != nil {
 		t.Fatal(err)
 	}
-	r, ok := st["77777777-aaaa-bbbb-cccc-dddddddddddd"]
+	r, ok := st[transcript]
 	if !ok || r.Goal != "padel in Oslo" || r.Size != int64(len(before)) {
 		t.Errorf("store = %s", b)
 	}

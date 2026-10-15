@@ -16,7 +16,7 @@ func Todo(sessions []*session.Session, st Store, limit int) []*session.Session {
 		if Can(s) != nil {
 			continue
 		}
-		if r, ok := st[s.ID]; ok && !Outdated(r, s) {
+		if r, ok := st.Get(s); ok && !Outdated(r, s) {
 			continue
 		}
 		out = append(out, s)
@@ -31,7 +31,7 @@ func Todo(sessions []*session.Session, st Store, limit int) []*session.Session {
 // Count reports how many of sessions have a Recap, and how many of those are outdated.
 func Count(sessions []*session.Session, st Store) (have, outdated int) {
 	for _, s := range sessions {
-		r, ok := st[s.ID]
+		r, ok := st.Get(s)
 		if !ok {
 			continue
 		}
@@ -53,7 +53,7 @@ type Result struct {
 // Backfill makes a Recap for each Session in turn and stores it with put. report is
 // called once per Session, in order. An Account whose login failed fails its remaining
 // Sessions at once, because the model (autoname.Ask) remembers the failure.
-func Backfill(ctx context.Context, sessions []*session.Session, model Model, put func(id string, r Recap) error, report func(Result)) {
+func Backfill(ctx context.Context, sessions []*session.Session, model Model, put func(key string, r Recap) error, report func(Result)) {
 	for _, s := range sessions {
 		if ctx.Err() != nil {
 			return
@@ -61,7 +61,7 @@ func Backfill(ctx context.Context, sessions []*session.Session, model Model, put
 		res := Result{Session: s}
 		res.Recap, res.Err = Make(ctx, s, model)
 		if res.Err == nil {
-			res.Err = put(s.ID, res.Recap)
+			res.Err = put(Key(s), res.Recap)
 		}
 		report(res)
 	}
