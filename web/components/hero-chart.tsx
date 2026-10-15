@@ -24,7 +24,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Panel } from "@/components/panel";
 import { bucketLabel, num } from "@/lib/format";
-import { buildSeries, isSparse, type Row, type Series } from "@/lib/series";
+import { buildSeries, gapSpan, isSparse, type Row, type Series } from "@/lib/series";
 import type { Stats } from "@/lib/types";
 
 export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
@@ -36,7 +36,7 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
   const config = Object.fromEntries(series.map((s) => [s.key, { label: s.name }]));
   const sparse = isSparse(rows);
   const Chart = sparse ? BarChart : AreaChart;
-  const gap = rows.filter((r) => !r.covered);
+  const span = gapSpan(rows, sparse);
 
   return (
     <Panel
@@ -101,10 +101,10 @@ export function HeroChart({ stats, pulse }: { stats: Stats; pulse: number }) {
                 </pattern>
               </defs>
               <CartesianGrid vertical={false} stroke="var(--grid)" />
-              {gap.length > 0 && (
+              {span && (
                 <ReferenceArea
-                  x1={gap[0].t}
-                  x2={rows.find((r) => r.covered)?.t ?? gap[gap.length - 1].t}
+                  x1={span[0]}
+                  x2={span[1]}
                   fill="url(#gap-hatch)"
                   fillOpacity={1}
                   strokeOpacity={0}

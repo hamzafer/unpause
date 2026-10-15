@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSeries, isSparse } from "./series";
+import { buildSeries, gapSpan, isSparse } from "./series";
 import { client, stats } from "./test-stats";
 import type { SeriesPoint } from "./types";
 
@@ -52,5 +52,20 @@ describe("buildSeries", () => {
     expect(isSparse(rows(0))).toBe(true);
     expect(isSparse(rows(2))).toBe(true);
     expect(isSparse(rows(3))).toBe(false);
+  });
+});
+
+describe("gapSpan", () => {
+  const rows = (cov: boolean[]) =>
+    cov.map((c, i) => ({ t: `d${i}`, covered: c, total: c ? 0 : null })) as Parameters<typeof gapSpan>[0];
+
+  it("is null when every bucket is logged", () => {
+    expect(gapSpan(rows([true, true]), false)).toBeNull();
+  });
+  it("stops at the last unlogged bucket for bars, so it never sits behind a bar", () => {
+    expect(gapSpan(rows([false, false, true]), true)).toEqual(["d0", "d1"]);
+  });
+  it("runs up to the first logged point for areas, where the shape starts", () => {
+    expect(gapSpan(rows([false, false, true, true, true]), false)).toEqual(["d0", "d2"]);
   });
 });

@@ -56,3 +56,15 @@ export function buildSeries(stats: Stats): { series: Series[]; rows: Row[] } {
 
 /** An area needs a few points to read as a shape; with fewer, stacked bars show the same data honestly. */
 export const isSparse = (rows: Row[]) => rows.filter((r) => r.covered).length < 3;
+
+/**
+ * Where the hatched "not logged yet" area runs, as [first, last] bucket keys, or null.
+ * Bars sit in bands, so the hatch stops at the last unlogged bucket; an area's shape
+ * starts at the first logged point, so the hatch runs up to it.
+ */
+export function gapSpan(rows: Row[], sparse: boolean): [string, string] | null {
+  const gap = rows.filter((r) => !r.covered);
+  if (!gap.length) return null;
+  const end = sparse ? gap[gap.length - 1].t : (rows.find((r) => r.covered)?.t ?? gap[gap.length - 1].t);
+  return [gap[0].t, end];
+}

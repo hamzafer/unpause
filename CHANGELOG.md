@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: in the stats page's bar view (few days logged), the hatched "not logged yet" area no longer runs behind the first bar.
+
 ## v0.10.0, 2026-10-15
 
 - `unpause mcp stats` shows long client names in full. The name column fits the longest tool or client name (up to 40 characters) instead of cutting at 18, so `local-agent-mode-unpause` no longer shows as `local-agent-mode-…`.
