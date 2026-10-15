@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.8.2, 2026-10-15
 
 - Fix: Recaps are kept per transcript instead of per session id. A session resumed in another folder or account keeps its id in a second transcript, so the two overwrote each other's Recap and backfill redid them every run. Existing Recaps move over on their own; the few whose id was shared get made again by the next `unpause recap`.
 
