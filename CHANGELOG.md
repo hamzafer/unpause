@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.10.1, 2026-10-15
 
 - Fix: in the stats page's bar view (few days logged), the hatched "not logged yet" area no longer runs behind the first bar.
 
