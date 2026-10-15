@@ -1,0 +1,170 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Tokens from docs/superpowers/specs/2026-10-15-mcp-stats-web-design.md.
+   Dark is the default (class="dark" on <html>); light when picked, or when
+   the system is light and nothing was picked. */
+:root {
+  --background: #ffffff;
+  --card: #fafafa;
+  --border: #e5e5e5;
+  --text: #171717;
+  --muted-text: #666666;
+  --ui-accent: #2a78d6;
+
+  /* One step off the card: hover washes, ranked-list bars, chips. */
+  --step: #f0f0f0;
+  --bar: #ebebeb;
+  --grid: #ececec;
+  --danger: #d93036;
+
+  --series-0: #2a78d6;
+  --series-1: #eb6834;
+  --series-2: #1baf7a;
+  --series-3: #eda100;
+  --series-4: #e87ba4;
+  --series-other: #a3a3a3;
+
+  /* shadcn/ui names mapped onto the tokens above. */
+  --foreground: var(--text);
+  --card-foreground: var(--text);
+  --popover: var(--background);
+  --popover-foreground: var(--text);
+  --primary: var(--text);
+  --primary-foreground: var(--background);
+  --secondary: var(--step);
+  --secondary-foreground: var(--text);
+  --muted: var(--step);
+  --muted-foreground: var(--muted-text);
+  --accent: var(--step);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --input: var(--border);
+  --ring: var(--ui-accent);
+  --radius: 0.5rem;
+
+  color-scheme: light;
+}
+
+.dark {
+  --background: #000000;
+  --card: #0a0a0a;
+  --border: #1f1f1f;
+  --text: #ededed;
+  --muted-text: #a1a1a1;
+  --ui-accent: #3987e5;
+
+  --step: #171717;
+  --bar: #1a1a1a;
+  --grid: #1a1a1a;
+  --danger: #f2555a;
+
+  --series-0: #3987e5;
+  --series-1: #d95926;
+  --series-2: #199e70;
+  --series-3: #c98500;
+  --series-4: #d55181;
+  --series-other: #5c5c5c;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-step: var(--step);
+  --color-bar: var(--bar);
+  --color-ui-accent: var(--ui-accent);
+  --color-danger: var(--danger);
+
+  /* Literal family names; the next/font variables (set on <html>) come
+     first so the self-hosted files win. */
+  --font-sans: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  /* One focus style everywhere: a 2px accent ring with a gap. */
+  :focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* The one motion: a single pulse on the hero's live edge and a fading tint
+   on rows that polling just brought in. Off for reduced motion. */
+@keyframes live-pulse {
+  0% {
+    r: 4px;
+    opacity: 0.8;
+  }
+  100% {
+    r: 18px;
+    opacity: 0;
+  }
+}
+@keyframes row-tint {
+  from {
+    background-color: color-mix(in srgb, var(--ui-accent) 20%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.live-pulse {
+  animation: live-pulse 1.4s ease-out 1 both;
+}
+.row-new > td {
+  animation: row-tint 2.4s ease-out 1 both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-pulse {
+    display: none;
+  }
+  .row-new > td {
+    animation: none;
+  }
+  /* Everything else that moves (the sheet, tooltips) answers the user; cut it
+     to nothing here too. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

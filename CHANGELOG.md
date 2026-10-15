@@ -3,6 +3,8 @@
 ## Unreleased
 
 - `unpause mcp stats` shows long client names in full. The name column fits the longest tool or client name (up to 40 characters) instead of cutting at 18, so `local-agent-mode-unpause` no longer shows as `local-agent-mode-…`.
+- `unpause mcp stats --web` shows the access log as a live page in the browser: calls over time by client, the sessions read most with every call that returned them, top searches, tools and the latest calls. It serves on `127.0.0.1` only (`--port`, default 4777, a free one if taken; `--no-open`), answers only requests addressed to that host and port, and stops on Ctrl+C. The URL carries a token made for that run, and the page's data is served only with it, so other local users can't read session titles off the port. The page is built into the binary.
+- The README shows how to add `unpause mcp` to Claude Desktop (and Cowork) and Codex.
 
 ## v0.9.0, 2026-10-15
 

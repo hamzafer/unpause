@@ -17,3 +17,37 @@ jobs:
       - run: go vet ./...
       - run: go test ./...
       - run: go build ./cmd/unpause
+  web-export:
+    # The stats page is a Next.js export committed under internal/webui/dist (ADR 0014).
+    # Rebuild it and fail when the committed files differ, so the binary never serves a
+    # stale page. Skips while web/ doesn't exist.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: web
+        run: |
+          if [ -f web/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "no web/package.json, skipping"; fi
+      - if: steps.web.outputs.present == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json # the version comes from its packageManager field
+      - if: steps.web.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.node-version
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web install --frozen-lockfile
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web lint
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web typecheck
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web test
+      - if: steps.web.outputs.present == 'true'
+        run: pnpm --dir web build
+      - if: steps.web.outputs.present == 'true'
+        run: |
+          git add -N internal/webui/dist
+          git diff --exit-code --stat internal/webui/dist || { echo "internal/webui/dist is stale: run 'pnpm --dir web build' and commit it"; exit 1; }

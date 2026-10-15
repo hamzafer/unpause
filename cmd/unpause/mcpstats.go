@@ -1,13 +1,19 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"os"
+	"os/exec"
+	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -17,6 +23,8 @@ import (
 	"github.com/hamzafer/unpause/internal/config"
 	"github.com/hamzafer/unpause/internal/mcpserver"
 	"github.com/hamzafer/unpause/internal/session"
+	"github.com/hamzafer/unpause/internal/statsweb"
+	"github.com/hamzafer/unpause/internal/webui"
 )
 
 // mcpStatsCmd is `unpause mcp stats`: a summary of the Access log.
@@ -26,9 +34,24 @@ func mcpStatsCmd() *cobra.Command {
 		Short: "Summarize what MCP clients read",
 		Long: "Reads the access log the MCP server keeps next to the index cache (access.jsonl, plus access.jsonl.1 after a rotation) " +
 			"and shows calls per tool and per client, the sessions read most through get_session, errors and the top search queries. " +
-			"The log never holds message text or titles; titles shown here are looked up on this machine.",
+			"The log never holds message text or titles; titles shown here are looked up on this machine.\n\n" +
+			"With --web it serves the same log as a live page on 127.0.0.1 and opens it in the browser " +
+			"(--port picks the port, --no-open only prints the URL). Ctrl+C stops it.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			web, _ := cmd.Flags().GetBool("web")
+			if !web {
+				for _, f := range []string{"port", "no-open"} {
+					if cmd.Flags().Changed(f) {
+						return fmt.Errorf("--%s only works with --web", f)
+					}
+				}
+			}
+			if web {
+				port, _ := cmd.Flags().GetInt("port")
+				noOpen, _ := cmd.Flags().GetBool("no-open")
+				return runStatsWeb(cmd.Context(), cmd.ErrOrStderr(), port, !noOpen)
+			}
 			sinceFlag, _ := cmd.Flags().GetString("since")
 			asJSON, _ := cmd.Flags().GetBool("json")
 			window, err := parseSince(sinceFlag)
@@ -77,7 +100,99 @@ func mcpStatsCmd() *cobra.Command {
 	}
 	c.Flags().String("since", "7d", "only calls this recent: a Go duration (36h) or days (7d); 0 = all")
 	c.Flags().Bool("json", false, "output JSON")
+	c.Flags().Bool("web", false, "show the stats as a live page in the browser, served on 127.0.0.1")
+	c.Flags().Int("port", 4777, "with --web: the port to serve on (a free one if it is taken)")
+	c.Flags().Bool("no-open", false, "with --web: print the URL without opening the browser")
+	c.MarkFlagsMutuallyExclusive("web", "json")
+	c.MarkFlagsMutuallyExclusive("web", "since")
 	return c
+}
+
+// runStatsWeb serves the stats page until Ctrl+C. The URL goes to stderr; stdout stays empty.
+func runStatsWeb(ctx context.Context, stderr io.Writer, port int, open bool) error {
+	if port < 0 || port > 65535 {
+		return fmt.Errorf("--port %d: want 0 to 65535", port)
+	}
+	token, err := statsweb.NewToken()
+	if err != nil {
+		return err
+	}
+	ln, err := statsweb.Listen(port)
+	if err != nil {
+		return err
+	}
+	// The token is in the URL only: the page reads it from there, and API calls without
+	// it are refused, so another local user can't read titles off the port.
+	url := "http://" + ln.Addr().String() + "/?t=" + token
+	fmt.Fprintf(stderr, "unpause mcp stats: %s (Ctrl+C to stop)\n", url)
+	if open {
+		if err := openBrowser(url); err != nil {
+			fmt.Fprintf(stderr, "unpause: could not open the browser: %v\n", err)
+		}
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	// After the first Ctrl+C, stop catching signals: a second one kills at once.
+	go func() {
+		<-ctx.Done()
+		stop()
+	}()
+	err = statsweb.Serve(ctx, ln, statsweb.Config{
+		ReadLog: func() ([]mcpserver.Entry, error) { return mcpserver.ReadLog(mcpserver.LogPath(config.CachePath())) },
+		Lookup:  indexLookup,
+		Now:     time.Now,
+		Loc:     time.Local,
+		Static:  webui.FS(),
+		Token:   token,
+	})
+	if errors.Is(err, statsweb.ErrSlowShutdown) {
+		// Stopping is what was asked for; a slow browser tab is not a failure.
+		fmt.Fprintf(stderr, "unpause: %v\n", err)
+		return nil
+	}
+	return err
+}
+
+// indexLookup loads this machine's index for titles; the log never holds them.
+func indexLookup() statsweb.Lookup {
+	_, sessions, err := loadAll(true)
+	if err != nil {
+		return nil
+	}
+	byID := make(map[string]statsweb.Info, len(sessions))
+	for _, s := range sessions {
+		project := s.Repo()
+		if project == "?" {
+			project = ""
+		}
+		byID[s.ID] = statsweb.Info{Title: s.Title(), Account: s.Account, Project: project}
+	}
+	return func(id string) (statsweb.Info, bool) {
+		info, ok := byID[id]
+		return info, ok
+	}
+}
+
+// openBrowser opens url with the desktop's default browser.
+func openBrowser(url string) error {
+	var name string
+	switch runtime.GOOS {
+	case "darwin":
+		name = "open"
+	case "linux":
+		name = "xdg-open"
+	default:
+		return fmt.Errorf("don't know how to open a browser on %s", runtime.GOOS)
+	}
+	cmd := exec.Command(name, url)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	go cmd.Wait()
+	return nil
 }
 
 // parseSince reads a Go duration, with "d" for days allowed in front ("7d", "1d12h").
