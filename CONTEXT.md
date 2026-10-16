@@ -63,7 +63,7 @@ A Session that Claude Desktop's Cowork mode ran inside its VM. Listed under the 
 _Avoid_: desktop session, agent-mode session
 
 **MCP server**:
-`unpause mcp`: the read-only stdio server that lets another assistant (ChatGPT, through OpenAI's tunnel) list, search and read Sessions.
+`unpause mcp`: the read-only stdio server that lets another assistant (Claude Desktop, the ChatGPT Mac app, Codex, or ChatGPT on the web through OpenAI's tunnel) list, search and read Sessions.
 _Avoid_: plugin, connector, API
 
 **Excluded**:

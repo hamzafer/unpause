@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The README shows how to use `unpause mcp` from the ChatGPT Mac app (Codex and local Work mode, no tunnel) and says the tunnel is only for ChatGPT on the web.
+
 ## v0.10.1, 2026-10-15
 
 - Fix: in the stats page's bar view (few days logged), the hatched "not logged yet" area no longer runs behind the first bar.
