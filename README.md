@@ -228,16 +228,22 @@ codex mcp add unpause -- unpause mcp
 
 ### Use from the ChatGPT Mac app
 
-The ChatGPT desktop app (Chat, Work and Codex in one app) reads the same `~/.codex/config.toml` as the Codex CLI, so the `codex mcp add` line above also adds unpause there. Quit and reopen the app after adding it. Which modes can use it:
+The ChatGPT desktop app (Chat, Work and Codex in one app) reads the same `~/.codex/config.toml` as the Codex CLI. Like Claude Desktop it doesn't see your shell's `PATH`, so add unpause with its full path, then quit and reopen the app:
+
+```sh
+codex mcp add unpause -- "$(which unpause)" mcp
+```
+
+Which modes can use it (tested on macOS):
 
 | Mode | unpause |
 |---|---|
 | Codex | yes |
 | Work, started in the desktop app | yes, it runs on your Mac |
-| Work in the cloud (started on web or mobile) | no, it runs on OpenAI's servers |
+| Work in the cloud (started on web or mobile) | no, it runs on OpenAI's servers and can't reach your Mac |
 | Chat | no, it only uses remote plugins |
 
-No tunnel is needed for these. In `unpause mcp stats` the app shows up as Codex.
+No tunnel is needed for these. The app identifies itself as `codex-mcp-client`; the stats page (`unpause mcp stats --web`) shows it as Codex.
 
 ### Use from ChatGPT through a tunnel
 
