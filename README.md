@@ -226,9 +226,22 @@ It also works in Cowork. For Codex:
 codex mcp add unpause -- unpause mcp
 ```
 
+### Use from the ChatGPT Mac app
+
+The ChatGPT desktop app (Chat, Work and Codex in one app) reads the same `~/.codex/config.toml` as the Codex CLI, so the `codex mcp add` line above also adds unpause there. Quit and reopen the app after adding it. Which modes can use it:
+
+| Mode | unpause |
+|---|---|
+| Codex | yes |
+| Work, started in the desktop app | yes, it runs on your Mac |
+| Work in the cloud (started on web or mobile) | no, it runs on OpenAI's servers |
+| Chat | no, it only uses remote plugins |
+
+No tunnel is needed for these. In `unpause mcp stats` the app shows up as Codex.
+
 ### Use from ChatGPT through a tunnel
 
-To reach it from ChatGPT, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `unpause mcp` as a child process and polls OpenAI over outbound HTTPS, so nothing on your Mac listens for connections:
+Only ChatGPT on the web or a phone needs this. To reach unpause from there, use OpenAI's Secure MCP Tunnel. `tunnel-client` runs `unpause mcp` as a child process and polls OpenAI over outbound HTTPS, so nothing on your Mac listens for connections:
 
 1. Create a tunnel at https://platform.openai.com/settings/organization/tunnels and note its `tunnel_...` id.
 2. With `CONTROL_PLANE_API_KEY` exported (see OpenAI's tunnel docs for which key), run:
